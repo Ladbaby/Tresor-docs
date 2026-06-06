@@ -1,0 +1,89 @@
+---
+title: Web UI Guide
+description: Manage Tresor from the embedded browser dashboard
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Web UI Guide
+
+Tresor includes an **embedded single-page application** accessible through any web browser. The web UI is served by the daemon itself on the configured `bind_addr` — no separate frontend deployment needed.
+
+Access it at `http://127.0.0.1:8080` (or whatever `bind_addr` you configured).
+
+## Authentication
+
+If you set `admin_password` in the config, the web UI shows a login screen. Enter the password to obtain a session token. All dashboard operations require authentication.
+
+## Dashboard Tabs
+
+### Downstreams
+
+The **Downstreams** tab displays all configured LLM provider endpoints in a table.
+
+**Actions:**
+- **Add Downstream** — Create a new provider endpoint with name, base URL, and API key
+- **Edit** — Modify any downstream's settings
+- **Add Model** — Manually add model IDs to the downstream's `output_model_ids` list
+- **Fetch Models** — Calls the provider's `/models` endpoint to auto-discover available models and add them with one click
+- **Remove Model** — Remove a model from the downstream's routing capability
+- **Delete** — Remove the downstream entirely (cascade: nullifies referencing rules, deletes pointing aliases)
+
+### Aliases
+
+The **Aliases** tab organizes model mappings into group cards. Each card represents an input model and shows all its alias options.
+
+**Actions:**
+- **Create Group** — Define a new input model with its first alias option
+- **Add Option** — Add another provider/model mapping to an existing group
+- **Activate** — Hot-switch to make this alias the active one for its group (deactivates siblings)
+- **Delete** — Remove an individual alias option (auto-promotes sibling if deleting the active one)
+- **Delete Group** — Remove all aliases for an input model at once
+
+### Rules
+
+The **Rules** tab shows all routing rules in a table with enable/disable toggle switches.
+
+**Actions:**
+- **Create Rule** — Define a new rule with name, path pattern, optional model filter, and downstream
+- **Edit** — Modify rule settings and pipeline configuration
+- **Pipeline Builder** — Add, remove, and configure transform plugins in order:
+  - Select a plugin from the available list
+  - Configure plugin-specific options (e.g., headers for `custom_header`)
+  - Reorder steps to control transformation sequence
+- **Toggle Enable/Disable** — Activate or deactivate a rule without deleting it
+- **Switch Downstream** — Change the rule's default downstream
+- **Delete** — Remove the rule
+
+### Plugins
+
+The **Plugins** tab is a read-only reference showing all available built-in plugins:
+
+| Column | Content |
+|---|---|
+| ID | Plugin identifier (used in `pipeline_config`) |
+| Description | What the plugin does |
+| Config Schema | JSON schema for valid configuration options |
+
+Use this tab to look up plugin IDs and configuration options when building pipeline configs.
+
+### Settings
+
+The **Settings** tab configures global proxy behavior:
+
+| Setting | Options |
+|---|---|
+| Proxy Mode | `auto`, `env`, `windows`, `none` |
+| Proxy API Keys | List of allowed Bearer tokens for incoming proxy requests |
+| Admin Password | Change the admin API authentication password |
+| Default Tab | Which tab to show on page load: `downstreams`, `aliases`, `rules`, `plugins`, or `settings` |
+
+Changes take effect **immediately** and are persisted to the YAML config file automatically.
+
+## Persistence
+
+All changes made in the web UI are:
+1. Applied immediately to the running daemon (no restart needed)
+2. Persisted to the SQLite database
+3. Written back to the YAML config file atomically

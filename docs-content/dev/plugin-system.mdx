@@ -1,0 +1,237 @@
+---
+title: Plugin System
+description: Building and registering transform plugins for the proxy pipeline
+---
+
+# Plugin System
+
+The plugin system is the transformation layer of Tresor. Plugins implement Go interfaces to modify requests before forwarding and responses before returning to the client.
+
+## Core Interfaces
+
+### RequestTransformer
+
+Modifies outgoing requests (body + headers):
+
+```go
+type RequestTransformer interface {
+    TransformRequest(req *http.Request, body []byte, ctx *PipelineContext) (*http.Request, []byte, error)
+}
+```
+
+- Receives the original request, raw body bytes, and shared pipeline context
+- Returns a modified request (may be a copy), transformed body, and any error
+- Common transformations: format conversion, header injection, model name rewriting
+
+### ResponseTransformer
+
+Modifies non-streaming responses:
+
+```go
+type ResponseTransformer interface {
+    TransformResponse(resp *http.Response, body []byte, ctx *PipelineContext) ([]byte, error)
+}
+```
+
+- Receives the downstream's response and raw body bytes
+- Returns transformed body bytes
+- Common transformations: format conversion back to client-expected format
+
+### StreamResponseTransformer
+
+Handles streaming (SSE) responses event-by-event:
+
+```go
+type StreamResponseTransformer interface {
+    TransformStream(chunk SSEChunk, ctx *PipelineContext) (SSEChunk, error)
+}
+```
+
+- Receives individual SSE chunks from the downstream
+- Returns transformed chunks for the client
+- Use `ctx.Variables` map for state tracking across events (e.g., accumulating content, tracking role)
+
+A plugin can implement any combination of these interfaces. The pipeline parser checks each plugin against all three and registers only the applicable steps.
+
+## PipelineContext
+
+Carries shared state through a request's lifecycle:
+
+```go
+type PipelineContext struct {
+    TargetDownstream *Downstream       // Resolved downstream for this request
+    InputModelID     string           // Original model from client request
+    OutputModelID    string           // Model name after alias rewrite
+    Variables        map[string]any   // Inter-plugin communication / state tracking
+}
+```
+
+The `Variables` map enables plugins to share state — particularly important for streaming transforms that need to track context across SSE events.
+
+## Plugin Registry
+
+Plugins are registered at startup in `internal/plugins/registry.go`:
+
+```go
+var registry = make(map[string]any)
+
+func Register(id string, plugin any) {
+    registry[id] = plugin
+}
+
+func Get(id string) (any, bool) {
+    plugin, ok := registry[id]
+    return plugin, ok
+}
+
+func List() []PluginInfo {
+    // Returns [{ID, Description, ConfigSchema}] for each registered plugin
+}
+```
+
+All built-in plugins are registered in `init()` functions. The `/api/plugins` endpoint exposes the registry for web UI consumption.
+
+## Built-in Plugins
+
+### `custom_header`
+
+Injects arbitrary HTTP headers into forwarded requests.
+
+**Config schema:**
+```json
+{
+  "type": "object",
+  "properties": {
+    "headers": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    }
+  },
+  "required": ["headers"]
+}
+```
+
+**Usage:**
+```yaml
+pipeline_config:
+  - plugin_id: custom_header
+    config:
+      headers:
+        X-Custom-Header: my-value
+        X-Request-ID: abc-123
+```
+
+**Transforms:** Request only
+
+---
+
+### `openai2anthropic`
+
+Converts OpenAI Chat Completion format to Anthropic Messages format (and vice versa for responses).
+
+**Request transform:**
+- Maps model names via configurable mapping table
+- Extracts system prompts into Anthropic's dedicated `system` field
+- Converts message roles and content blocks
+- Handles multi-modal content (text + images)
+- Sets Anthropic-specific headers (`anthropic-version`, `x-api-key` auth)
+
+**Response transform:**
+- Maps Anthropic response fields to OpenAI format
+- Converts content blocks to OpenAI message format
+
+**Streaming transform:**
+- Tracks state across SSE events (role deltas, content accumulation, finish reason)
+- Maps Anthropic's `message_start`, `content_block_start/delta/end`, `message_delta`, `message_stop` events to OpenAI's chunk format
+- Converts `end_turn` → `stop` for finish reasons
+
+**Config schema:** No config required (`{}`)
+
+---
+
+### `anthropic2openai`
+
+The reverse of `openai2anthropic` — converts Anthropic Messages format to OpenAI Chat Completion format.
+
+**Request transform:**
+- Converts Anthropic messages array to OpenAI messages format
+- Merges Anthropic's `system` field into the first message
+- Sets OpenAI auth header (`Authorization: Bearer`)
+
+**Response transform:**
+- Maps OpenAI response fields back to Anthropic format
+
+**Streaming transform:**
+- Parses OpenAI SSE chunks (`data: {...}` with `[DONE]` marker)
+- Produces Anthropic's event-stream format (`event: message_start`, `content_block_delta`, etc.)
+
+**Config schema:** No config required (`{}`)
+
+---
+
+### `fix_anthropic_images`
+
+Extracts images from nested `tool_result.content[]` arrays and promotes them to top-level message content. Designed for llama.cpp-compatible backends that expect flat message structures.
+
+**Behavior:**
+- Identifies image blocks inside `tool_result.content[]` arrays
+- Promotes them to the message's top-level `content` array
+- Handles edge cases: mixed content (text + tool_result), empty base64 data (skipped), string-valued tool_result content (preserved as-is)
+
+**Config schema:** No config required (`{}`)
+
+**Transforms:** Request only
+
+## Pipeline Configuration Format
+
+Pipeline config is stored as JSON in the `rules.pipeline_config` column:
+
+```json
+[
+  {"plugin_id": "custom_header", "config": {"headers": {"X-Custom": "value"}}},
+  {"plugin_id": "openai2anthropic"}
+]
+```
+
+Each entry has:
+- `plugin_id` (required): Registry ID of the plugin
+- `config` (optional): Plugin-specific configuration object
+
+Plugins execute **sequentially** — each plugin's output becomes the next plugin's input. Order matters.
+
+## Writing a Custom Plugin
+
+To add a new plugin:
+
+1. **Create a struct** in `internal/plugins/` that implements one or more of the transformer interfaces
+2. **Register it** by calling `registry.Register("my_plugin", &MyPlugin{})` in an `init()` function
+3. **Define a config schema** as a JSON Schema object for web UI consumption
+
+Example skeleton:
+
+```go
+package plugins
+
+import (
+    "net/http"
+    "encoding/json"
+)
+
+type MyTransformer struct {
+    Config map[string]any
+}
+
+func (t *MyTransformer) TransformRequest(req *http.Request, body []byte, ctx *engine.PipelineContext) (*http.Request, []byte, error) {
+    // Parse body, apply transformation, return modified request + body
+    return req, body, nil
+}
+
+func (t *MyTransformer) TransformResponse(resp *http.Response, body []byte, ctx *engine.PipelineContext) ([]byte, error) {
+    // Parse response body, apply transformation, return modified body
+    return body, nil
+}
+
+func init() {
+    Register("my_transformer", &MyTransformer{})
+}
+```

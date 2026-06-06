@@ -1,0 +1,196 @@
+---
+title: Architecture
+description: Internal architecture of the Tresor proxy and routing engine
+---
+
+# Architecture
+
+Tresor follows a clean layered structure with three core concerns: **storage**, **engine**, and **API**. The codebase is written in Go with no external web framework — it uses `net/http` ServeMux directly for all routing.
+
+## Directory Structure
+
+```
+cmd/                        # CLI entry points (Cobra)
+├── root.go                # Root command, --config flag
+├── run.go                 # Daemon startup
+├── rule.go                # Rule & alias subcommands
+└── version.go             # Version display
+
+internal/
+├── config/                # YAML configuration loader with auto-detect
+│   └── config.go
+│
+├── store/                 # SQLite data layer + upsert logic
+│   ├── store.go          # Schema creation, migrations, busy timeout
+│   ├── rule.go           # Rule CRUD + pattern matching
+│   ├── downstream.go     # Downstream CRUD + model management
+│   ├── alias.go          # Alias CRUD + group operations
+│   └── write_config.go   # YAML write-back on mutation
+│
+├── engine/                # Core proxy handler + pipeline execution
+│   ├── engine.go         # Proxy forwarding, model resolution, auth
+│   ├── pipeline.go       # Transformer orchestration, streaming
+│   └── types.go          # Interfaces (RequestTransformer, etc.)
+│
+├── plugins/               # Plugin registry + built-in transformers
+│   ├── registry.go       # Plugin registration and lookup
+│   ├── custom_header.go  # Header injection plugin
+│   ├── openai2anthropic.go # OpenAI → Anthropic format conversion
+│   ├── anthropic2openai.go # Anthropic → OpenAI format conversion
+│   ├── anthropic_image_fix.go # Image extraction from tool results
+│   └── streaming.go      # SSE parsing and chunk transformation
+│
+├── api/                   # Admin REST API + embedded web UI
+│   ├── router.go         # Route registration, method enforcement
+│   ├── rules.go          # Rule endpoints
+│   ├── downstreams.go    # Downstream endpoints + plugins list
+│   ├── aliases.go        # Alias endpoints + group operations
+│   ├── config.go         # Runtime config endpoints
+│   └── embed.go          # Embedded web UI via //go:embed
+│
+├── middleware/            # Bearer-token auth for admin API
+│   └── auth.go
+│
+├── proxy/                 # Outbound proxy mode implementation
+│   ├── proxy.go          # Mode resolution (auto/env/windows/none)
+│   └── system_windows.go # Windows registry proxy reading
+│
+└── api/web/               # Embedded SPA
+    ├── index.html
+    ├── style.css
+    └── app.js
+
+e2e/                       # End-to-end integration tests
+main.go                    # Binary entry point
+```
+
+## Technology Stack
+
+| Concern | Choice | Reason |
+|---|---|---|
+| Language | Go 1.26+ | Fast compilation, cross-platform CLI, native concurrency |
+| Router | `net/http` ServeMux | No external framework dependency |
+| CLI Framework | `cobra` | De facto standard for Go CLI applications |
+| Database | `modernc.org/sqlite` | Pure Go SQLite — no CGO dependency |
+| Config | YAML | Human-readable, portable, version-controllable |
+| Web UI | Embedded via `//go:embed` | No separate frontend deployment needed |
+
+## Request Flow
+
+```
+Client Request
+      │
+      ▼
+┌──────────────────┐
+│ 1. Auth Check     │  ← Validate proxy_api_keys if configured
+└────────┬─────────┘
+         │
+┌────────▼────────┐
+│ 2. Model Extract │  ← Parse model name from request body
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ 3. Model Resolve │  ← The forwarding gate:
+│                   │     • Active alias? → use alias downstream, rewrite model
+│                   │     • No alias? → find downstream by output_model_ids
+│                   │     • Neither? → return 404 "unknown model"
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ 4. Rule Match    │  ← Optional: find best matching rule for pipeline
+│                   │     Priority: exact path+model > exact path > wildcard *
+│                   │     If rule matched AND no alias → let rule override downstream
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ 5. Request       │  ← Execute request transformers sequentially
+│    Pipeline      │     (body + headers may change)
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ 6. Forward       │  ← Send transformed request to downstream server
+│    to Downstream │     Strip client auth, inject downstream API key
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ 7. Response      │  ← Execute response transformers sequentially
+│    Pipeline      │     Non-streaming: full body transform
+│                   │     Streaming (SSE): event-by-event transform
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ 8. Return to     │  ← Final response to client
+│    Client        │
+└──────────────────┘
+```
+
+## Data Layer
+
+### SQLite Schema
+
+The database uses WAL mode with a 5000ms busy timeout. Four tables:
+
+**downstreams** — Provider endpoints
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | TEXT PRIMARY KEY | Unique identifier |
+| `name` | TEXT NOT NULL | Display name |
+| `base_url` | TEXT NOT NULL | API base URL |
+| `api_key` | TEXT NOT NULL | Authentication key |
+| `created_at` | DATETIME | Creation timestamp |
+| `updated_at` | DATETIME | Last update timestamp |
+
+**output_model_ids** — Model-to-downstream mapping
+
+| Column | Type | Description |
+|---|---|---|
+| `downstream_id` | TEXT REFERENCES downstreams | Foreign key |
+| `model_id` | TEXT | Model identifier |
+
+(Composite unique on both columns)
+
+**rules** — Routing policies with transform pipelines
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | TEXT PRIMARY KEY | Unique identifier |
+| `name` | TEXT NOT NULL | Display name |
+| `pattern_path` | TEXT NOT NULL | URL path to match |
+| `pattern_model` | TEXT | Optional model filter |
+| `active_downstream` | TEXT REFERENCES downstreams | Default target |
+| `pipeline_config` | TEXT (JSON) | Ordered plugin list |
+| `is_enabled` | INTEGER | Toggle (0/1) |
+| `created_at` | DATETIME | Creation timestamp |
+| `updated_at` | DATETIME | Last update timestamp |
+
+**aliases** — Model name mappings
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | TEXT PRIMARY KEY | Unique identifier |
+| `input_model_id` | TEXT NOT NULL | Client-facing model name (group key) |
+| `downstream_id` | TEXT REFERENCES downstreams | Target provider |
+| `output_model_id` | TEXT NOT NULL | Actual model to forward as |
+| `is_active` | INTEGER DEFAULT 0 | Active flag (one per group) |
+| `created_at` | DATETIME | Creation timestamp |
+| `updated_at` | DATETIME | Last update timestamp |
+
+Indexes on foreign keys and query patterns ensure efficient lookups.
+
+### Upsert Semantics
+
+On startup, YAML data is merged into the database:
+
+- **Downstreams**: Matched by ID — updated if exists, inserted if new
+- **Rules**: Matched by ID — updated if exists, inserted if new
+- **Aliases**: Special logic — runtime-active aliases not in YAML are preserved (protects hot-switched state); stale YAML aliases not matching DB are deleted; new YAML aliases are created
+- **Model IDs**: All YAML models replace existing ones for each downstream
+
+Rows that exist only in the database (created via web UI or API) are preserved.
+
+### Cascade Delete
+
+Deleting a downstream:
+- Nullifies `active_downstream` on all referencing rules
+- Deletes all aliases pointing to that downstream

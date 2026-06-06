@@ -1,0 +1,99 @@
+---
+title: Downstreams
+description: Configure LLM provider endpoints for routing
+---
+
+# Downstreams
+
+A **downstream** defines an LLM provider endpoint that Tresor can forward requests to. Each downstream has a unique ID, a base URL, an API key, and a list of model IDs it can serve.
+
+## Configuration
+
+```yaml
+downstreams:
+  - id: openai
+    name: OpenAI
+    base_url: https://api.openai.com/v1
+    api_key: sk-proj-...
+    output_model_ids:
+      - gpt-4o
+      - gpt-4o-mini
+      - gpt-3.5-turbo
+
+  - id: anthropic
+    name: Anthropic
+    base_url: https://api.anthropic.com
+    api_key: sk-ant-...
+    output_model_ids:
+      - claude-sonnet-4-20250514
+      - claude-haiku-4.5
+```
+
+### Fields
+
+| Field | Required | Description |
+|---|---|---|
+| `id` | Yes | Unique identifier (alphanumeric, used to reference this downstream in rules and aliases) |
+| `name` | Yes | Display name for the web UI |
+| `base_url` | Yes | The provider's API base URL |
+| `api_key` | Optional | API key for authentication (can be left empty and set later via web UI) |
+| `output_model_ids` | Required | List of model IDs this downstream can serve — used for automatic routing |
+
+## Output Model IDs
+
+The `output_model_ids` list is the **routing gate**: when no alias matches an incoming request, Tresor looks for a downstream whose `output_model_ids` contains the requested model. If none is found, the request returns a 404 error.
+
+This means you must register every model you want to route through a downstream in its `output_model_ids` list.
+
+### Adding Models via Web UI
+
+The web UI provides a "Fetch Models" button that calls the provider's `/models` endpoint to auto-discover available models and add them to the downstream's model list.
+
+### Adding Models via CLI
+
+```bash
+# List all downstreams
+./tresor downstream list
+
+# Add a model to a downstream (via API)
+curl -X POST http://127.0.0.1:8080/api/downstreams/openai/models \
+  -H "Authorization: Bearer secret" \
+  -H "Content-Type: application/json" \
+  -d '{"model_id": "gpt-4o-2024-05-13"}'
+```
+
+## Default Downstreams
+
+If your config file does not define any downstreams, Tresor seeds two built-in defaults on startup:
+
+| ID | Name | Base URL |
+|---|---|---|
+| `openai` | OpenAI | `https://api.openai.com/v1` |
+| `anthropic` | Anthropic | `https://api.anthropic.com` |
+
+You can still add API keys and model IDs via the web UI or admin API without editing the config file.
+
+## Managing Downstreams
+
+### Via Web UI
+
+The **Downstreams** tab shows all configured providers in a table. Click **Edit** to modify settings, add/remove model IDs, or fetch models from the provider.
+
+### Via CLI
+
+```bash
+./tresor downstream list
+```
+
+### Via Admin API
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/downstreams` | List all downstreams (API keys masked as `***`) |
+| `POST` | `/api/downstreams` | Create a new downstream |
+| `GET` | `/api/downstreams/{id}` | Get a single downstream |
+| `PUT` | `/api/downstreams/{id}` | Update a downstream |
+| `DELETE` | `/api/downstreams/{id}` | Delete a downstream (cascade: nullifies referencing rules, deletes pointing aliases) |
+| `POST` | `/api/downstreams/{id}/models` | Add an output model ID |
+| `DELETE` | `/api/downstreams/{id}/models/{model_id}` | Remove a model |
+| `POST` | `/api/downstreams/{id}/fetch-models` | Auto-discover models from provider's `/models` endpoint |
