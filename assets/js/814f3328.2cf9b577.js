@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkladbaby_Tresor_docs=globalThis.webpackChunkladbaby_Tresor_docs||[]).push([[472],{5513(s){s.exports=JSON.parse('{"title":"Recent posts","items":[]}')}}]);
