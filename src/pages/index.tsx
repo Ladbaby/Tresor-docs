@@ -55,7 +55,7 @@ function HomePage() {
         padding: '60px 20px 40px',
       }}>
         {/* Hero */}
-        <img src="/img/logo.svg" alt="Tresor Logo" style={{width: '80px', height: '80px', marginBottom: '20px'}} />
+        <img src="/img/logo.png" alt="Tresor Logo" style={{width: '80px', height: '80px', marginBottom: '20px'}} />
         <h1 style={{fontSize: '2.5rem', fontWeight: 800, marginBottom: '12px'}}>
           {siteConfig.title}
         </h1>
