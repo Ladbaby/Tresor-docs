@@ -3,11 +3,11 @@ title: Routing Rules
 description: Define routing rules with transform pipelines
 ---
 
-# Routing Rules
+# 📏 Routing Rules
 
 Rules define **how** Tresor transforms requests before forwarding them. They are **optional** — basic forwarding works with downstreams and `output_model_ids` alone. Rules add plugin pipelines and can optionally override the resolved downstream when no alias is present.
 
-## Configuration
+## ⚙️ Configuration
 
 ```yaml
 rules:
@@ -40,17 +40,17 @@ rules:
 | `pipeline_config` | Yes | Ordered list of transform plugins and their config |
 | `is_enabled` | Yes | Toggle rule on/off without deleting it |
 
-## Rule Matching Priority
+## 🎯 Rule Matching Priority
 
 When multiple rules could match a request, Tresor selects the **best** one:
 
-1. **Exact path + exact model** (highest priority) — e.g., `/v1/chat/completions` + `gpt-4o`
-2. **Exact path, no model filter** — e.g., `/v1/chat/completions` matches any model
-3. **Wildcard** (`*`) — matches all unmatched paths (lowest priority)
+1. 🥇 **Exact path + exact model** (highest priority) — e.g., `/v1/chat/completions` + `gpt-4o`
+2. 🥈 **Exact path, no model filter** — e.g., `/v1/chat/completions` matches any model
+3. 🥉 **Wildcard** (`*`) — matches all unmatched paths (lowest priority)
 
 If no rule matches, forwarding still proceeds with an empty pipeline (no transforms).
 
-## Pipeline Configuration
+## 🔌 Pipeline Configuration
 
 The `pipeline_config` defines an ordered list of plugins to execute. Each step specifies a plugin ID and optional configuration:
 
@@ -63,26 +63,26 @@ pipeline_config:
   - plugin_id: openai2anthropic
 ```
 
-Plugins execute **sequentially** — each plugin's output becomes the next plugin's input. Order matters.
+Plugins execute **sequentially** — each plugin's output becomes the next plugin's input. Order matters. ⚡
 
 ### Available Plugins
 
 | Plugin ID | Description |
 |---|---|
-| `custom_header` | Inject arbitrary HTTP headers into forwarded requests |
-| `openai2anthropic` | Convert OpenAI Chat Completion format to Anthropic Messages format (and vice versa for responses) |
-| `anthropic2openai` | Convert Anthropic Messages format to OpenAI Chat Completion format (and vice versa for responses) |
-| `fix_anthropic_images` | Extract images from nested `tool_result.content[]` arrays and promote them to top-level message content |
+| `custom_header` | ➕ Inject arbitrary HTTP headers into forwarded requests |
+| `openai2anthropic` | 🔄 Convert OpenAI Chat Completion format to Anthropic Messages format (and vice versa for responses) |
+| `anthropic2openai` | 🔄 Convert Anthropic Messages format to OpenAI Chat Completion format (and vice versa for responses) |
+| `fix_anthropic_images` | 🖼️ Extract images from nested `tool_result.content[]` arrays and promote them to top-level message content |
 
 See the [/tresor-docs/docs/dev/plugin-system](/tresor-docs/docs/dev/plugin-system) documentation in the Developer Guide for details on each plugin's configuration options.
 
-## Managing Rules
+## 🛠️ Managing Rules
 
-### Via Web UI
+### 🖥️ Via Web UI
 
 The **Rules** tab shows all rules in a table with enable/disable toggles. The edit modal provides a pipeline step builder for adding, removing, and configuring transform plugins.
 
-### Via CLI
+### 💻 Via CLI
 
 ```bash
 # List all routing rules
@@ -95,7 +95,7 @@ The **Rules** tab shows all rules in a table with enable/disable toggles. The ed
 ./tresor rule switch chat-rule anthropic
 ```
 
-### Via Admin API
+### 🌐 Via Admin API
 
 | Method | Path | Description |
 |---|---|---|

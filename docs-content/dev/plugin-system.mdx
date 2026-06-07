@@ -3,11 +3,11 @@ title: Plugin System
 description: Building and registering transform plugins for the proxy pipeline
 ---
 
-# Plugin System
+# 🔌 Plugin System
 
 The plugin system is the transformation layer of Tresor. Plugins implement Go interfaces to modify requests before forwarding and responses before returning to the client.
 
-## Core Interfaces
+## 🧩 Core Interfaces
 
 ### RequestTransformer
 
@@ -53,7 +53,7 @@ type StreamResponseTransformer interface {
 
 A plugin can implement any combination of these interfaces. The pipeline parser checks each plugin against all three and registers only the applicable steps.
 
-## PipelineContext
+## 📦 PipelineContext
 
 Carries shared state through a request's lifecycle:
 
@@ -68,7 +68,7 @@ type PipelineContext struct {
 
 The `Variables` map enables plugins to share state — particularly important for streaming transforms that need to track context across SSE events.
 
-## Plugin Registry
+## 📋 Plugin Registry
 
 Plugins are registered at startup in `internal/plugins/registry.go`:
 
@@ -91,13 +91,13 @@ func List() []PluginInfo {
 
 All built-in plugins are registered in `init()` functions. The `/api/plugins` endpoint exposes the registry for web UI consumption.
 
-## Built-in Plugins
+## 🛠️ Built-in Plugins
 
-### `custom_header`
+### ➕ `custom_header`
 
 Injects arbitrary HTTP headers into forwarded requests.
 
-**Config schema:**
+**📐 Config schema:**
 ```json
 {
   "type": "object",
@@ -111,7 +111,7 @@ Injects arbitrary HTTP headers into forwarded requests.
 }
 ```
 
-**Usage:**
+**📝 Usage:**
 ```yaml
 pipeline_config:
   - plugin_id: custom_header
@@ -121,11 +121,11 @@ pipeline_config:
         X-Request-ID: abc-123
 ```
 
-**Transforms:** Request only
+**⚙️ Transforms:** Request only
 
 ---
 
-### `openai2anthropic`
+### 🔄 `openai2anthropic`
 
 Converts OpenAI Chat Completion format to Anthropic Messages format (and vice versa for responses).
 
@@ -145,11 +145,11 @@ Converts OpenAI Chat Completion format to Anthropic Messages format (and vice ve
 - Maps Anthropic's `message_start`, `content_block_start/delta/end`, `message_delta`, `message_stop` events to OpenAI's chunk format
 - Converts `end_turn` → `stop` for finish reasons
 
-**Config schema:** No config required (`{}`)
+**📐 Config schema:** No config required (`{}`)
 
 ---
 
-### `anthropic2openai`
+### ↩️ `anthropic2openai`
 
 The reverse of `openai2anthropic` — converts Anthropic Messages format to OpenAI Chat Completion format.
 
@@ -165,11 +165,11 @@ The reverse of `openai2anthropic` — converts Anthropic Messages format to Open
 - Parses OpenAI SSE chunks (`data: {...}` with `[DONE]` marker)
 - Produces Anthropic's event-stream format (`event: message_start`, `content_block_delta`, etc.)
 
-**Config schema:** No config required (`{}`)
+**📐 Config schema:** No config required (`{}`)
 
 ---
 
-### `fix_anthropic_images`
+### 🖼️ `fix_anthropic_images`
 
 Extracts images from nested `tool_result.content[]` arrays and promotes them to top-level message content. Designed for llama.cpp-compatible backends that expect flat message structures.
 
@@ -180,9 +180,9 @@ Extracts images from nested `tool_result.content[]` arrays and promotes them to 
 
 **Config schema:** No config required (`{}`)
 
-**Transforms:** Request only
+**⚙️ Transforms:** Request only
 
-## Pipeline Configuration Format
+## 📐 Pipeline Configuration Format
 
 Pipeline config is stored as JSON in the `rules.pipeline_config` column:
 
@@ -199,7 +199,7 @@ Each entry has:
 
 Plugins execute **sequentially** — each plugin's output becomes the next plugin's input. Order matters.
 
-## Writing a Custom Plugin
+## ✍️ Writing a Custom Plugin
 
 To add a new plugin:
 

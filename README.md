@@ -1,10 +1,10 @@
-# Tresor Documentation
+# 📚 Tresor Documentation
 
 Documentation site for [Tresor](https://github.com/ladbaby/tresor) — an LLM traffic interception and routing engine.
 
 Built with [Docusaurus](https://docusaurus.io/). Deployed to [GitHub Pages](https://ladbaby.github.io/tresor-docs/).
 
-## Local Development
+## 🛠️ Local Development
 
 ```bash
 # Install dependencies (first time only)
@@ -20,7 +20,7 @@ npm run build
 npm run serve
 ```
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 ├── docs-content/        # MDX documentation source files
@@ -33,7 +33,7 @@ npm run serve
 └── .github/workflows/   # CI deployment
 ```
 
-## Editing Docs
+## ✏️ Editing Docs
 
 Docs use MDX format. Internal links should use **relative paths** (e.g., `docs/user/configuration/basics`) — Docusaurus automatically prepends the `baseUrl`.
 

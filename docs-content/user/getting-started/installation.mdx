@@ -6,16 +6,16 @@ description: Build and install Tresor from source
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Installation
+# 📦 Installation
 
 Tresor is distributed as a single compiled Go binary with no external dependencies. Build it from source to get started.
 
 ## Prerequisites
 
-- **Go 1.26+** — required for compilation
-- A YAML config file with your provider API keys (see below)
+- 🐹 **Go 1.26+** — required for compilation
+- 📝 A YAML config file with your provider API keys (see below)
 
-## Building from Source
+## 🔨 Building from Source
 
 <Tabs>
   <TabItem value="linux" label="Linux">
@@ -37,9 +37,9 @@ Tresor is distributed as a single compiled Go binary with no external dependenci
 
 The compiled binary has no runtime dependencies — it's a single executable that includes the daemon, CLI, web UI, and SQLite database engine.
 
-## Quick Start
+## 🚀 Quick Start
 
-### 1. Create a Config File
+### 1️⃣ Create a Config File
 
 Copy the example configuration and customize it:
 
@@ -70,7 +70,7 @@ downstreams:
       - claude-sonnet-4-20250514
 ```
 
-### 2. Start the Daemon
+### 2️⃣ Start the Daemon
 
 <Tabs>
   <TabItem value="default" label="Default config">
@@ -88,7 +88,7 @@ downstreams:
 
 The daemon starts listening on the configured `bind_addr`. The proxy and admin API are available on this address.
 
-### 3. Point Your Application
+### 3️⃣ Point Your Application
 
 Configure your application's LLM client to use Tresor as the endpoint:
 
@@ -98,11 +98,11 @@ base_url: http://127.0.0.1:8080
 
 Any request sent to Tresor is intercepted, routed to the appropriate downstream, and the response is returned — all transparently.
 
-### 4. Open the Web UI
+### 4️⃣ Open the Web UI
 
 Navigate to `http://127.0.0.1:8080` in your browser to access the embedded dashboard for managing downstreams, rules, aliases, and settings visually.
 
-## Config File Locations
+## 📂 Config File Locations
 
 Tresor auto-detects the config file in this order:
 
@@ -110,7 +110,7 @@ Tresor auto-detects the config file in this order:
 2. `./config.yaml` in the current working directory
 3. `$HOME/.tresor.yaml` in your home directory
 
-## Version Info
+## ℹ️ Version Info
 
 Check the compiled binary's version:
 

@@ -3,13 +3,13 @@ title: Model Aliases
 description: Map model names to different providers without changing application code
 ---
 
-# Model Aliases
+# 🏷️ Model Aliases
 
 Aliases let you **map one model name to another** at the proxy layer. Your application sends requests using its native model name (e.g., `gpt-4o`), and Tresor transparently forwards them to a different provider with a different model (e.g., `claude-sonnet-4`).
 
 Aliases are the **primary routing mechanism** — they take priority over downstream `output_model_ids` matching. Rules only apply when no alias exists.
 
-## How Aliases Work
+## 🔄 How Aliases Work
 
 Aliases are organized into **groups** by input model ID. Within each group, you can define multiple options (different providers or models), and exactly one option is active at a time.
 
@@ -19,7 +19,7 @@ aliases:
     options:
       - id: alias-gpt4o-openai
         downstream_id: openai
-        output_model_id: gpt-4o       # Active (first in list)
+        output_model_id: gpt-4o       # ✅ Active (first in list)
 
       - id: alias-gpt4o-anthropic
         downstream_id: anthropic
@@ -28,17 +28,17 @@ aliases:
 
 When your app sends a request for `gpt-4o`:
 
-- **Active alias is `alias-gpt4o-openai`** → Request goes to OpenAI as `gpt-4o` (no transformation needed)
-- **Switch active to `alias-gpt4o-anthropic`** → Same request goes to Anthropic as `claude-sonnet-4`, with the model name rewritten in the request body
+- ✅ **Active alias is `alias-gpt4o-openai`** → Request goes to OpenAI as `gpt-4o` (no transformation needed)
+- 🔄 **Switch active to `alias-gpt4o-anthropic`** → Same request goes to Anthropic as `claude-sonnet-4`, with the model name rewritten in the request body
 
-## Alias Group Semantics
+## 📊 Alias Group Semantics
 
-- The **first option** in each group is active by default (`is_active` is managed by the database, not YAML)
-- **Activating** one alias automatically **deactivates** any currently active sibling in the same group
-- **Deleting the active alias** auto-promotes the next sibling to active
-- **Deleting the last alias** in a group leaves no active alias (requests fall through to downstream `output_model_ids` matching)
+- 🥇 The **first option** in each group is active by default (`is_active` is managed by the database, not YAML)
+- 🔄 **Activating** one alias automatically **deactivates** any currently active sibling in the same group
+- ⬆️ **Deleting the active alias** auto-promotes the next sibling to active
+- 📭 **Deleting the last alias** in a group leaves no active alias (requests fall through to downstream `output_model_ids` matching)
 
-## Hot-Switching
+## ⚡ Hot-Switching
 
 You can switch the active alias for a model **without restarting** the daemon. The change takes effect immediately for subsequent requests:
 
@@ -52,7 +52,7 @@ You can switch the active alias for a model **without restarting** the daemon. T
 
 The web UI also provides activate/deactivate buttons for each alias option in its group.
 
-## Configuration Format
+## 📐 Configuration Format
 
 In YAML, aliases use a nested structure with `input_model_id` as the group key and `options` as the list of mappings:
 
@@ -82,16 +82,16 @@ Each option requires:
 | `downstream_id` | Yes | Which downstream provider to forward to |
 | `output_model_id` | Yes | The model name to use when forwarding |
 
-## Managing Aliases
+## 🛠️ Managing Aliases
 
-### Via Web UI
+### 🖥️ Via Web UI
 
 The **Aliases** tab displays group cards showing each input model's options. You can:
 - Create new alias groups and add options
 - Activate/deactivate individual aliases (hot-switch)
 - Delete individual aliases or entire groups
 
-### Via CLI
+### 💻 Via CLI
 
 ```bash
 # List all alias groups with their active option highlighted
@@ -107,7 +107,7 @@ The **Aliases** tab displays group cards showing each input model's options. You
 ./tresor alias delete alias-gpt4o-openai
 ```
 
-### Via Admin API
+### 🌐 Via Admin API
 
 | Method | Path | Description |
 |---|---|---|

@@ -3,17 +3,17 @@ title: Transparent Provider Switching
 description: Route traffic to a different provider without changing application code
 ---
 
-# Transparent Provider Switching
+# 🔄 Transparent Provider Switching
 
 Your application talks to one LLM API (e.g., OpenAI), but you want to route traffic to a different provider (e.g., Anthropic) without modifying any application code.
 
-## Scenario
+## 📋 Scenario
 
 Your app sends OpenAI-format requests to `http://127.0.0.1:8080/v1/chat/completions`. You want these requests forwarded to Anthropic with format conversion.
 
-## Setup
+## ⚙️ Setup
 
-### 1. Configure Downstreams
+### 1️⃣ Configure Downstreams
 
 ```yaml
 downstreams:
@@ -32,7 +32,7 @@ downstreams:
       - claude-sonnet-4-20250514
 ```
 
-### 2. Create a Rule with Format Conversion
+### 2️⃣ Create a Rule with Format Conversion
 
 ```yaml
 rules:
@@ -51,7 +51,7 @@ The `openai2anthropic` plugin:
 - Extracts system prompts into Anthropic's `system` field
 - Handles streaming responses (SSE event conversion)
 
-### 3. Point Your App
+### 3️⃣ Point Your App
 
 Configure your application to use Tresor as the endpoint:
 

@@ -3,19 +3,19 @@ title: Model Aliasing
 description: Hot-switch between models and providers without restarting
 ---
 
-# Model Aliasing
+# 🏷️ Model Aliasing
 
 Use aliases to map a single model name to different actual models across providers. This lets you **hot-switch** between backends on the fly — no restart, no code changes.
 
-## Scenario
+## 📋 Scenario
 
 Your app always requests `gpt-4o`. You want to be able to switch between:
 - **OpenAI's actual GPT-4o** (direct routing, no transform)
 - **Anthropic's Claude Sonnet** (with format conversion via a rule)
 
-## Setup
+## ⚙️ Setup
 
-### Define the Alias Group
+### 🏷️ Define the Alias Group
 
 ```yaml
 aliases:
@@ -30,7 +30,7 @@ aliases:
         output_model_id: claude-sonnet-4-20250514
 ```
 
-### Define Routing Rules
+### 📏 Define Routing Rules
 
 ```yaml
 rules:
@@ -44,9 +44,9 @@ rules:
     is_enabled: true
 ```
 
-## Hot-Switching
+## ⚡ Hot-Switching
 
-### Switch to Claude Sonnet
+### 🔄 Switch to Claude Sonnet
 
 ```bash
 ./tresor alias activate alias-gpt4o-anthropic
@@ -54,7 +54,7 @@ rules:
 
 Now requests for `gpt-4o` are forwarded to Anthropic as `claude-sonnet-4`, with format conversion.
 
-### Switch Back to OpenAI
+↩️ **Switch Back to OpenAI**
 
 ```bash
 ./tresor alias activate alias-gpt4o-openai
@@ -62,7 +62,7 @@ Now requests for `gpt-4o` are forwarded to Anthropic as `claude-sonnet-4`, with 
 
 Requests for `gpt-4o` go directly to OpenAI as `gpt-4o` (no transformation needed since both sides use the same format).
 
-## How It Works
+## 🔍 How It Works
 
 The model resolution hierarchy ensures the right behavior:
 

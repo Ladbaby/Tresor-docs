@@ -3,11 +3,11 @@ title: Architecture
 description: Internal architecture of the Tresor proxy and routing engine
 ---
 
-# Architecture
+# 🏗️ Architecture
 
 Tresor follows a clean layered structure with three core concerns: **storage**, **engine**, and **API**. The codebase is written in Go with no external web framework — it uses `net/http` ServeMux directly for all routing.
 
-## Directory Structure
+## 📁 Directory Structure
 
 ```
 cmd/                        # CLI entry points (Cobra)
@@ -64,7 +64,7 @@ e2e/                       # End-to-end integration tests
 main.go                    # Binary entry point
 ```
 
-## Technology Stack
+## 🛠️ Technology Stack
 
 | Concern | Choice | Reason |
 |---|---|---|
@@ -75,7 +75,7 @@ main.go                    # Binary entry point
 | Config | YAML | Human-readable, portable, version-controllable |
 | Web UI | Embedded via `//go:embed` | No separate frontend deployment needed |
 
-## Request Flow
+## 🔄 Request Flow
 
 ```
 Client Request
@@ -124,9 +124,9 @@ Client Request
 └──────────────────┘
 ```
 
-## Data Layer
+## 💾 Data Layer
 
-### SQLite Schema
+### 🗄️ SQLite Schema
 
 The database uses WAL mode with a 5000ms busy timeout. Four tables:
 
@@ -178,7 +178,7 @@ The database uses WAL mode with a 5000ms busy timeout. Four tables:
 
 Indexes on foreign keys and query patterns ensure efficient lookups.
 
-### Upsert Semantics
+### 🔄 Upsert Semantics
 
 On startup, YAML data is merged into the database:
 
@@ -189,7 +189,7 @@ On startup, YAML data is merged into the database:
 
 Rows that exist only in the database (created via web UI or API) are preserved.
 
-### Cascade Delete
+### 💥 Cascade Delete
 
 Deleting a downstream:
 - Nullifies `active_downstream` on all referencing rules

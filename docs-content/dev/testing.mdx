@@ -1,8 +1,8 @@
-# Testing
+# 🧪 Testing
 
 Tresor uses a two-tier testing strategy: **unit tests** for individual packages and an **integration test** for end-to-end verification.
 
-## Running Tests
+## ▶️ Running Tests
 
 ```bash
 # Build check — ensure everything compiles
@@ -22,7 +22,7 @@ go test ./internal/engine/...
 go test -tags=integration ./e2e/...
 ```
 
-## Test Verification Sequence
+## ✅ Test Verification Sequence
 
 When making changes, follow this sequence:
 
@@ -33,15 +33,15 @@ When making changes, follow this sequence:
 
 Skipping any step is not acceptable for changes affecting API behavior, proxy logic, or the web UI. Unit tests alone cannot catch rendering bugs, JavaScript errors, or integration issues between layers.
 
-## Unit Test Coverage
+## 📊 Unit Test Coverage
 
-### Configuration (`internal/config/`)
+### ⚙️ Configuration (`internal/config/`)
 
 | File | Coverage |
 |---|---|
 | `config_test.go` | YAML parsing, default values, auto-detect path resolution, nil slice safety |
 
-### Data Layer (`internal/store/`)
+### 💾 Data Layer (`internal/store/`)
 
 | File | Coverage |
 |---|---|
@@ -50,7 +50,7 @@ Skipping any step is not acceptable for changes affecting API behavior, proxy lo
 | `write_config_test.go` | YAML round-trip (DB → file → DB), overwrite old data, atomic write (tmp file + rename) |
 | `alias_test.go` | Alias CRUD operations, activation, auto-deactivate sibling on new activation, find active alias by model, list groups with downstream names, invalid downstream rejection, delete with auto-promotion of siblings, last-in-group delete cleanup, inactive deletion (no promotion) |
 
-### Engine (`internal/engine/`)
+### ⚡ Engine (`internal/engine/`)
 
 | File | Coverage |
 |---|---|
@@ -58,7 +58,7 @@ Skipping any step is not acceptable for changes affecting API behavior, proxy lo
 | `engine_helper_test.go` | Model rewrite in JSON body (parses and updates), non-JSON passthrough (binary content) |
 | `pipeline_test.go` | Empty pipeline config parsing, invalid JSON error handling, model name extraction from request bodies, HTTP request copying for safe modification |
 
-### API (`internal/api/`)
+### 🌐 API (`internal/api/`)
 
 | File | Coverage |
 |---|---|
@@ -66,13 +66,13 @@ Skipping any step is not acceptable for changes affecting API behavior, proxy lo
 | `downstreams_test.go` | Full CRUD, API key masking in list responses (`***`), model add/remove operations, empty model ID rejection, not-found handling (404) |
 | `aliases_test.go` | Full CRUD with grouped view, missing field rejection, invalid downstream rejection, hot-switch activation, auto-deactivate sibling on activation, method not allowed (405), group delete with count response, not-found group handling (404) |
 
-### Middleware (`internal/middleware/`)
+### 🔐 Middleware (`internal/middleware/`)
 
 | File | Coverage |
 |---|---|
 | `auth_test.go` | Passthrough when no password set, valid token allows access, wrong token returns 401, missing header returns 401, malformed token format rejected |
 
-### Plugins (`internal/plugins/`)
+### 🔌 Plugins (`internal/plugins/`)
 
 | File | Coverage |
 |---|---|
@@ -80,13 +80,13 @@ Skipping any step is not acceptable for changes affecting API behavior, proxy lo
 | `anthropic_image_fix_test.go` | No-change passthrough for messages without tool results, single image extraction from tool_result, mixed content handling (text + tool_result), string-valued tool_result preservation, multiple message handling, response no-op, empty base64 data skip |
 | `streaming_test.go` | SSE data writing and chunk formatting, done marker handling, OpenAI SSE parsing with early stop detection, Anthropic SSE parsing with early stop detection, Anthropic SSE event writing |
 
-### Proxy (`internal/proxy/`)
+### 🌍 Proxy (`internal/proxy/`)
 
 | File | Coverage |
 |---|---|
 | `proxy_test.go` | Mode `none` returns nil (no proxy), `env` mode reads HTTPS_PROXY variable, `auto` mode fallback chain (registry → env → direct), `windows` mode registry reading with env fallback, environment variable cleanup between tests |
 
-## Integration Test (`e2e/`)
+## 🧬 Integration Test (`e2e/`)
 
 The E2E test (`//go:build integration` tag) starts a live daemon with a test configuration and validates:
 
@@ -99,9 +99,9 @@ The E2E test (`//go:build integration` tag) starts a live daemon with a test con
 - Proxy routing (requests forwarded correctly)
 - Web UI accessibility
 
-## Test Patterns
+## 🧩 Test Patterns
 
-### Table-Driven Tests
+### 📋 Table-Driven Tests
 
 Most unit tests use Go's table-driven pattern for comprehensive coverage:
 
@@ -124,6 +124,6 @@ func TestSomething(t *testing.T) {
 }
 ```
 
-### In-Memory Test Fixtures
+### 💾 In-Memory Test Fixtures
 
 Tests use temporary directories and in-memory SQLite databases to avoid polluting the real filesystem. Helper functions set up clean test environments with pre-seeded data.

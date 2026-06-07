@@ -3,17 +3,17 @@ title: A/B Testing Backends
 description: Route the same endpoint to different providers based on model
 ---
 
-# A/B Testing Backends
+# ⚖️ A/B Testing Backends
 
 Use per-model routing rules to send traffic to different providers based on the requested model. This lets you compare provider quality, cost, or latency for the same task.
 
-## Scenario
+## 📋 Scenario
 
 You want `/v1/chat/completions` requests routed differently depending on the model:
 - `gpt-4o` → OpenAI
 - `claude-sonnet` → Anthropic
 
-## Setup
+## ⚙️ Setup
 
 ```yaml
 downstreams:
@@ -50,7 +50,7 @@ rules:
     is_enabled: true
 ```
 
-## How It Works
+## 🔍 How It Works
 
 Tresor's **rule matching priority** selects the best match:
 
@@ -59,7 +59,7 @@ Tresor's **rule matching priority** selects the best match:
 
 The `anthropic2openai` plugin converts Anthropic's response format back to OpenAI format, so the client sees a consistent interface regardless of which provider handled the request.
 
-## Adding More Providers
+## ➕ Adding More Providers
 
 Simply add more downstreams and rules:
 

@@ -1,13 +1,13 @@
-# Contributing
+# 🤝 Contributing
 
-## Development Workflow
+## 💻 Development Workflow
 
-### Prerequisites
+### 📋 Prerequisites
 
 - **Go 1.26+** — required for compilation
 - **Node.js 20+** — required for building the documentation site
 
-### Building
+### 🔨 Building
 
 ```bash
 # Compile the binary
@@ -17,7 +17,7 @@ go build -o tresor.exe .
 go build -ldflags "-X main.version=1.0.0 -X main.commit=abc123" -o tresor.exe .
 ```
 
-### Running Tests
+### 🧪 Running Tests
 
 ```bash
 # All unit tests
@@ -33,14 +33,14 @@ go test -tags=integration ./e2e/...
 
 See the [/tresor-docs/docs/dev/testing](/tresor-docs/docs/dev/testing) page for the full verification sequence.
 
-## Code Style
+## 📝 Code Style
 
 - Follow Go conventions (`gofmt` for formatting, `govet` for static analysis)
 - Match existing code patterns: naming, comment density, error handling
 - Use table-driven tests for comprehensive coverage
 - Write tests before or alongside implementation
 
-## Adding a New Plugin
+## 🔌 Adding a New Plugin
 
 1. Create a new file in `internal/plugins/` (e.g., `my_plugin.go`)
 2. Implement one or more transformer interfaces (`RequestTransformer`, `ResponseTransformer`, `StreamResponseTransformer`)
@@ -51,7 +51,7 @@ See the [/tresor-docs/docs/dev/testing](/tresor-docs/docs/dev/testing) page for 
 
 See the [/tresor-docs/docs/dev/plugin-system](/tresor-docs/docs/dev/plugin-system) page for interface definitions and examples.
 
-## Modifying the Web UI
+## 🌐 Modifying the Web UI
 
 The web UI source files are in `internal/api/web/`:
 
@@ -61,7 +61,7 @@ The web UI source files are in `internal/api/web/`:
 
 The embedded files are compiled into the binary via `//go:embed web/*` in `internal/api/embed.go`. After editing, rebuild the binary.
 
-### Testing Web UI Changes
+### 🧪 Testing Web UI Changes
 
 1. Rebuild: `go build -o tresor.exe .`
 2. Start the daemon: `./tresor.exe run --config config.yaml`
@@ -69,7 +69,7 @@ The embedded files are compiled into the binary via `//go:embed web/*` in `inter
 4. Perform core interactions (create, edit, delete, hot-switch)
 5. Verify the UI reflects expected state and no JavaScript errors occur
 
-## Documentation
+## 📚 Documentation
 
 The documentation site is a standalone Docusaurus project (repo: `ladbaby/tresor-docs`). Docs source files are in `docs-content/`, organized under `user/` and `dev/` subdirectories.
 
@@ -87,7 +87,7 @@ npm run build
 npm run serve
 ```
 
-### Documentation Conventions
+### ✏️ Documentation Conventions
 
 - Use `.mdx` format for all documentation pages
 - Frontmatter must include `title` and `description`
@@ -95,7 +95,7 @@ npm run serve
 - Link between related pages using absolute paths with the full site path (e.g., `/tresor-docs/docs/user/configuration/basics`)
 - Keep user docs focused on _what_ and _why_; keep developer docs focused on _how_
 
-## Pull Request Process
+## 📬 Pull Request Process
 
 1. Fork the repository and create a feature branch
 2. Make your changes following the code style guidelines
@@ -104,7 +104,7 @@ npm run serve
 5. Submit the pull request with a clear description of changes
 6. Ensure CI checks pass (build, tests)
 
-## Git Conventions
+## 📌 Git Conventions
 
 - Commit messages follow conventional commit style: `type(scope): message`
   - Types: `feat`, `fix`, `docs`, `ci`, `refactor`, `test`

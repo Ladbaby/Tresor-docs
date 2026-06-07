@@ -13,8 +13,8 @@ Tresor has two faces in one binary:
 
 | Mode | What It Does |
 |------|-------------|
-| **Daemon** | Long-running HTTP proxy + admin REST API + embedded web UI |
-| **CLI** | Command-line client for managing rules, downstreams, and aliases |
+| **Daemon** | 🖥️ Long-running HTTP proxy + admin REST API + embedded web UI |
+| **CLI** | 💻 Command-line client for managing rules, downstreams, and aliases |
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
@@ -28,32 +28,32 @@ Tresor has two faces in one binary:
                          └── CLI Commands
 ```
 
-## Core Features
+## ✨ Core Features
 
-- **Protocol Translation** — Convert between OpenAI and Anthropic API formats transparently. Send an OpenAI request, receive it from an Anthropic backend, without changing a line of application code.
-- **Per-Path Routing** — Route different API paths (and models) to different downstream providers based on configurable rules.
-- **Model Aliasing** — Map one model name to another at the proxy layer. Your app sends `gpt-4o`, Tresor forwards as `claude-sonnet-4`. Hot-switch between backends without restarting.
-- **Plugin Pipeline** — Chain multiple transformation plugins per rule (header injection, format conversion, image extraction, and more).
-- **Embedded Web UI** — Manage everything from a browser-based dashboard served by the daemon itself. No separate frontend needed.
-- **Single Config File** — All downstreams, rules, aliases, and settings live in one portable YAML file. Changes via API or UI write back automatically.
-- **Zero External Dependencies** — Pure Go SQLite (no CGO), no external web framework, single compiled binary.
+- 🔄 **Protocol Translation** — Convert between OpenAI and Anthropic API formats transparently. Send an OpenAI request, receive it from an Anthropic backend, without changing a line of application code.
+- 🛤️ **Per-Path Routing** — Route different API paths (and models) to different downstream providers based on configurable rules.
+- 🏷️ **Model Aliasing** — Map one model name to another at the proxy layer. Your app sends `gpt-4o`, Tresor forwards as `claude-sonnet-4`. Hot-switch between backends without restarting.
+- 🔌 **Plugin Pipeline** — Chain multiple transformation plugins per rule (header injection, format conversion, image extraction, and more).
+- 🌐 **Embedded Web UI** — Manage everything from a browser-based dashboard served by the daemon itself. No separate frontend needed.
+- 📝 **Single Config File** — All downstreams, rules, aliases, and settings live in one portable YAML file. Changes via API or UI write back automatically.
+- 🪶 **Zero External Dependencies** — Pure Go SQLite (no CGO), no external web framework, single compiled binary.
 
-## How It Works
+## 🔄 How It Works
 
 When a request hits Tresor:
 
-1. **Model Resolution** — Extract the model name from the request body
-2. **Alias Check** — Look for an active alias matching the model; if found, use its downstream and rewrite the model name
-3. **Direct Routing** — If no alias, find which downstream can handle this model via `output_model_ids`
-4. **Rule Matching** — Optionally match a routing rule for pipeline transforms (and optional downstream override)
-5. **Transform & Forward** — Run request through configured transformers, then forward to the resolved downstream
-6. **Transform Response** — Run the downstream's response through response transformers before returning to the client
+1. 🔍 **Model Resolution** — Extract the model name from the request body
+2. 🏷️ **Alias Check** — Look for an active alias matching the model; if found, use its downstream and rewrite the model name
+3. 🎯 **Direct Routing** — If no alias, find which downstream can handle this model via `output_model_ids`
+4. 📏 **Rule Matching** — Optionally match a routing rule for pipeline transforms (and optional downstream override)
+5. ⚙️ **Transform & Forward** — Run request through configured transformers, then forward to the resolved downstream
+6. ↩️ **Transform Response** — Run the downstream's response through response transformers before returning to the client
 
-## Key Design Decisions
+## 🏗️ Key Design Decisions
 
-- **Single YAML config** — all settings in one portable file
-- **SQLite** (`modernc.org/sqlite`) — pure Go, no CGO dependency
-- **Upsert on startup** — YAML data merges into SQLite; DB-only rows preserved
-- **No external web framework** — uses `net/http` ServeMux directly
-- **Single binary** — daemon and CLI dispatched by subcommand
-- **Web UI embedded at compile time** — via Go's `embed.FS`
+- 📝 **Single YAML config** — all settings in one portable file
+- 💾 **SQLite** (`modernc.org/sqlite`) — pure Go, no CGO dependency
+- 🔄 **Upsert on startup** — YAML data merges into SQLite; DB-only rows preserved
+- 🚫 **No external web framework** — uses `net/http` ServeMux directly
+- 📦 **Single binary** — daemon and CLI dispatched by subcommand
+- 🌐 **Web UI embedded at compile time** — via Go's `embed.FS`
