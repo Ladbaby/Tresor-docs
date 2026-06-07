@@ -76,11 +76,15 @@ Plugins execute **sequentially** — each plugin's output becomes the next plugi
 
 See the [/tresor-docs/docs/dev/plugin-system](/tresor-docs/docs/dev/plugin-system) documentation in the Developer Guide for details on each plugin's configuration options.
 
+## ⚡ Auto-Translation
+
+When a downstream declares `api_formats` and the incoming request uses a different format, Tresor automatically inserts the appropriate format converter — even without an explicit rule. For example, if a request arrives at `/v1/chat/completions` (OpenAI format) and resolves to a downstream with `api_formats: [anthropic]`, the `openai2anthropic` plugin is prepended to the pipeline automatically.
+
 ## 🛠️ Managing Rules
 
 ### 🖥️ Via Web UI
 
-The **Rules** tab shows all rules in a table with enable/disable toggles. The edit modal provides a pipeline step builder for adding, removing, and configuring transform plugins.
+The **Rules** tab shows all rules in a table with enable/disable toggles. The edit modal provides a **visual pipeline builder** for adding, removing, and configuring transform plugins — select a plugin from a dropdown, configure its options through dynamically generated fields, and reorder steps.
 
 ### 💻 Via CLI
 

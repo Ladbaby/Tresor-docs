@@ -57,9 +57,9 @@ See the [/tresor-docs/docs/dev/plugin-system](/tresor-docs/docs/dev/plugin-syste
 
 The web UI source files are in `internal/api/web/`:
 
-- `index.html` — Page structure and tab content
+- `index.html` — Page structure and tab content (downstreams, aliases, rules, plugins, settings, about)
 - `style.css` — Styling and responsive layout
-- `app.js` — Application logic, API calls, dynamic rendering
+- `app.js` — Application logic, API calls, dynamic rendering, login screen, theme toggle
 
 The embedded files are compiled into the binary via `//go:embed web/*` in `internal/api/embed.go`. After editing, rebuild the binary.
 

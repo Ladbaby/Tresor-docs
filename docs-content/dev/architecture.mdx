@@ -28,7 +28,7 @@ internal/
 │   └── write_config.go   # YAML write-back on mutation
 │
 ├── engine/                # Core gateway handler + pipeline execution
-│   ├── engine.go         # Gateway forwarding, model resolution, auth
+│   ├── engine.go         # Gateway forwarding, model resolution, auth, auto-translation
 │   ├── pipeline.go       # Transformer orchestration, streaming
 │   └── types.go          # Interfaces (RequestTransformer, etc.)
 │
@@ -41,11 +41,11 @@ internal/
 │   └── streaming.go      # SSE parsing and chunk transformation
 │
 ├── api/                   # Admin REST API + embedded web UI
-│   ├── router.go         # Route registration, method enforcement
+│   ├── router.go         # Route registration, method enforcement, auth endpoints
 │   ├── rules.go          # Rule endpoints
-│   ├── downstreams.go    # Downstream endpoints + plugins list
+│   ├── downstreams.go    # Downstream endpoints + plugins list + fetch-models
 │   ├── aliases.go        # Alias endpoints + group operations
-│   ├── config.go         # Runtime config endpoints
+│   ├── config.go         # Runtime config endpoints (proxy mode, auth keys, password, default tab)
 │   └── embed.go          # Embedded web UI via //go:embed
 │
 ├── middleware/            # Bearer-token auth for admin API
@@ -103,26 +103,35 @@ Client Request
 └────────┬────────┘
          │
 ┌────────▼────────┐
-│ 5. Request       │  ← Execute request transformers sequentially
+│ 5. Auto-         │  ← If request format != downstream api_formats,
+│    Translation   │     automatically insert format converter
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ 6. Request       │  ← Execute request transformers sequentially
 │    Pipeline      │     (body + headers may change)
 └────────┬────────┘
          │
 ┌────────▼────────┐
-│ 6. Forward       │  ← Send transformed request to downstream server
+│ 7. Forward       │  ← Send transformed request to downstream server
 │    to Downstream │     Strip client auth, inject downstream API key
 └────────┬────────┘
          │
 ┌────────▼────────┐
-│ 7. Response      │  ← Execute response transformers sequentially
+│ 8. Response      │  ← Execute response transformers sequentially
 │    Pipeline      │     Non-streaming: full body transform
 │                   │     Streaming (SSE): event-by-event transform
 └────────┬────────┘
          │
 ┌────────▼────────┐
-│ 8. Return to     │  ← Final response to client
+│ 9. Return to     │  ← Final response to client
 │    Client        │
 └──────────────────┘
 ```
+
+## 📡 Aggregated Model List
+
+Tresor exposes `/v1/models` and `/models` endpoints that aggregate all known model IDs from downstream `output_model_ids` and alias input/output model IDs. The response is formatted as an OpenAI-style model list, so OpenAI-compatible clients can discover available models through Tresor.
 
 ## 💾 Data Layer
 
@@ -138,6 +147,7 @@ The database uses WAL mode with a 5000ms busy timeout. Four tables:
 | `name` | TEXT NOT NULL | Display name |
 | `base_url` | TEXT NOT NULL | API base URL |
 | `api_key` | TEXT NOT NULL | Authentication key |
+| `api_formats` | TEXT (JSON) | API format(s) this downstream speaks |
 | `created_at` | DATETIME | Creation timestamp |
 | `updated_at` | DATETIME | Last update timestamp |
 
@@ -170,7 +180,7 @@ The database uses WAL mode with a 5000ms busy timeout. Four tables:
 |---|---|---|
 | `id` | TEXT PRIMARY KEY | Unique identifier |
 | `input_model_id` | TEXT NOT NULL | Client-facing model name (group key) |
-| `downstream_id` | TEXT REFERENCES downstreams | Target provider |
+| `downstream_id` | TEXT NOT NULL REFERENCES downstreams | Target provider |
 | `output_model_id` | TEXT NOT NULL | Actual model to forward as |
 | `is_active` | INTEGER DEFAULT 0 | Active flag (one per group) |
 | `created_at` | DATETIME | Creation timestamp |
@@ -182,7 +192,7 @@ Indexes on foreign keys and query patterns ensure efficient lookups.
 
 On startup, YAML data is merged into the database:
 
-- **Downstreams**: Matched by ID — updated if exists, inserted if new
+- **Downstreams**: Matched by ID — updated if exists, inserted if new. `api_formats` carried over.
 - **Rules**: Matched by ID — updated if exists, inserted if new
 - **Aliases**: Special logic — runtime-active aliases not in YAML are preserved (protects hot-switched state); stale YAML aliases not matching DB are deleted; new YAML aliases are created
 - **Model IDs**: All YAML models replace existing ones for each downstream
@@ -194,3 +204,37 @@ Rows that exist only in the database (created via web UI or API) are preserved.
 Deleting a downstream:
 - Nullifies `active_downstream` on all referencing rules
 - Deletes all aliases pointing to that downstream
+
+### 🏠 Default Seeds
+
+When no downstreams, rules, or aliases are defined in YAML, Tresor seeds three default downstreams:
+
+| ID | Name | Base URL | Models |
+|---|---|---|---|
+| `openai-gpt4o` | OpenAI GPT-4o | `https://api.openai.com/v1` | gpt-4o, gpt-4o-mini, gpt-3.5-turbo |
+| `anthropic-sonnet` | Anthropic Claude Sonnet | `https://api.anthropic.com` | claude-sonnet-4-20250514 |
+| `anthropic-haiku` | Anthropic Claude Haiku | `https://api.anthropic.com` | claude-haiku-4.5 |
+
+Along with default alias groups for `gpt-4o` and `claude-sonnet`.
+
+## 🌐 Admin API
+
+### Public Endpoints (no auth required)
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/health` | Health check |
+| GET | `/api/auth/status` | Check whether auth is enabled |
+| POST | `/api/auth/login` | Verify password, obtain session |
+| GET | `/api/version` | Binary version and build time |
+
+### Protected Endpoints
+
+All other `/api/*` endpoints require the configured `admin_password` Bearer token. See the individual documentation pages for downstream, rule, alias, and config endpoints.
+
+### Runtime Configuration Endpoint
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/config` | Get current runtime settings (proxy mode, proxy keys, password status, default tab) |
+| PUT | `/api/config` | Update runtime settings live (pushes changes to running engine + auth middleware, writes back to YAML) |

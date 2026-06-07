@@ -47,10 +47,10 @@ You can switch the active alias for a model **without restarting** the daemon. T
 ./tresor alias activate alias-gpt4o-anthropic
 
 # Switch back to OpenAI
-./tesor alias activate alias-gpt4o-openai
+./tresor alias activate alias-gpt4o-openai
 ```
 
-The web UI also provides activate/deactivate buttons for each alias option in its group.
+The web UI also provides activate buttons for each alias option in its group.
 
 ## 📐 Configuration Format
 
@@ -87,8 +87,9 @@ Each option requires:
 ### 🖥️ Via Web UI
 
 The **Aliases** tab displays group cards showing each input model's options. You can:
-- Create new alias groups and add options
-- Activate/deactivate individual aliases (hot-switch)
+- Create new alias groups with a tag-based model multi-select
+- Add options to existing groups
+- Click inactive options to hot-switch (activate them)
 - Delete individual aliases or entire groups
 
 ### 💻 Via CLI

@@ -3,9 +3,12 @@ title: Downstreams
 description: Configure LLM provider endpoints for routing
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # 🔗 Downstreams
 
-A **downstream** defines an LLM provider endpoint that Tresor can forward requests to. Each downstream has a unique ID, a base URL, an API key, and a list of model IDs it can serve.
+A **downstream** defines an LLM provider endpoint that Tresor can forward requests to. Each downstream has a unique ID, a base URL, an API key, a list of model IDs it can serve, and declares which API format(s) it speaks.
 
 ## ⚙️ Configuration
 
@@ -13,6 +16,7 @@ A **downstream** defines an LLM provider endpoint that Tresor can forward reques
 downstreams:
   - id: openai
     name: OpenAI
+    api_formats: [openai]
     base_url: https://api.openai.com/v1
     api_key: sk-proj-...
     output_model_ids:
@@ -22,6 +26,7 @@ downstreams:
 
   - id: anthropic
     name: Anthropic
+    api_formats: [anthropic]
     base_url: https://api.anthropic.com
     api_key: sk-ant-...
     output_model_ids:
@@ -35,6 +40,7 @@ downstreams:
 |---|---|---|
 | `id` | Yes | Unique identifier (alphanumeric, used to reference this downstream in rules and aliases) |
 | `name` | Yes | Display name for the web UI |
+| `api_formats` | Optional | List of API formats this downstream speaks (`openai`, `anthropic`). Enables auto-translation when the request format doesn't match. |
 | `base_url` | Yes | The provider's API base URL |
 | `api_key` | Optional | 🔑 API key for authentication (can be left empty and set later via web UI) |
 | `output_model_ids` | Required | List of model IDs this downstream can serve — used for automatic routing |
@@ -62,14 +68,24 @@ curl -X POST http://127.0.0.1:11510/api/downstreams/openai/models \
   -d '{"model_id": "gpt-4o-2024-05-13"}'
 ```
 
+## ⚡ API Formats & Auto-Translation
+
+The `api_formats` field declares which API protocol(s) a downstream understands. When set, Tresor can **automatically translate** between formats without needing an explicit rule:
+
+- Request comes in as OpenAI format (`/v1/chat/completions`) → downstream declares `api_formats: [anthropic]` → auto-insert `openai2anthropic` transformer
+- Request comes in as Anthropic format (`/v1/messages`) → downstream declares `api_formats: [openai]` → auto-insert `anthropic2openai` transformer
+
+If `api_formats` is empty or not set, no auto-translation is attempted for that downstream.
+
 ## 🏠 Default Downstreams
 
-If your config file does not define any downstreams, Tresor seeds two built-in defaults on startup:
+If your config file does not define any downstreams, Tresor seeds three built-in defaults on startup:
 
-| ID | Name | Base URL |
-|---|---|---|
-| `openai` | OpenAI | `https://api.openai.com/v1` |
-| `anthropic` | Anthropic | `https://api.anthropic.com` |
+| ID | Name | Base URL | Models |
+|---|---|---|---|
+| `openai-gpt4o` | OpenAI GPT-4o | `https://api.openai.com/v1` | gpt-4o, gpt-4o-mini, gpt-3.5-turbo |
+| `anthropic-sonnet` | Anthropic Claude Sonnet | `https://api.anthropic.com` | claude-sonnet-4-20250514 |
+| `anthropic-haiku` | Anthropic Claude Haiku | `https://api.anthropic.com` | claude-haiku-4.5 |
 
 You can still add API keys and model IDs via the web UI or admin API without editing the config file.
 
@@ -77,7 +93,7 @@ You can still add API keys and model IDs via the web UI or admin API without edi
 
 ### 🖥️ Via Web UI
 
-The **Downstreams** tab shows all configured providers in a table. Click **Edit** to modify settings, add/remove model IDs, or fetch models from the provider.
+The **Downstreams** tab shows all configured providers in a table with a Format column showing color-coded badges (OpenAI/Anthropic). Click **Edit** to modify settings, add/remove model IDs, or fetch models from the provider.
 
 ### 💻 Via CLI
 
@@ -87,8 +103,6 @@ The **Downstreams** tab shows all configured providers in a table. Click **Edit*
 
 ### 🌐 Via Admin API
 
-| Method | Path | Description |
-|---|---|---|
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/api/downstreams` | 📋 List all downstreams (API keys masked as `***`) |

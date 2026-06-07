@@ -19,6 +19,7 @@ Your app sends OpenAI-format requests to `http://127.0.0.1:11510/v1/chat/complet
 downstreams:
   - id: openai
     name: OpenAI
+    api_formats: [openai]
     base_url: https://api.openai.com/v1
     api_key: sk-proj-...
     output_model_ids:
@@ -26,6 +27,7 @@ downstreams:
 
   - id: anthropic
     name: Anthropic
+    api_formats: [anthropic]
     base_url: https://api.anthropic.com
     api_key: sk-ant-...
     output_model_ids:
@@ -50,6 +52,8 @@ The `openai2anthropic` plugin:
 - Maps model names (e.g., `gpt-4o` → `claude-sonnet-4`)
 - Extracts system prompts into Anthropic's `system` field
 - Handles streaming responses (SSE event conversion)
+
+> **Tip:** If the downstream declares `api_formats: [anthropic]`, auto-translation kicks in automatically — the explicit `openai2anthropic` plugin in the pipeline is redundant but harmless (deduplication prevents double-conversion).
 
 ### 3️⃣ Point Your App
 

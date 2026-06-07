@@ -43,13 +43,22 @@ Handles streaming (SSE) responses event-by-event:
 
 ```go
 type StreamResponseTransformer interface {
-    TransformStream(chunk SSEChunk, ctx *PipelineContext) (SSEChunk, error)
+    TransformStreamChunk(chunk SSEChunk, ctx *PipelineContext) (SSEChunk, error)
 }
 ```
 
 - Receives individual SSE chunks from the downstream
 - Returns transformed chunks for the client
 - Use `ctx.Variables` map for state tracking across events (e.g., accumulating content, tracking role)
+
+The `SSEChunk` type represents a single SSE event:
+
+```go
+type SSEChunk struct {
+    EventType string   // e.g. "message_start", "content_block_delta" — empty for unnamed events
+    Data      []byte   // the JSON payload
+}
+```
 
 A plugin can implement any combination of these interfaces. The pipeline parser checks each plugin against all three and registers only the applicable steps.
 
@@ -60,9 +69,7 @@ Carries shared state through a request's lifecycle:
 ```go
 type PipelineContext struct {
     TargetDownstream *Downstream       // Resolved downstream for this request
-    InputModelID     string           // Original model from client request
-    OutputModelID    string           // Model name after alias rewrite
-    Variables        map[string]any   // Inter-plugin communication / state tracking
+    Variables        map[string]any    // Inter-plugin communication / state tracking
 }
 ```
 
@@ -182,6 +189,10 @@ Extracts images from nested `tool_result.content[]` arrays and promotes them to 
 
 **⚙️ Transforms:** Request only
 
+## ⚡ Auto-Translation
+
+Tresor can automatically insert format converters when the request format doesn't match the downstream's declared `api_formats`. The engine detects the input format from the request path (`/v1/chat/completions` → OpenAI, `/v1/messages` → Anthropic) and compares it against the downstream's format list. If there's a mismatch, the appropriate plugin (`openai2anthropic` or `anthropic2openai`) is automatically prepended to the request pipeline and appended to the response/stream pipelines — without any explicit rule.
+
 ## 📐 Pipeline Configuration Format
 
 Pipeline config is stored as JSON in the `rules.pipeline_config` column:
@@ -229,6 +240,11 @@ func (t *MyTransformer) TransformRequest(req *http.Request, body []byte, ctx *en
 func (t *MyTransformer) TransformResponse(resp *http.Response, body []byte, ctx *engine.PipelineContext) ([]byte, error) {
     // Parse response body, apply transformation, return modified body
     return body, nil
+}
+
+func (t *MyTransformer) TransformStreamChunk(chunk engine.SSEChunk, ctx *engine.PipelineContext) (engine.SSEChunk, error) {
+    // Transform SSE event, return modified chunk
+    return chunk, nil
 }
 
 func init() {

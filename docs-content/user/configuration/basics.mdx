@@ -27,11 +27,20 @@ default_tab: "downstreams"           # Default web UI tab on load
 downstreams:
   - id: openai
     name: OpenAI
+    api_formats: [openai]            # API format(s) this downstream speaks
     base_url: https://api.openai.com/v1
     api_key: sk-proj-...
     output_model_ids:                # Models this downstream can handle
       - gpt-4o
       - gpt-4o-mini
+
+  - id: anthropic
+    name: Anthropic
+    api_formats: [anthropic]
+    base_url: https://api.anthropic.com
+    api_key: sk-ant-...
+    output_model_ids:
+      - claude-sonnet-4-20250514
 
 # --- Routing Rules (Optional) ---
 rules:
@@ -52,7 +61,8 @@ aliases:
     options:
       - id: alias-gpt4o-openai
         downstream_id: openai
-        output_model_id: gpt-4o       # Active (first in list)
+        output_model_id: gpt-4o
+
       - id: alias-gpt4o-anthropic
         downstream_id: anthropic
         output_model_id: claude-sonnet-4-20250514
@@ -73,7 +83,13 @@ aliases:
 |---|---|---|
 | `proxy_mode` | string | Outbound proxy mode: `auto`, `env`, `windows`, or `none` |
 | `proxy_api_keys` | list | 🔑 Optional Bearer tokens that client requests must include |
-| `default_tab` | string | Default web UI tab: `downstreams`, `aliases`, `rules`, `plugins`, or `settings` |
+| `default_tab` | string | Default web UI tab: `downstreams`, `aliases`, `rules`, `plugins`, `settings`, or `about` |
+
+## 🔌 Downstream `api_formats`
+
+The `api_formats` field declares which API protocol(s) a downstream speaks (e.g., `openai`, `anthropic`). This enables **auto-translation**: when a request arrives in a format that doesn't match the downstream's declared format, Tresor automatically inserts the appropriate format converter into the pipeline — no explicit rule needed.
+
+For example, if a downstream declares `api_formats: [anthropic]` and receives a request at `/v1/chat/completions` (OpenAI format), Tresor automatically prepends the `openai2anthropic` transformer.
 
 ## 🔄 Upsert on Startup
 
@@ -91,7 +107,7 @@ The write-back uses a tmp-file-plus-rename pattern for atomicity, so you never s
 
 ## ➡️ Next Steps
 
-- [Downstreams](/tresor-docs/docs/user/configuration/downstreams) — Configure LLM provider endpoints
-- [Rules](/tresor-docs/docs/user/configuration/rules) — Define routing rules with transform pipelines
-- [Aliases](/tresor-docs/docs/user/configuration/aliases) — Set up model name mappings
-- [Proxy Modes](/tresor-docs/docs/user/configuration/proxy-modes) — Configure outbound proxy behavior
+- [🔗 Downstreams](/tresor-docs/docs/user/configuration/downstreams) — Configure LLM provider endpoints
+- [📏 Rules](/tresor-docs/docs/user/configuration/rules) — Define routing rules with transform pipelines
+- [🏷️ Aliases](/tresor-docs/docs/user/configuration/aliases) — Set up model name mappings
+- [🌐 Proxy Modes](/tresor-docs/docs/user/configuration/proxy-modes) — Configure outbound proxy behavior

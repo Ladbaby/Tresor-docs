@@ -19,6 +19,7 @@ You want `/v1/chat/completions` requests routed differently depending on the mod
 downstreams:
   - id: openai
     name: OpenAI
+    api_formats: [openai]
     base_url: https://api.openai.com/v1
     api_key: sk-proj-...
     output_model_ids:
@@ -26,6 +27,7 @@ downstreams:
 
   - id: anthropic
     name: Anthropic
+    api_formats: [anthropic]
     base_url: https://api.anthropic.com
     api_key: sk-ant-...
     output_model_ids:
@@ -59,6 +61,8 @@ Tresor's **rule matching priority** selects the best match:
 
 The `anthropic2openai` plugin converts Anthropic's response format back to OpenAI format, so the client sees a consistent interface regardless of which provider handled the request.
 
+> **Auto-Translation note:** Since the Anthropic downstream declares `api_formats: [anthropic]` and the request path `/v1/chat/completions` is OpenAI format, auto-translation would insert `openai2anthropic` on the request side. The explicit `anthropic2openai` in the rule handles the response side. Deduplication ensures no double-conversion.
+
 ## ➕ Adding More Providers
 
 Simply add more downstreams and rules:
@@ -66,6 +70,7 @@ Simply add more downstreams and rules:
 ```yaml
   - id: azure-openai
     name: Azure OpenAI
+    api_formats: [openai]
     base_url: https://my-resource.openai.azure.com/openai
     api_key: azure-key-...
     output_model_ids:

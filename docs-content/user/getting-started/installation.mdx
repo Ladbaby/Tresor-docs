@@ -12,21 +12,26 @@ Tresor is distributed as a single compiled Go binary with no external dependenci
 
 ## 📥 Install from Release
 
-The quickest way to get started on **Linux** or **macOS** — download the latest release with one command:
+### Linux / macOS — Setup Script
+
+The quickest way to get started — download the latest release with one command:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Ladbaby/Tresor/main/setup.sh | bash
 ```
 
 This script:
-- Detects your OS and architecture automatically
+- Detects your OS and architecture automatically (Linux amd64/arm64, macOS amd64/arm64)
 - Downloads the latest release binary from GitHub
 - Installs it to `~/.local/bin/tresor`
 - Creates a config skeleton at `~/.config/tresor/config.yaml`
-
-If `~/.local/bin` is not in your `$PATH`, the script will print instructions to add it.
+- Checks if `~/.local/bin` is in your `$PATH` and warns if not
 
 > **Note:** This script only supports Linux and macOS. Windows users should [build from source](#build-from-source) or download a release binary manually from [GitHub Releases](https://github.com/Ladbaby/Tresor/releases).
+
+### Windows
+
+Download a release binary manually from [GitHub Releases](https://github.com/Ladbaby/Tresor/releases), then place it in a directory on your PATH or reference it directly.
 
 ## 🔨 Build from Source
 
@@ -68,9 +73,14 @@ Edit `~/.config/tresor/config.yaml` to add your provider API keys:
 
 ```yaml
 downstreams:
-  - id: openai
+  - id: openai-gpt4o
+    name: OpenAI GPT-4o
+    base_url: https://api.openai.com/v1
     api_key: sk-proj-...   # Replace with your API key
-  - id: anthropic
+
+  - id: anthropic-sonnet
+    name: Anthropic Claude Sonnet
+    base_url: https://api.anthropic.com
     api_key: sk-ant-...    # Replace with your API key
 ```
 
@@ -117,7 +127,7 @@ Any request sent to Tresor is intercepted, routed to the appropriate downstream,
 
 ### 4️⃣ Open the Web UI
 
-Navigate to `http://127.0.0.1:11510` in your browser to access the embedded dashboard for managing downstreams, rules, aliases, and settings visually.
+Navigate to `http://127.0.0.1:11510` in your browser to access the embedded dashboard. The web UI features a login screen (if `admin_password` is set), dark/light theme toggle, and tabs for managing downstreams, aliases, rules, plugins, settings, and an about panel.
 
 ## 📂 Config File Locations
 
