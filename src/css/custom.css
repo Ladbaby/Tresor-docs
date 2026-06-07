@@ -26,3 +26,11 @@
   --ifm-color-primary-lightest: #FAE8D0;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+/* Homepage - dark mode adjustments for feature/doc cards */
+[data-theme='dark'] .tresor-homepage [style*='background: var(--ifm-color-primary-lighter)'] {
+  background: #2a2520 !important;
+}
+[data-theme='dark'] .tresor-homepage [style*='background: var(--ifm-color-primary-lightest)'] {
+  background: #332e28 !important;
+}
