@@ -9,9 +9,12 @@ const config: Config = {
   tagline: 'A single-binary LLM gateway for switching providers at scale with one click.',
   favicon: 'img/favicon.ico',
 
-  // GitHub Pages user repo: ladbaby.github.io/Tresor-docs/
+  // GitHub Pages via `docusaurus deploy`
   url: 'https://ladbaby.github.io',
   baseUrl: '/Tresor-docs/',
+  trailingSlash: false,
+  organizationName: 'ladbaby',
+  projectName: 'Tresor-docs',
 
   onBrokenLinks: 'throw',
 
