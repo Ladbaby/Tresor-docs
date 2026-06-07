@@ -91,26 +91,6 @@ function HomePage() {
           <FeatureCard icon="🌐" title="Embedded Web UI" description="Manage everything from a browser dashboard — no separate frontend needed." />
         </div>
 
-        {/* Architecture diagram */}
-        <div style={{
-          background: 'var(--ifm-color-primary-lightest)',
-          borderRadius: '10px',
-          padding: '24px 32px',
-          width: '100%',
-          maxWidth: '600px',
-          marginBottom: '36px',
-          fontFamily: 'monospace',
-          fontSize: '14px',
-          lineHeight: 1.8,
-          border: '1px solid var(--ifm-color-primary-light)',
-        }}>
-          <div>┌──────────────┐     ┌──────────────┐     ┌──────────────┐</div>
-          <div>│   Your App   │─────▶│    Tresor     │─────▶│  LLM Provider │</div>
-          <div>│              │     │    (gateway)  │     │  (OpenAI,      │</div>
-          <div>│              │◀─────│              │◀─────│  Anthropic...) │</div>
-          <div>└──────────────┘     └──────────────┘     └──────────────┘</div>
-        </div>
-
         {/* GitHub link */}
         <Link
           href="https://github.com/ladbaby/tresor"
