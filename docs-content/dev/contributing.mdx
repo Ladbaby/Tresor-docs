@@ -9,7 +9,7 @@
 
 ### 🔨 Building
 
-> **End users:** Use the setup script instead — see [Installation](/tresor-docs/docs/user/getting-started/installation). The `go build` workflow below is for development and testing only.
+> **End users:** Use the setup script instead — see [Installation](/Tresor-docs/docs/user/getting-started/installation). The `go build` workflow below is for development and testing only.
 
 ```bash
 # Compile the binary
@@ -33,7 +33,7 @@ go test ./internal/engine/...
 go test -tags=integration ./e2e/...
 ```
 
-See the [/tresor-docs/docs/dev/testing](/tresor-docs/docs/dev/testing) page for the full verification sequence.
+See the [/Tresor-docs/docs/dev/testing](/Tresor-docs/docs/dev/testing) page for the full verification sequence.
 
 ## 📝 Code Style
 
@@ -51,7 +51,7 @@ See the [/tresor-docs/docs/dev/testing](/tresor-docs/docs/dev/testing) page for 
 5. Write unit tests covering request transform, response transform, and streaming (if applicable)
 6. Run `go test ./internal/plugins/...` to verify
 
-See the [/tresor-docs/docs/dev/plugin-system](/tresor-docs/docs/dev/plugin-system) page for interface definitions and examples.
+See the [/Tresor-docs/docs/dev/plugin-system](/Tresor-docs/docs/dev/plugin-system) page for interface definitions and examples.
 
 ## 🌐 Modifying the Web UI
 
@@ -73,7 +73,7 @@ The embedded files are compiled into the binary via `//go:embed web/*` in `inter
 
 ## 📚 Documentation
 
-The documentation site is a standalone Docusaurus project (repo: `ladbaby/tresor-docs`). Docs source files are in `docs-content/`, organized under `user/` and `dev/` subdirectories.
+The documentation site is a standalone Docusaurus project (repo: `ladbaby/Tresor-docs`). Docs source files are in `docs-content/`, organized under `user/` and `dev/` subdirectories.
 
 ```bash
 # Install dependencies (first time only)
@@ -94,7 +94,7 @@ npm run serve
 - Use `.mdx` format for all documentation pages
 - Frontmatter must include `title` and `description`
 - Use `<Tabs>` and `<TabItem>` for platform-specific instructions
-- Link between related pages using absolute paths with the full site path (e.g., `/tresor-docs/docs/user/configuration/basics`)
+- Link between related pages using absolute paths with the full site path (e.g., `/Tresor-docs/docs/user/configuration/basics`)
 - Keep user docs focused on _what_ and _why_; keep developer docs focused on _how_
 
 ## 📬 Pull Request Process

@@ -13,9 +13,9 @@ const config: Config = {
     v4: true,
   },
 
-  // GitHub Pages user repo: ladbaby.github.io/tresor-docs/
+  // GitHub Pages user repo: ladbaby.github.io/Tresor-docs/
   url: 'https://ladbaby.github.io',
-  baseUrl: '/tresor-docs/',
+  baseUrl: '/Tresor-docs/',
 
   onBrokenLinks: 'throw',
 
@@ -32,7 +32,7 @@ const config: Config = {
           path: './docs-content',
           routeBasePath: 'docs',
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/ladbaby/tresor-docs/edit/main/docs-content/',
+          editUrl: 'https://github.com/ladbaby/Tresor-docs/edit/main/docs-content/',
         },
         theme: {
           customCss: './src/css/custom.css',

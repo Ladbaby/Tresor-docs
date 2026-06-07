@@ -3,7 +3,7 @@ import Layout from '@theme/Layout';
 
 function Redirect() {
   useEffect(() => {
-    window.location.href = '/tresor-docs/docs/user/intro';
+    window.location.href = '/Tresor-docs/docs/user/intro';
   }, []);
   return (
     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh'}}>
