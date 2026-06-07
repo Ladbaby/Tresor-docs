@@ -9,7 +9,7 @@ Your application talks to one LLM API (e.g., OpenAI), but you want to route traf
 
 ## 📋 Scenario
 
-Your app sends OpenAI-format requests to `http://127.0.0.1:8080/v1/chat/completions`. You want these requests forwarded to Anthropic with format conversion.
+Your app sends OpenAI-format requests to `http://127.0.0.1:11510/v1/chat/completions`. You want these requests forwarded to Anthropic with format conversion.
 
 ## ⚙️ Setup
 
@@ -58,7 +58,7 @@ Configure your application to use Tresor as the endpoint:
 ```python
 # Python example
 client = OpenAI(
-    base_url="http://127.0.0.1:8080/v1",
+    base_url="http://127.0.0.1:11510/v1",
     api_key="sk-proxy-123"
 )
 

@@ -11,7 +11,7 @@ Tresor is configured entirely via a single YAML file. All settings, downstreams,
 
 ```yaml
 # --- Server Settings ---
-bind_addr: "127.0.0.1:8080"          # TCP address for proxy + admin API
+bind_addr: "127.0.0.1:11510"         # TCP address for gateway + admin API
 socket_path: "/tmp/tresor.sock"      # Optional Unix socket (admin only)
 db_path: "./tresor.db"               # SQLite database path
 admin_password: "secret"             # 🔐 Optional Bearer token for admin API
@@ -62,7 +62,7 @@ aliases:
 
 | Field | Type | Description |
 |---|---|---|
-| `bind_addr` | string | TCP address for the proxy and admin API (e.g. `127.0.0.1:8080`) |
+| `bind_addr` | string | TCP address for the gateway and admin API (e.g. `127.0.0.1:11510`) |
 | `socket_path` | string | Optional Unix Domain Socket path for admin API only |
 | `db_path` | string | SQLite database file path (`~` expands to home directory) |
 | `admin_password` | string | 🔐 Optional Bearer token required for admin API and web UI access |

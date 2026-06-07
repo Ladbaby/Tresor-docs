@@ -6,7 +6,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Tresor',
-  tagline: 'LLM traffic interception and routing engine',
+  tagline: 'A single-binary LLM gateway for switching providers at scale with one click.',
   favicon: 'img/favicon.ico',
 
   future: {

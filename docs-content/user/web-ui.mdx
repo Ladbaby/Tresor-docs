@@ -10,7 +10,7 @@ import TabItem from '@theme/TabItem';
 
 Tresor includes an **embedded single-page application** accessible through any web browser. The web UI is served by the daemon itself on the configured `bind_addr` — no separate frontend deployment needed.
 
-Access it at `http://127.0.0.1:8080` (or whatever `bind_addr` you configured).
+Access it at `http://127.0.0.1:11510` (or whatever `bind_addr` you configured).
 
 ## 🔐 Authentication
 
@@ -70,12 +70,12 @@ Use this tab to look up plugin IDs and configuration options when building pipel
 
 ### ⚙️ Settings
 
-The **Settings** tab configures global proxy behavior:
+The **Settings** tab configures global gateway behavior:
 
 | Setting | Options |
 |---|---|
-| Proxy Mode | 🌐 `auto`, `env`, `windows`, `none` |
-| Proxy API Keys | 🔑 List of allowed Bearer tokens for incoming proxy requests |
+| Gateway Mode | 🌐 `auto`, `env`, `windows`, `none` |
+| Gateway API Keys | 🔑 List of allowed Bearer tokens for incoming gateway requests |
 | Admin Password | 🔐 Change the admin API authentication password |
 | Default Tab | 📑 Which tab to show on page load: `downstreams`, `aliases`, `rules`, `plugins`, or `settings` |
 

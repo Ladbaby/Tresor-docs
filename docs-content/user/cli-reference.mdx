@@ -10,21 +10,21 @@ The Tresor binary serves as both the daemon and a CLI client. CLI commands conne
 All CLI commands accept the `--config` flag to specify which config file to use for connecting to the daemon:
 
 ```bash
-./tresor --config /path/to/config.yaml <command>
+tresor --config ~/.config/tresor/config.yaml <command>
 ```
 
 ## 🖥️ Daemon Commands
 
-### `run` — 🚀 Start the Daemon
+### `run` — Start the Daemon
 
-Starts the daemon (proxy + admin API + web UI):
+Starts the daemon (gateway + admin API + web UI):
 
 ```bash
 # Auto-detect config from current directory or home
-./tresor run
+tresor run
 
 # Explicit config path
-./tresor run --config /path/to/config.yaml
+tresor run --config ~/.config/tresor/config.yaml
 ```
 
 ### `version` — Show Version
@@ -32,7 +32,7 @@ Starts the daemon (proxy + admin API + web UI):
 Displays the binary version and build information:
 
 ```bash
-./tresor version
+tresor version
 ```
 
 ## Rule Commands
@@ -42,7 +42,7 @@ Displays the binary version and build information:
 List all routing rules:
 
 ```bash
-./tresor rule list
+tresor rule list
 ```
 
 ### `rule create`
@@ -50,7 +50,7 @@ List all routing rules:
 Create a new routing rule:
 
 ```bash
-./tresor rule create "My Rule" "/v1/chat/completions" openai
+tresor rule create "My Rule" "/v1/chat/completions" openai
 ```
 
 Creates a rule with the given name, matching the specified path, defaulting to the given downstream. Pipeline config can be added later via the web UI or admin API.
@@ -60,7 +60,7 @@ Creates a rule with the given name, matching the specified path, defaulting to t
 Change a rule's active downstream:
 
 ```bash
-./tresor rule switch chat-rule anthropic
+tresor rule switch chat-rule anthropic
 ```
 
 ## Alias Commands
@@ -70,7 +70,7 @@ Change a rule's active downstream:
 List all alias groups with their active option highlighted:
 
 ```bash
-./tresor alias list
+tresor alias list
 ```
 
 ### `alias create`
@@ -78,13 +78,13 @@ List all alias groups with their active option highlighted:
 Create a new alias option:
 
 ```bash
-./tresor alias create <input-model-id> <downstream-id> <output-model-id>
+tresor alias create <input-model-id> <downstream-id> <output-model-id>
 ```
 
 Example:
 
 ```bash
-./tresor alias create gpt-4o anthropic claude-sonnet-4-20250514
+tresor alias create gpt-4o anthropic claude-sonnet-4-20250514
 ```
 
 ### `alias activate`
@@ -92,7 +92,7 @@ Example:
 Activate an alias option, deactivating any currently active sibling in the same group:
 
 ```bash
-./tresor alias activate alias-gpt4o-anthropic
+tresor alias activate alias-gpt4o-anthropic
 ```
 
 ### `alias delete`
@@ -100,5 +100,5 @@ Activate an alias option, deactivating any currently active sibling in the same 
 Delete an alias option. If deleting the active alias, the next sibling is automatically promoted to active:
 
 ```bash
-./tresor alias delete alias-gpt4o-openai
+tresor alias delete alias-gpt4o-openai
 ```

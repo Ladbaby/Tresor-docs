@@ -5,7 +5,7 @@ description: Map model names to different providers without changing application
 
 # 🏷️ Model Aliases
 
-Aliases let you **map one model name to another** at the proxy layer. Your application sends requests using its native model name (e.g., `gpt-4o`), and Tresor transparently forwards them to a different provider with a different model (e.g., `claude-sonnet-4`).
+Aliases let you **map one model name to another** at the gateway layer. Your application sends requests using its native model name (e.g., `gpt-4o`), and Tresor transparently forwards them to a different provider with a different model (e.g., `claude-sonnet-4`).
 
 Aliases are the **primary routing mechanism** — they take priority over downstream `output_model_ids` matching. Rules only apply when no alias exists.
 

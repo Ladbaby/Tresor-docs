@@ -56,7 +56,7 @@ The web UI provides a "Fetch Models" button that calls the provider's `/models` 
 ./tresor downstream list
 
 # Add a model to a downstream (via API)
-curl -X POST http://127.0.0.1:8080/api/downstreams/openai/models \
+curl -X POST http://127.0.0.1:11510/api/downstreams/openai/models \
   -H "Authorization: Bearer secret" \
   -H "Content-Type: application/json" \
   -d '{"model_id": "gpt-4o-2024-05-13"}'

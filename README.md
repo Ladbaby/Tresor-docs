@@ -1,6 +1,6 @@
 # 📚 Tresor Documentation
 
-Documentation site for [Tresor](https://github.com/ladbaby/tresor) — an LLM traffic interception and routing engine.
+Documentation site for [Tresor](https://github.com/ladbaby/tresor) — a single-binary LLM gateway for switching providers at scale with one click.
 
 Built with [Docusaurus](https://docusaurus.io/). Deployed to [GitHub Pages](https://ladbaby.github.io/tresor-docs/).
 

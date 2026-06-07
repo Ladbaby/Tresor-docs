@@ -5,7 +5,7 @@ description: What is Tresor?
 
 # Tresor
 
-**LLM traffic interception and routing engine** — a single Go binary that sits between your applications and LLM providers, intercepting API calls, routing them to different backends, and transforming request/response formats on the fly.
+**A single-binary LLM gateway for switching providers at scale with one click.** — a single Go binary that sits between your applications and LLM providers, intercepting API calls, routing them to different backends, and transforming request/response formats on the fly.
 
 ## At a Glance
 
@@ -13,13 +13,13 @@ Tresor has two faces in one binary:
 
 | Mode | What It Does |
 |------|-------------|
-| **Daemon** | 🖥️ Long-running HTTP proxy + admin REST API + embedded web UI |
+| **Daemon** | 🖥️ Long-running HTTP gateway + admin REST API + embedded web UI |
 | **CLI** | 💻 Command-line client for managing rules, downstreams, and aliases |
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
 │   Your App   │────▶│    Tresor    │────▶│  LLM Provider│
-│              │     │    (proxy)   │     │  (OpenAI,    │
+│              │     │    (gateway) │     │  (OpenAI,    │
 │              │◀────│              │◀────│  Anthropic..) │
 └──────────────┘     └──────────────┘     └──────────────┘
                          │
@@ -32,7 +32,7 @@ Tresor has two faces in one binary:
 
 - 🔄 **Protocol Translation** — Convert between OpenAI and Anthropic API formats transparently. Send an OpenAI request, receive it from an Anthropic backend, without changing a line of application code.
 - 🛤️ **Per-Path Routing** — Route different API paths (and models) to different downstream providers based on configurable rules.
-- 🏷️ **Model Aliasing** — Map one model name to another at the proxy layer. Your app sends `gpt-4o`, Tresor forwards as `claude-sonnet-4`. Hot-switch between backends without restarting.
+- 🏷️ **Model Aliasing** — Map one model name to another at the gateway layer. Your app sends `gpt-4o`, Tresor forwards as `claude-sonnet-4`. Hot-switch between backends without restarting.
 - 🔌 **Plugin Pipeline** — Chain multiple transformation plugins per rule (header injection, format conversion, image extraction, and more).
 - 🌐 **Embedded Web UI** — Manage everything from a browser-based dashboard served by the daemon itself. No separate frontend needed.
 - 📝 **Single Config File** — All downstreams, rules, aliases, and settings live in one portable YAML file. Changes via API or UI write back automatically.

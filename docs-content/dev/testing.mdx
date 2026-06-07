@@ -31,7 +31,7 @@ When making changes, follow this sequence:
 3. **E2E smoke test**: Start the daemon with a test config (`./tresor.exe run --config <path>`), then run `go test -tags=integration ./e2e/...`
 4. **Browser verification**: Use `agent-browser` to verify web UI changes visually
 
-Skipping any step is not acceptable for changes affecting API behavior, proxy logic, or the web UI. Unit tests alone cannot catch rendering bugs, JavaScript errors, or integration issues between layers.
+Skipping any step is not acceptable for changes affecting API behavior, gateway logic, or the web UI. Unit tests alone cannot catch rendering bugs, JavaScript errors, or integration issues between layers.
 
 ## 📊 Unit Test Coverage
 

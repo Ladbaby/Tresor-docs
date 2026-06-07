@@ -1,6 +1,6 @@
 ---
 title: Architecture
-description: Internal architecture of the Tresor proxy and routing engine
+description: Internal architecture of the Tresor gateway and routing engine
 ---
 
 # 🏗️ Architecture
@@ -27,8 +27,8 @@ internal/
 │   ├── alias.go          # Alias CRUD + group operations
 │   └── write_config.go   # YAML write-back on mutation
 │
-├── engine/                # Core proxy handler + pipeline execution
-│   ├── engine.go         # Proxy forwarding, model resolution, auth
+├── engine/                # Core gateway handler + pipeline execution
+│   ├── engine.go         # Gateway forwarding, model resolution, auth
 │   ├── pipeline.go       # Transformer orchestration, streaming
 │   └── types.go          # Interfaces (RequestTransformer, etc.)
 │
