@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 .docusaurus/
+*.ps1
 
 # Build output
 build/
