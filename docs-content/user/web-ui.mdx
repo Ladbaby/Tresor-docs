@@ -51,11 +51,12 @@ The **Downstreams** tab displays all configured LLM provider endpoints in a tabl
 The **Aliases** tab organizes model mappings into group cards. Each card represents an input model and shows all its alias options as clickable cards in a grid layout.
 
 **Actions:**
-- ➕ **Create Group** — Define a new input model with its first alias option. Uses a tag-based model multi-select populated from the selected downstream's known models, plus a custom text input for arbitrary model IDs.
-- 📋 **Add Option** — Add another provider/model mapping to an existing group
+- ➕ **Create Group** — Define a new input model with its first alias option. Uses a tag-based model multi-select populated from the selected downstream's known models, plus a custom text input for arbitrary model IDs. A **Regex** checkbox lets you define the input model as a regular expression pattern (e.g., `^claude-.*` to match all Claude models).
+- 📋 **Add Option** — Add another provider/model mapping to an existing group. Includes a **Regex** checkbox for pattern-based matching.
 - ⚡ **Activate** — Click on any inactive option card to hot-switch and make it the active one for its group (deactivates siblings)
 - 🗑️ **Delete Option** — Remove an individual alias option (auto-promotes sibling if deleting the active one)
 - 💥 **Delete Group** — Remove all aliases for an input model at once
+- 🔀 **Drag-and-Drop Reorder** — Drag a group's header to reorder groups vertically. Groups are displayed in `group_order` sequence; dragging a header to a new position updates the ordering on the server immediately. Groups with regex options show a purple "regex" badge in the header.
 
 ### 📏 Rules
 
@@ -116,8 +117,34 @@ The **Settings** tab configures global gateway behavior. Changes take effect **i
 - Changing the password logs out the current session
 
 **Dashboard:**
-- Default Tab selector: `downstreams`, `aliases`, `rules`, `plugins`, `settings`, `about`
+- Default Tab selector: `downstreams`, `aliases`, `rules`, `plugins`, `settings`, `logs`, `about`
 - Controls which tab is shown on page load or refresh
+
+### 📋 Logs
+
+The **Logs** tab shows real-time gateway request logs via Server-Sent Events (SSE). Entries are sorted **newest first**, so the most recent request appears at the top.
+
+**Table columns:**
+
+| Column | Content |
+|---|---|
+| Time | Request timestamp |
+| Method | HTTP method (GET, POST, etc.) |
+| Path | Request path |
+| Model | Resolved model name (or input model if no alias) |
+| Downstream | Target provider name |
+| Alias | Alias group used (or "—") |
+| Status | HTTP status code (color-coded: green < 400, amber 4xx, red 5xx) |
+| Duration | Request latency |
+| Error | Error message (if any) |
+
+**Actions:**
+- 🔍 **Filter** — A text input at the top of the logs table filters visible rows in real-time. Matches against model, path, downstream, status, error, alias group, and method.
+- ⏸ **Pause** — Temporarily stops rendering new log rows (keeps the SSE connection alive). Click ▶ Resume to continue rendering.
+- 🗑️ **Clear** — Removes all entries from the table and in-memory buffer.
+- 🔴 **Live indicator** — Shows connection status: "Live" (green), "Paused" (amber), "Offline" (red), "Disconnected" (grey).
+
+The SSE connection is only active while the Logs tab is visible; switching to another tab automatically disconnects it to save resources.
 
 ### ℹ️ About
 

@@ -81,6 +81,34 @@ Each option requires:
 | `id` | Yes | Unique identifier for this alias option |
 | `downstream_id` | Yes | Which downstream provider to forward to |
 | `output_model_id` | Yes | The model name to use when forwarding |
+| `is_regex` | No | Treat `input_model_id` as a regular expression pattern |
+
+## 🎯 Regex Aliases
+
+When `is_regex: true`, the `input_model_id` is interpreted as a [Go regular expression](https://pkg.go.dev/regexp). The alias matches any incoming model name that satisfies the pattern, rather than requiring an exact string match.
+
+```yaml
+aliases:
+  - input_model_id: "^claude-.*"
+    options:
+      - id: alias-claude-wildcard
+        downstream_id: anthropic
+        output_model_id: claude-sonnet-4-20250514
+        is_regex: true
+```
+
+This example maps **any** model starting with `claude-` (e.g., `claude-sonnet-4`, `claude-opus-4`, `claude-haiku-4.5`) to Claude Sonnet on Anthropic.
+
+**Key behaviors:**
+- Exact-match aliases take priority over regex aliases. A request for `claude-sonnet` with an exact alias and a regex alias `^claude-.*` will use the exact match.
+- Regex aliases are **excluded** from the model discovery API (`/v1/models`, `/models`). Since they represent patterns rather than concrete model IDs, including them would mislead clients about available models.
+- Invalid regex patterns are rejected at creation time. The alias won't be saved if the pattern can't be compiled.
+
+## 🔃 Group Reordering
+
+Alias groups are displayed in the order they were created. You can reorder groups via **drag-and-drop** in the web UI (drag a group's header to a new position). The order is persisted to the database (`group_order` column) and survives restarts.
+
+In YAML, group ordering is determined by array position — the first group in the `aliases` array has `group_order: 1`, the second has `group_order: 2`, etc.
 
 ## 🛠️ Managing Aliases
 
@@ -112,10 +140,11 @@ The **Aliases** tab displays group cards showing each input model's options. You
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/api/aliases` | List all alias groups (enriched with downstream names) |
-| `POST` | `/api/aliases` | Create a new alias option |
+| `GET` | `/api/aliases` | List all alias groups (enriched with downstream names, ordered by `group_order`) |
+| `POST` | `/api/aliases` | Create a new alias option (body may include `is_regex`) |
 | `GET` | `/api/aliases/{id}` | Get a single alias |
-| `PUT` | `/api/aliases/{id}` | Update alias fields |
+| `PUT` | `/api/aliases/{id}` | Update alias fields (including `is_regex`) |
 | `DELETE` | `/api/aliases/{id}` | Delete an alias (auto-promotes sibling if deleting active) |
 | `PUT` | `/api/aliases/{id}/activate` | Hot-switch: activate this alias, deactivate siblings |
 | `DELETE` | `/api/aliases/group/{inputModelId}` | Delete all aliases for an input model |
+| `POST` | `/api/aliases/reorder` | Reorder groups: `{"order": ["gpt-4o", "claude-sonnet"]}` |

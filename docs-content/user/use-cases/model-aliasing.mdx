@@ -94,3 +94,27 @@ This means you can add more options to the group as new providers or models beco
 ```
 
 And switch between any of them with a single CLI command or web UI click.
+
+## 🎯 Regex Aliases: Match a Family of Models
+
+Regex aliases let you map **all models matching a pattern** to a single output. This is useful when you want to normalize a family of model variants through one backend.
+
+**Example: Route all Claude models to Anthropic Sonnet**
+
+```yaml
+aliases:
+  - input_model_id: "^claude-.*"
+    options:
+      - id: alias-claude-to-sonnet
+        downstream_id: anthropic
+        output_model_id: claude-sonnet-4-20250514
+        is_regex: true
+```
+
+Now any request for `claude-sonnet-4`, `claude-opus-4`, or `claude-haiku-4.5` will be forwarded to Anthropic as `claude-sonnet-4-20250514`. This is useful for A/B testing or forcing all Claude variants through a single model for cost control.
+
+**Priority rule:** Exact-match aliases always take precedence over regex aliases. If you have an exact alias for `claude-sonnet` and a regex alias `^claude-.*`, a request for `claude-sonnet` will use the exact match.
+
+**Model discovery:** Regex aliases are excluded from the `/v1/models` endpoint since they represent patterns, not concrete model IDs.
+
+**Creating regex aliases:** Use the web UI's "Regex" checkbox when creating or editing alias groups. The CLI does not have a `--regex` flag; for CLI usage, create the alias through the web UI or admin API (`POST /api/aliases` with `is_regex: true`).

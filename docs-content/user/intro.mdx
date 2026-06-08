@@ -50,10 +50,11 @@ Imagine you have agents on three machines, all calling OpenAI. You want to switc
 - 🔄 **Protocol Translation** — Convert between OpenAI and Anthropic API formats transparently. Send an OpenAI request, receive it from an Anthropic backend, without changing a line of application code.
 - ⚡ **Auto-Translation** — When a downstream declares its API format (e.g., `api_formats: [anthropic]`), Tresor automatically inserts the appropriate format converter into the pipeline, even without an explicit rule.
 - 🛤️ **Per-Path Routing** — Route different API paths (and models) to different downstream providers based on configurable rules.
-- 🏷️ **Model Aliasing** — Map one model name to another at the gateway layer. Your app sends `gpt-4o`, Tresor forwards as `claude-sonnet-4`. Hot-switch between backends without restarting.
+- 🏷️ **Model Aliasing** — Map one model name to another at the gateway layer. Your app sends `gpt-4o`, Tresor forwards as `claude-sonnet-4`. Hot-switch between backends without restarting. Supports **regex patterns** (e.g., `^claude-.*`) to match entire families of models. Groups can be **reordered via drag-and-drop** in the web UI.
 - 🔌 **Plugin Pipeline** — Chain multiple transformation plugins per rule (header injection, format conversion, image extraction, and more).
-- 📋 **Aggregated Model List** — Tresor exposes `/v1/models` that aggregates all known models from downstreams and aliases, so OpenAI-compatible clients can discover available models.
-- 🌐 **Embedded Web UI** — Manage everything from a browser-based dashboard served by the daemon itself. Features include a login screen, dark/light theme toggle, visual pipeline editor, and an About panel. No separate frontend needed.
+- 📋 **Aggregated Model List** — Tresor exposes `/v1/models` that aggregates all known models from downstreams and exact-match aliases (regex aliases excluded), so OpenAI-compatible clients can discover available models.
+- 📊 **Request Logging** — Real-time gateway request logs via Server-Sent Events (SSE), displayed newest-first with a text filter for searching. Configurable log verbosity (debug, info, warn, error).
+- 🌐 **Embedded Web UI** — Manage everything from a browser-based dashboard served by the daemon itself. Features include a login screen, dark/light theme toggle, visual pipeline editor, request log viewer, and an About panel. No separate frontend needed.
 - 📝 **Single Config File** — All downstreams, rules, aliases, and settings live in one portable YAML file. Changes via API or UI write back automatically.
 - 🪶 **Zero External Dependencies** — Pure Go SQLite (no CGO), no external web framework, single compiled binary.
 
@@ -63,7 +64,7 @@ When a request hits Tresor:
 
 1. 🔐 **Auth Check** — Validate proxy API key if configured
 2. 🔍 **Model Extract** — Extract the model name from the request body
-3. 🏷️ **Alias Check** — Look for an active alias matching the model; if found, use its downstream and rewrite the model name
+3. 🏷️ **Alias Check** — Look for an active exact alias matching the model; if not found, try active regex aliases. If found, use its downstream and rewrite the model name
 4. 🎯 **Direct Routing** — If no alias, find which downstream can handle this model via `output_model_ids`
 5. 📏 **Rule Matching** — Collect all matching rules for pipeline transforms (rules never override the resolved downstream; multiple rules can match and their pipelines are concatenated)
 6. ⚡ **Auto-Translation** — If the request format doesn't match the downstream's declared format, automatically insert a format converter

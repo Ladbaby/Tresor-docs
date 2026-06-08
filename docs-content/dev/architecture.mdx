@@ -91,7 +91,8 @@ Client Request
          │
 ┌────────▼────────┐
 │ 3. Model Resolve │  ← The forwarding gate:
-│                   │     • Active alias? → use alias downstream, rewrite model
+│                   │     • Active exact alias? → use alias downstream, rewrite model
+│                   │     • Active regex alias? → pattern match, use downstream, rewrite
 │                   │     • No alias? → find downstream by output_model_ids
 │                   │     • Neither? → return 404 "unknown model"
 └────────┬────────┘
@@ -134,7 +135,7 @@ Client Request
 
 ## 📡 Aggregated Model List
 
-Tresor exposes `/v1/models` and `/models` endpoints that aggregate all known model IDs from downstream `output_model_ids` and alias input/output model IDs. The response is formatted as an OpenAI-style model list, so OpenAI-compatible clients can discover available models through Tresor.
+Tresor exposes `/v1/models` and `/models` endpoints that aggregate all known model IDs from downstream `output_model_ids` and alias input/output model IDs. Regex aliases are **excluded** from the input model ID list since they represent patterns rather than concrete model names. The response is formatted as an OpenAI-style model list, so OpenAI-compatible clients can discover available models through Tresor.
 
 ## 💾 Data Layer
 
@@ -188,10 +189,12 @@ The database uses WAL mode with a 5000ms busy timeout. Four tables:
 | `downstream_id` | TEXT NOT NULL REFERENCES downstreams | Target provider |
 | `output_model_id` | TEXT NOT NULL | Actual model to forward as |
 | `is_active` | INTEGER DEFAULT 0 | Active flag (one per group) |
+| `is_regex` | INTEGER DEFAULT 0 | Treat `input_model_id` as a regex pattern |
+| `group_order` | INTEGER DEFAULT 0 | Display order for group reordering |
 | `created_at` | DATETIME | Creation timestamp |
 | `updated_at` | DATETIME | Last update timestamp |
 
-Indexes on foreign keys and query patterns ensure efficient lookups.
+Indexes on foreign keys and query patterns ensure efficient lookups. Regex patterns are cached (via `sync.Map`) to avoid recompilation on every request.
 
 ### 🔄 Upsert Semantics
 
@@ -237,9 +240,20 @@ Along with default alias groups for `gpt-4o` and `claude-sonnet`.
 
 All other `/api/*` endpoints require the configured `admin_password` Bearer token. See the individual documentation pages for downstream, rule, alias, and config endpoints.
 
+Key alias endpoints include `POST /api/aliases/reorder` for drag-and-drop group reordering, which accepts `{"order": ["gpt-4o", "claude-sonnet"]}`.
+
+### Log Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/logs` | Get recent log entries (newest first, filtered by log level) |
+| GET | `/api/logs/stream` | SSE stream of log entries (sends initial batch + live updates) |
+| GET | `/api/log_level` | Get current log level |
+| PUT/POST | `/api/log_level` | Update log level |
+
 ### Runtime Configuration Endpoint
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/api/config` | Get current runtime settings (proxy mode, proxy keys, password status, default tab) |
+| GET | `/api/config` | Get current runtime settings (proxy mode, proxy keys, password status, default tab, log level) |
 | PUT | `/api/config` | Update runtime settings live (pushes changes to running engine + auth middleware, writes back to YAML) |

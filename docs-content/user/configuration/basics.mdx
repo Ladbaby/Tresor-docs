@@ -67,6 +67,13 @@ aliases:
       - id: alias-gpt4o-anthropic
         downstream_id: anthropic
         output_model_id: claude-sonnet-4-20250514
+
+  - input_model_id: "^claude-.*"
+    options:
+      - id: alias-claude-wildcard
+        downstream_id: anthropic
+        output_model_id: claude-sonnet-4-20250514
+        is_regex: true
 ```
 
 ## 🖥️ Server Settings
@@ -84,13 +91,29 @@ aliases:
 |---|---|---|
 | `proxy_mode` | string | Outbound proxy mode: `auto`, `env`, `windows`, or `none` |
 | `proxy_api_keys` | list | 🔑 Optional Bearer tokens that client requests must include |
-| `default_tab` | string | Default web UI tab: `downstreams`, `aliases`, `rules`, `plugins`, `settings`, or `about` |
+| `default_tab` | string | Default web UI tab: `downstreams`, `aliases`, `rules`, `plugins`, `settings`, `logs`, or `about` |
+| `log_level` | string | Request log verbosity: `debug`, `info`, `warn`, or `error` (default: `info`) |
 
 ## 🔌 Downstream `api_formats`
 
 The `api_formats` field declares which API protocol(s) a downstream speaks (e.g., `openai`, `anthropic`). This enables **auto-translation**: when a request arrives in a format that doesn't match the downstream's declared format, Tresor automatically inserts the appropriate format converter into the pipeline — no explicit rule needed.
 
 For example, if a downstream declares `api_formats: [anthropic]` and receives a request at `/v1/chat/completions` (OpenAI format), Tresor automatically prepends the `openai2anthropic` transformer.
+
+## 🏷️ Alias Option Fields
+
+Each alias option within a group has these fields:
+
+| Field | Required | Description |
+|---|---|---|
+| `id` | Yes | Unique identifier for this alias option |
+| `downstream_id` | Yes | Which downstream provider to forward to |
+| `output_model_id` | Yes | The model name to use when forwarding |
+| `is_regex` | No | Treat `input_model_id` as a regular expression (default: `false`) |
+
+When `is_regex: true`, the group's `input_model_id` is a Go regular expression pattern. Requests whose model name matches the pattern are routed through this alias. See [Model Aliases](/Tresor-docs/docs/user/configuration/aliases) for details.
+
+Alias groups are ordered by their position in the YAML array. In the web UI, groups can be reordered via drag-and-drop.
 
 ## 🔄 Upsert on Startup
 

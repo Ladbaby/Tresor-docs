@@ -98,6 +98,8 @@ Example:
 tresor alias create gpt-4o anthropic claude-sonnet-4-20250514
 ```
 
+> **Note:** The CLI does not have a `--regex` flag. To create regex aliases (where the input model ID is treated as a regular expression), use the web UI or the admin API directly (`POST /api/aliases` with `is_regex: true` in the JSON body).
+
 ### `alias activate`
 
 Activate an alias option, deactivating any currently active sibling in the same group:
