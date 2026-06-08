@@ -109,7 +109,7 @@ The **Downstreams** tab shows all configured providers in a table with a Format 
 | `POST` | `/api/downstreams` | ➕ Create a new downstream |
 | `GET` | `/api/downstreams/{id}` | 🔍 Get a single downstream |
 | `PUT` | `/api/downstreams/{id}` | ✏️ Update a downstream |
-| `DELETE` | `/api/downstreams/{id}` | 🗑️ Delete a downstream (cascade: nullifies referencing rules, deletes pointing aliases) |
+| `DELETE` | `/api/downstreams/{id}` | 🗑️ Delete a downstream (cascade: removes downstream ID from rule `match_downstreams` arrays, deletes pointing aliases) |
 | `POST` | `/api/downstreams/{id}/models` | ➕ Add an output model ID |
 | `DELETE` | `/api/downstreams/{id}/models/{model_id}` | ❌ Remove a model |
 | `POST` | `/api/downstreams/{id}/fetch-models` | 🔎 Auto-discover models from provider's `/models` endpoint |

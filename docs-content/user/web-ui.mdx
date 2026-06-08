@@ -44,7 +44,7 @@ The **Downstreams** tab displays all configured LLM provider endpoints in a tabl
 - ✏️ **Edit** — Modify any downstream's settings including format checkboxes
 - 🔢 **Add Model** — Manually add model IDs to the downstream's `output_model_ids` list
 - 🔎 **Fetch Models** — Calls the provider's `/models` endpoint to auto-discover available models and add them with one click
-- 🗑️ **Delete** — Remove the downstream entirely (cascade: nullifies referencing rules, deletes pointing aliases)
+- 🗑️ **Delete** — Remove the downstream entirely (cascade: removes downstream ID from rule `match_downstreams` arrays, deletes pointing aliases)
 
 ### 🏷️ Aliases
 
@@ -68,14 +68,16 @@ The **Rules** tab shows all routing rules in a table with enable/disable toggle 
 | Name | Rule display name |
 | Pattern Path | URL path pattern |
 | Pattern Model | Optional model filter |
-| Downstream | Target downstream ID |
+| Match | Color-coded badges showing format/downstream filters (e.g. `in:openai`, `out:anthropic`, `ds:OpenAI`) |
 | Pipeline | Plugin chain (shown as `plugin1 → plugin2`) |
 | Enabled | ON/OFF status badge |
 | Actions | Edit / Toggle / Delete buttons |
 
 **Actions:**
-- ➕ **Create Rule** — Define a new rule with name, path pattern, optional model filter, and downstream
-- ✏️ **Edit** — Modify rule settings with a **visual pipeline builder**:
+- ➕ **Create Rule** — Define a new rule with name, path pattern, optional model filter, format filters (input format checkboxes, downstream format checkboxes, downstream multi-select)
+- ✏️ **Edit** — Modify rule settings including format filters and a **visual pipeline builder**:
+  - Format checkboxes for input and downstream format filters
+  - Multi-select for matching downstreams
   - Select a plugin from a dropdown list
   - Configure plugin-specific options through dynamically generated fields (e.g., header key-value pairs for `custom_header`)
   - Each pipeline step is rendered as a card with the plugin description and config form

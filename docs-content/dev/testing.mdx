@@ -45,16 +45,17 @@ Skipping any step is not acceptable for changes affecting API behavior, gateway 
 
 | File | Coverage |
 |---|---|
-| `store_test.go` | Database open/close, schema creation, seed defaults (3 providers: openai-gpt4o, anthropic-sonnet, anthropic-haiku) |
-| `upsert_test.go` | Upsert insert/update, empty config no-op, stale cleanup, merge with existing data, cascade delete for downstreams, model add/remove, rule update/delete, alias group delete, `api_formats` migration |
-| `write_config_test.go` | YAML round-trip (DB → file → DB), overwrite old data, atomic write (tmp file + rename) |
+| `store_test.go` | Database open/close, schema creation, seed defaults (3 providers: openai-gpt4o, anthropic-sonnet, anthropic-haiku), `active_downstream` → `match_downstreams` migration |
+| `upsert_test.go` | Upsert insert/update, empty config no-op, stale cleanup, merge with existing data, cascade delete for downstreams (removes from rule `match_downstreams`), model add/remove, rule update/delete, alias group delete, `api_formats` migration |
+| `write_config_test.go` | YAML round-trip (DB → file → DB), overwrite old data, atomic write (tmp file + rename), format/downstream array fields survive round-trip |
 | `alias_test.go` | Alias CRUD operations, activation, auto-deactivate sibling on new activation, find active alias by model, list groups with downstream names, invalid downstream rejection, delete with auto-promotion of siblings, last-in-group delete cleanup, inactive deletion (no promotion) |
+| `rule.go` (matching) | `MatchRule` method (format/downstream filter checks), `FindMatchingRules` (multi-match collection, format filtering, downstream ID filtering, downstream format filtering, combo filters) |
 
 ### ⚡ Engine (`internal/engine/`)
 
 | File | Coverage |
 |---|---|
-| `engine_test.go` | Unknown model returns 404, wildcard rule matching, path-only matching, model priority (exact > path), pipeline execution with body/header transforms, auth header conflict handling, alias overrides downstream resolution, alias rewrites model name in body, alias forwarding without rules, direct model forwarding via output_model_ids, empty model returns 400, rule overrides downstream when no alias exists, proxy auth validation, missing proxy key returns 401, model list endpoint aggregation |
+| `engine_test.go` | Unknown model returns 404, wildcard rule matching, path-only matching, model priority (exact > path), pipeline execution with body/header transforms, auth header conflict handling, alias overrides downstream resolution, alias rewrites model name in body, alias forwarding without rules, direct model forwarding via output_model_ids, empty model returns 400, format-filtered rule correctly skipped, multi-rule pipeline concatenation, proxy auth validation, missing proxy key returns 401, model list endpoint aggregation |
 | `engine_helper_test.go` | Model rewrite in JSON body (parses and updates), non-JSON passthrough (binary content) |
 | `pipeline_test.go` | Empty pipeline config parsing, invalid JSON error handling, model name extraction from request bodies, HTTP request copying for safe modification |
 
@@ -62,7 +63,7 @@ Skipping any step is not acceptable for changes affecting API behavior, gateway 
 
 | File | Coverage |
 |---|---|
-| `rules_test.go` | Full CRUD (create/read/update/delete), validation (missing name/path rejected), downstream existence validation, switch downstream validation, enabled-only toggle support, empty update rejection |
+| `rules_test.go` | Full CRUD (create/read/update/delete), validation (missing name/path rejected), downstream existence validation for `match_downstreams`, enabled-only toggle support, empty update rejection, format array fields in create/update |
 | `downstreams_test.go` | Full CRUD, API key masking in list responses (`***`), model add/remove operations, empty model ID rejection, not-found handling (404), `api_formats` handling |
 | `aliases_test.go` | Full CRUD with grouped view, missing field rejection, invalid downstream rejection, hot-switch activation, auto-deactivate sibling on activation, method not allowed (405), group delete with count response, not-found group handling (404) |
 

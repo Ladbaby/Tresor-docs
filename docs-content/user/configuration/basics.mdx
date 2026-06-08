@@ -47,8 +47,9 @@ rules:
   - id: chat-rule
     name: Chat Completions
     pattern_path: /v1/chat/completions
-    active_downstream: openai
-    pipeline_config:                 # 🔌 Transform plugins to apply
+    match_format: [openai]           # 🔌 Only match OpenAI-format requests
+    match_downstreams: [openai]      # Only match the "openai" downstream
+    pipeline_config:
       - plugin_id: custom_header
         config:
           headers:

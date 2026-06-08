@@ -64,7 +64,7 @@ When a request hits Tresor:
 2. 🔍 **Model Extract** — Extract the model name from the request body
 3. 🏷️ **Alias Check** — Look for an active alias matching the model; if found, use its downstream and rewrite the model name
 4. 🎯 **Direct Routing** — If no alias, find which downstream can handle this model via `output_model_ids`
-5. 📏 **Rule Matching** — Optionally match a routing rule for pipeline transforms (and optional downstream override)
+5. 📏 **Rule Matching** — Collect all matching rules for pipeline transforms (rules never override the resolved downstream; multiple rules can match and their pipelines are concatenated)
 6. ⚡ **Auto-Translation** — If the request format doesn't match the downstream's declared format, automatically insert a format converter
 7. ⚙️ **Transform & Forward** — Run request through configured transformers, then forward to the resolved downstream
 8. ↩️ **Transform Response** — Run the downstream's response through response transformers before returning to the client

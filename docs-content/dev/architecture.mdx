@@ -97,14 +97,17 @@ Client Request
 └────────┬────────┘
          │
 ┌────────▼────────┐
-│ 4. Rule Match    │  ← Optional: find best matching rule for pipeline
+│ 4. Rule Match    │  ← Collect ALL matching enabled rules (path+model)
 │                   │     Priority: exact path+model > exact path > wildcard *
-│                   │     If rule matched AND no alias → let rule override downstream
+│                   │     Filter by: match_format, match_downstream_format,
+│                   │     match_downstreams. Rules never override downstream.
+│                   │     Pipelines from all matching rules are concatenated.
 └────────┬────────┘
          │
 ┌────────▼────────┐
 │ 5. Auto-         │  ← If request format != downstream api_formats,
-│    Translation   │     automatically insert format converter
+│    Translation   │     automatically insert format converter (prepended/
+│                   │     appended around rule pipelines)
 └────────┬────────┘
          │
 ┌────────▼────────┐
@@ -160,7 +163,7 @@ The database uses WAL mode with a 5000ms busy timeout. Four tables:
 
 (Composite unique on both columns)
 
-**rules** — Routing policies with transform pipelines
+**rules** — Conditional transform pipelines with format-aware matching
 
 | Column | Type | Description |
 |---|---|---|
@@ -168,7 +171,9 @@ The database uses WAL mode with a 5000ms busy timeout. Four tables:
 | `name` | TEXT NOT NULL | Display name |
 | `pattern_path` | TEXT NOT NULL | URL path to match |
 | `pattern_model` | TEXT | Optional model filter |
-| `active_downstream` | TEXT REFERENCES downstreams | Default target |
+| `match_format` | TEXT (JSON) | Input request formats to match |
+| `match_downstream_format` | TEXT (JSON) | Downstream API formats to match |
+| `match_downstreams` | TEXT (JSON) | Downstream IDs to match |
 | `pipeline_config` | TEXT (JSON) | Ordered plugin list |
 | `is_enabled` | INTEGER | Toggle (0/1) |
 | `created_at` | DATETIME | Creation timestamp |
@@ -193,7 +198,7 @@ Indexes on foreign keys and query patterns ensure efficient lookups.
 On startup, YAML data is merged into the database:
 
 - **Downstreams**: Matched by ID — updated if exists, inserted if new. `api_formats` carried over.
-- **Rules**: Matched by ID — updated if exists, inserted if new
+- **Rules**: Matched by ID — updated if exists, inserted if new. `match_format`, `match_downstream_format`, `match_downstreams` serialized as JSON arrays.
 - **Aliases**: Special logic — runtime-active aliases not in YAML are preserved (protects hot-switched state); stale YAML aliases not matching DB are deleted; new YAML aliases are created
 - **Model IDs**: All YAML models replace existing ones for each downstream
 
@@ -202,7 +207,7 @@ Rows that exist only in the database (created via web UI or API) are preserved.
 ### 💥 Cascade Delete
 
 Deleting a downstream:
-- Nullifies `active_downstream` on all referencing rules
+- Removes the downstream ID from `match_downstreams` arrays on all referencing rules
 - Deletes all aliases pointing to that downstream
 
 ### 🏠 Default Seeds

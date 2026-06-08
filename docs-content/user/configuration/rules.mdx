@@ -5,7 +5,9 @@ description: Define routing rules with transform pipelines
 
 # 📏 Routing Rules
 
-Rules define **how** Tresor transforms requests before forwarding them. They are **optional** — basic forwarding works with downstreams and `output_model_ids` alone. Rules add plugin pipelines and can optionally override the resolved downstream when no alias is present.
+Rules define **how** Tresor transforms requests before forwarding them. They are **optional** — basic forwarding works with downstreams and `output_model_ids` alone. Rules only contribute their pipeline transformers when all matching conditions are met. **Rules never override the target downstream** — downstream selection is determined by aliases or `output_model_ids`.
+
+Multiple rules can match a single request; their pipelines are concatenated in priority order.
 
 ## ⚙️ Configuration
 
@@ -14,8 +16,10 @@ rules:
   - id: chat-anthropic
     name: Chat Completions -> Anthropic
     pattern_path: /v1/chat/completions
-    pattern_model: gpt-4o             # Optional: only match this model
-    active_downstream: anthropic
+    pattern_model: claude-sonnet    # Optional: only match this model
+    match_format: [openai]          # Only match OpenAI-format requests
+    match_downstream_format: [anthropic] # Only match Anthropic-format downstreams
+    match_downstreams: [anthropic]  # Only match the "anthropic" downstream
     pipeline_config:
       - plugin_id: openai2anthropic   # Transform OpenAI -> Anthropic format
     is_enabled: true
@@ -23,7 +27,6 @@ rules:
   - id: catch-all
     name: Default Route
     pattern_path: "*"                  # Catch-all for unmatched paths
-    active_downstream: openai
     pipeline_config: []                # No transformation
     is_enabled: true
 ```
@@ -36,19 +39,25 @@ rules:
 | `name` | Yes | Display name for the web UI |
 | `pattern_path` | Yes | URL path to match (exact path or `*` wildcard) |
 | `pattern_model` | Optional | Model name filter — only match requests using this model |
-| `active_downstream` | Yes | Default downstream ID for matched requests (used when no alias exists) |
+| `match_format` | Optional | Input request formats to match (e.g. `[openai, anthropic]`). Empty = match all. |
+| `match_downstream_format` | Optional | Downstream API formats to match. Empty = match all. |
+| `match_downstreams` | Optional | Downstream IDs to match against. Empty = match all. |
 | `pipeline_config` | Yes | Ordered list of transform plugins and their config |
 | `is_enabled` | Yes | Toggle rule on/off without deleting it |
 
+### Matching Criteria
+
+A rule matches when **all** non-empty conditions are satisfied. Each condition uses OR logic (e.g., `match_format: [openai, anthropic]` matches either format).
+
 ## 🎯 Rule Matching Priority
 
-When multiple rules could match a request, Tresor selects the **best** one:
+When multiple rules match a request, **all** are collected and their pipelines concatenated in priority order:
 
 1. 🥇 **Exact path + exact model** (highest priority) — e.g., `/v1/chat/completions` + `gpt-4o`
 2. 🥈 **Exact path, no model filter** — e.g., `/v1/chat/completions` matches any model
 3. 🥉 **Wildcard** (`*`) — matches all unmatched paths (lowest priority)
 
-If no rule matches, forwarding still proceeds with an empty pipeline (no transforms).
+Format filters (`match_format`, `match_downstream_format`, `match_downstreams`) are applied after the initial path+model match. Rules whose format conditions aren't satisfied are excluded from the pipeline.
 
 ## 🔌 Pipeline Configuration
 
@@ -80,11 +89,16 @@ See the [/Tresor-docs/docs/dev/plugin-system](/Tresor-docs/docs/dev/plugin-syste
 
 When a downstream declares `api_formats` and the incoming request uses a different format, Tresor automatically inserts the appropriate format converter — even without an explicit rule. For example, if a request arrives at `/v1/chat/completions` (OpenAI format) and resolves to a downstream with `api_formats: [anthropic]`, the `openai2anthropic` plugin is prepended to the pipeline automatically.
 
+Auto-translation transformers are prepended/appended around the collected rule pipelines, so explicit rule transformers still get applied.
+
 ## 🛠️ Managing Rules
 
 ### 🖥️ Via Web UI
 
-The **Rules** tab shows all rules in a table with enable/disable toggles. The edit modal provides a **visual pipeline builder** for adding, removing, and configuring transform plugins — select a plugin from a dropdown, configure its options through dynamically generated fields, and reorder steps.
+The **Rules** tab shows all rules in a table with enable/disable toggles. The **Match** column displays format/downstream filters as color-coded badges. The edit modal provides:
+- Format checkboxes for input and downstream format filters
+- Multi-select for matching downstreams
+- A **visual pipeline builder** for adding, removing, and configuring transform plugins
 
 ### 💻 Via CLI
 
@@ -92,11 +106,14 @@ The **Rules** tab shows all rules in a table with enable/disable toggles. The ed
 # List all routing rules
 ./tresor rule list
 
-# Create a new rule
-./tresor rule create "Chat Rule" "/v1/chat/completions" openai
+# Create a new rule (name and path required)
+./tresor rule create "Chat Rule" "/v1/chat/completions"
 
-# Switch a rule's active downstream
-./tresor rule switch chat-rule anthropic
+# Create with format filters
+./tresor rule create "Chat Rule" "/v1/chat/completions" \
+  --match-format openai \
+  --match-downstream-format anthropic \
+  --match-downstreams anthropic
 ```
 
 ### 🌐 Via Admin API
@@ -104,8 +121,7 @@ The **Rules** tab shows all rules in a table with enable/disable toggles. The ed
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/api/rules` | List all rules |
-| `POST` | `/api/rules` | Create a new rule (validates downstream exists) |
+| `POST` | `/api/rules` | Create a new rule (validates downstream IDs exist) |
 | `GET` | `/api/rules/{id}` | Get a single rule |
 | `PUT` | `/api/rules/{id}` | Partial update (supports enabled-only toggle or full update) |
 | `DELETE` | `/api/rules/{id}` | Delete a rule |
-| `PUT` | `/api/rules/{id}/switch` | Change active downstream |

@@ -34,14 +34,16 @@ downstreams:
       - claude-sonnet-4-20250514
 ```
 
-### 2️⃣ Create a Rule with Format Conversion
+### 2️⃣ Create a Rule with Format Conversion (Optional)
 
 ```yaml
 rules:
   - id: chat-anthropic
     name: Chat Completions -> Anthropic
     pattern_path: /v1/chat/completions
-    active_downstream: anthropic
+    match_format: [openai]
+    match_downstream_format: [anthropic]
+    match_downstreams: [anthropic]
     pipeline_config:
       - plugin_id: openai2anthropic
     is_enabled: true
@@ -53,7 +55,7 @@ The `openai2anthropic` plugin:
 - Extracts system prompts into Anthropic's `system` field
 - Handles streaming responses (SSE event conversion)
 
-> **Tip:** If the downstream declares `api_formats: [anthropic]`, auto-translation kicks in automatically — the explicit `openai2anthropic` plugin in the pipeline is redundant but harmless (deduplication prevents double-conversion).
+> **Tip:** Since the Anthropic downstream declares `api_formats: [anthropic]`, auto-translation kicks in automatically — the explicit `openai2anthropic` plugin in the rule is redundant but harmless (deduplication prevents double-conversion). The format filters on this rule ensure it only matches when the request is OpenAI format and the resolved downstream is Anthropic.
 
 ### 3️⃣ Point Your App
 

@@ -60,18 +60,19 @@ tresor rule list
 Create a new routing rule:
 
 ```bash
-tresor rule create "My Rule" "/v1/chat/completions" openai
+tresor rule create "My Rule" "/v1/chat/completions"
 ```
 
-Creates a rule with the given name, matching the specified path, defaulting to the given downstream. Pipeline config can be added later via the web UI or admin API.
-
-### `rule switch`
-
-Change a rule's active downstream:
+Creates a rule with the given name and matching path. Format filters can be added via flags:
 
 ```bash
-tresor rule switch chat-rule anthropic
+tresor rule create "Chat Rule" "/v1/chat/completions" \
+  --match-format openai \
+  --match-downstream-format anthropic \
+  --match-downstreams anthropic
 ```
+
+Pipeline config can be added later via the web UI or admin API.
 
 ## Alias Commands
 

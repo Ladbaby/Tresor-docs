@@ -38,15 +38,17 @@ rules:
     name: GPT-4o Route
     pattern_path: /v1/chat/completions
     pattern_model: gpt-4o
-    active_downstream: openai
+    match_downstreams: [openai]
     pipeline_config: []
     is_enabled: true
 
   - id: sonnet-rule
     name: Claude Sonnet Route
     pattern_path: /v1/chat/completions
-    pattern_model: claude-sonnet
-    active_downstream: anthropic
+    pattern_model: claude-sonnet-4-20250514
+    match_format: [openai]
+    match_downstream_format: [anthropic]
+    match_downstreams: [anthropic]
     pipeline_config:
       - plugin_id: anthropic2openai
     is_enabled: true
@@ -54,10 +56,10 @@ rules:
 
 ## 🔍 How It Works
 
-Tresor's **rule matching priority** selects the best match:
+Tresor's **rule matching priority** collects all matching rules, sorted by specificity. Format filters are applied after the initial path+model match:
 
-1. Request for `gpt-4o` → matches `gpt4o-rule` (exact path + exact model) → forwarded to OpenAI with no transform
-2. Request for `claude-sonnet` → matches `sonnet-rule` (exact path + exact model) → forwarded to Anthropic with `anthropic2openai` transform
+1. Request for `gpt-4o` → matches `gpt4o-rule` (exact path + exact model, downstream filter passes) → forwarded to OpenAI with no transform
+2. Request for `claude-sonnet-4-20250514` → matches `sonnet-rule` (exact path + exact model, format filters pass) → forwarded to Anthropic
 
 The `anthropic2openai` plugin converts Anthropic's response format back to OpenAI format, so the client sees a consistent interface regardless of which provider handled the request.
 
@@ -81,7 +83,7 @@ rules:
     name: Azure GPT-4o Route
     pattern_path: /v1/chat/completions
     pattern_model: azure-gpt4o
-    active_downstream: azure-openai
+    match_downstreams: [azure-openai]
     pipeline_config: []
     is_enabled: true
 ```
