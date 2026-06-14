@@ -42,6 +42,15 @@ downstreams:
     output_model_ids:
       - claude-sonnet-4-20250514
 
+  - id: openai-responses
+    name: OpenAI (Responses API)
+    api_formats: [openai_responses]
+    base_url: https://api.openai.com/v1
+    api_key: sk-proj-...
+    output_model_ids:
+      - gpt-4o
+      - o3-mini
+
 # --- Routing Rules (Optional) ---
 rules:
   - id: chat-rule
@@ -96,9 +105,15 @@ aliases:
 
 ## 🔌 Downstream `api_formats`
 
-The `api_formats` field declares which API protocol(s) a downstream speaks (e.g., `openai`, `anthropic`). This enables **auto-translation**: when a request arrives in a format that doesn't match the downstream's declared format, Tresor automatically inserts the appropriate format converter into the pipeline — no explicit rule needed.
+The `api_formats` field declares which API protocol(s) a downstream speaks. Three formats are supported:
 
-For example, if a downstream declares `api_formats: [anthropic]` and receives a request at `/v1/chat/completions` (OpenAI format), Tresor automatically prepends the `openai2anthropic` transformer.
+- `openai` — OpenAI Chat Completions (`/v1/chat/completions`)
+- `anthropic` — Anthropic Messages (`/v1/messages`)
+- `openai_responses` — OpenAI Responses API (`/v1/responses`)
+
+This enables **auto-translation**: when a request arrives in a format that doesn't match the downstream's declared format, Tresor automatically inserts the appropriate format converter into the pipeline — no explicit rule needed.
+
+For example, if a downstream declares `api_formats: [anthropic]` and receives a request at `/v1/chat/completions` (OpenAI format), Tresor automatically prepends the `openai2anthropic` transformer. Similarly, if a downstream declares `api_formats: [openai_responses]` and receives an OpenAI Chat Completions request, the `openai2responses` transformer is inserted automatically.
 
 ## 🏷️ Alias Option Fields
 

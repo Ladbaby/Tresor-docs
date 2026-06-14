@@ -29,6 +29,16 @@ rules:
     pattern_path: "*"                  # Catch-all for unmatched paths
     pipeline_config: []                # No transformation
     is_enabled: true
+
+  - id: responses-to-anthropic
+    name: Responses API -> Anthropic
+    pattern_path: /v1/responses
+    match_format: [openai_responses]
+    match_downstream_format: [anthropic]
+    match_downstreams: [anthropic]
+    pipeline_config:
+      - plugin_id: responses2anthropic
+    is_enabled: true
 ```
 
 ### Fields
@@ -39,7 +49,7 @@ rules:
 | `name` | Yes | Display name for the web UI |
 | `pattern_path` | Yes | URL path to match (exact path or `*` wildcard) |
 | `pattern_model` | Optional | Model name filter — only match requests using this model |
-| `match_format` | Optional | Input request formats to match (e.g. `[openai, anthropic]`). Empty = match all. |
+| `match_format` | Optional | Input request formats to match (e.g. `[openai, anthropic, openai_responses]`). Empty = match all. |
 | `match_downstream_format` | Optional | Downstream API formats to match. Empty = match all. |
 | `match_downstreams` | Optional | Downstream IDs to match against. Empty = match all. |
 | `pipeline_config` | Yes | Ordered list of transform plugins and their config |
@@ -82,12 +92,25 @@ Plugins execute **sequentially** — each plugin's output becomes the next plugi
 | `openai2anthropic` | 🔄 Convert OpenAI Chat Completion format to Anthropic Messages format (and vice versa for responses) |
 | `anthropic2openai` | 🔄 Convert Anthropic Messages format to OpenAI Chat Completion format (and vice versa for responses) |
 | `fix_anthropic_images` | 🖼️ Extract images from nested `tool_result.content[]` arrays and promote them to top-level message content |
+| `responses2openai` | Converts OpenAI Responses API requests to Chat Completions format (and vice versa for responses) |
+| `responses2anthropic` | Converts OpenAI Responses API requests to Anthropic Messages format (and vice versa for responses) |
+| `openai2responses` | Converts OpenAI Chat Completions requests to Responses API format (and vice versa for responses) |
+| `anthropic2responses` | Converts Anthropic Messages requests to Responses API format (and vice versa for responses) |
 
 See the [/Tresor-docs/docs/dev/plugin-system](/Tresor-docs/docs/dev/plugin-system) documentation in the Developer Guide for details on each plugin's configuration options.
 
 ## ⚡ Auto-Translation
 
-When a downstream declares `api_formats` and the incoming request uses a different format, Tresor automatically inserts the appropriate format converter — even without an explicit rule. For example, if a request arrives at `/v1/chat/completions` (OpenAI format) and resolves to a downstream with `api_formats: [anthropic]`, the `openai2anthropic` plugin is prepended to the pipeline automatically.
+When a downstream declares `api_formats` and the incoming request uses a different format, Tresor automatically inserts the appropriate format converter — even without an explicit rule. The engine detects the input format from the request path (`/v1/chat/completions` → OpenAI, `/v1/messages` → Anthropic, `/v1/responses` → OpenAI Responses API) and compares it against the downstream's format list. If there's a mismatch, the appropriate plugin is automatically selected:
+
+| Input Format | Downstream Format | Plugin |
+|---|---|---|
+| `openai` | `anthropic` | `openai2anthropic` |
+| `openai` | `openai_responses` | `openai2responses` |
+| `anthropic` | `openai` | `anthropic2openai` |
+| `anthropic` | `openai_responses` | `anthropic2responses` |
+| `openai_responses` | `openai` | `responses2openai` |
+| `openai_responses` | `anthropic` | `responses2anthropic` |
 
 Auto-translation transformers are prepended/appended around the collected rule pipelines, so explicit rule transformers still get applied.
 
@@ -96,7 +119,7 @@ Auto-translation transformers are prepended/appended around the collected rule p
 ### 🖥️ Via Web UI
 
 The **Rules** tab shows all rules in a table with enable/disable toggles. The **Match** column displays format/downstream filters as color-coded badges. The edit modal provides:
-- Format checkboxes for input and downstream format filters
+- Format checkboxes for input and downstream format filters (OpenAI, Anthropic, OpenAI Responses)
 - Multi-select for matching downstreams
 - A **visual pipeline builder** for adding, removing, and configuring transform plugins
 

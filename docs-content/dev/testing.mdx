@@ -77,7 +77,7 @@ Skipping any step is not acceptable for changes affecting API behavior, gateway 
 
 | File | Coverage |
 |---|---|
-| `plugins_test.go` | Custom header injection verification, OpenAI-to-Anthropic request/response transform accuracy, Anthropic-to-OpenAI request/response transform accuracy, streaming transforms for both directions, registry listing (4 plugins) |
+| `plugins_test.go` | Custom header injection verification, OpenAI-to-Anthropic request/response transform accuracy, Anthropic-to-OpenAI request/response transform accuracy, streaming transforms for both directions, Responses API plugin transforms (all 4 directions), registry listing (8 plugins) |
 | `anthropic_image_fix_test.go` | No-change passthrough for messages without tool results, single image extraction from tool_result, mixed content handling (text + tool_result), string-valued tool_result preservation, multiple message handling, response no-op, empty base64 data skip |
 | `streaming_test.go` | SSE data writing and chunk formatting, done marker handling, OpenAI SSE parsing with early stop detection, Anthropic SSE parsing with early stop detection, Anthropic SSE event writing |
 
@@ -95,7 +95,7 @@ The E2E test (`//go:build integration` tag) starts a live daemon with a test con
 - Auth status/login endpoints
 - Rule CRUD operations (create, list, read, update, delete)
 - Default downstreams are seeded (3 providers)
-- Plugin registry contains all built-in plugins (4)
+- Plugin registry contains all built-in plugins (8)
 - Alias group operations (create, activate, list)
 - Model add/remove on downstreams
 - Proxy routing (requests forwarded correctly)

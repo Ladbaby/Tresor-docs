@@ -32,6 +32,15 @@ downstreams:
     output_model_ids:
       - claude-sonnet-4-20250514
       - claude-haiku-4.5
+
+  - id: openai-responses
+    name: OpenAI (Responses API)
+    api_formats: [openai_responses]
+    base_url: https://api.openai.com/v1
+    api_key: sk-proj-...
+    output_model_ids:
+      - gpt-4o
+      - o3-mini
 ```
 
 ### Fields
@@ -40,7 +49,7 @@ downstreams:
 |---|---|---|
 | `id` | Yes | Unique identifier (alphanumeric, used to reference this downstream in rules and aliases) |
 | `name` | Yes | Display name for the web UI |
-| `api_formats` | Optional | List of API formats this downstream speaks (`openai`, `anthropic`). Enables auto-translation when the request format doesn't match. |
+| `api_formats` | Optional | List of API formats this downstream speaks (`openai`, `anthropic`, `openai_responses`). Enables auto-translation when the request format doesn't match. |
 | `base_url` | Yes | The provider's API base URL |
 | `api_key` | Optional | 🔑 API key for authentication (can be left empty and set later via web UI) |
 | `output_model_ids` | Required | List of model IDs this downstream can serve — used for automatic routing |
@@ -72,8 +81,16 @@ curl -X POST http://127.0.0.1:11510/api/downstreams/openai/models \
 
 The `api_formats` field declares which API protocol(s) a downstream understands. When set, Tresor can **automatically translate** between formats without needing an explicit rule:
 
-- Request comes in as OpenAI format (`/v1/chat/completions`) → downstream declares `api_formats: [anthropic]` → auto-insert `openai2anthropic` transformer
-- Request comes in as Anthropic format (`/v1/messages`) → downstream declares `api_formats: [openai]` → auto-insert `anthropic2openai` transformer
+| Input Format | Downstream Format | Auto-Plugin |
+|---|---|---|
+| `openai` (`/v1/chat/completions`) | `anthropic` | `openai2anthropic` |
+| `openai` (`/v1/chat/completions`) | `openai_responses` | `openai2responses` |
+| `anthropic` (`/v1/messages`) | `openai` | `anthropic2openai` |
+| `anthropic` (`/v1/messages`) | `openai_responses` | `anthropic2responses` |
+| `openai_responses` (`/v1/responses`) | `openai` | `responses2openai` |
+| `openai_responses` (`/v1/responses`) | `anthropic` | `responses2anthropic` |
+
+The Responses API acts as a **hub format** — all three client formats can translate to and from it. This means you can connect any client to any downstream regardless of format mismatch.
 
 If `api_formats` is empty or not set, no auto-translation is attempted for that downstream.
 
@@ -93,7 +110,7 @@ You can still add API keys and model IDs via the web UI or admin API without edi
 
 ### 🖥️ Via Web UI
 
-The **Downstreams** tab shows all configured providers in a table with a Format column showing color-coded badges (OpenAI/Anthropic). Click **Edit** to modify settings, add/remove model IDs, or fetch models from the provider.
+The **Downstreams** tab shows all configured providers in a table with a Format column showing color-coded badges (OpenAI/Anthropic/OpenAI Responses). Click **Edit** to modify settings, add/remove model IDs, or fetch models from the provider.
 
 ### 💻 Via CLI
 

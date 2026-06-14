@@ -9,7 +9,7 @@ Your application talks to one LLM API (e.g., OpenAI), but you want to route traf
 
 ## 📋 Scenario
 
-Your app sends OpenAI-format requests to `http://127.0.0.1:11510/v1/chat/completions`. You want these requests forwarded to Anthropic with format conversion.
+Your app sends OpenAI-format requests to `http://127.0.0.1:11510/v1/chat/completions`. You want these requests forwarded to Anthropic with format conversion. Or, your app uses the OpenAI Responses API (`/v1/responses`) and you want to route to an Anthropic backend.
 
 ## ⚙️ Setup
 
@@ -75,3 +75,37 @@ response = client.chat.completions.create(
 ```
 
 The app thinks it's talking to OpenAI. Tresor converts the request, forwards it to Anthropic, converts the response back, and returns it — all transparently.
+
+## Example 2: Responses API to Anthropic
+
+Your app uses the OpenAI Responses API format (e.g., a modern OpenAI SDK client). You want to route traffic to Anthropic.
+
+```yaml
+downstreams:
+  - id: anthropic
+    name: Anthropic
+    api_formats: [anthropic]
+    base_url: https://api.anthropic.com
+    api_key: sk-ant-...
+    output_model_ids:
+      - claude-sonnet-4-20250514
+```
+
+No explicit rule needed. Since the request arrives at `/v1/responses` (detected as `openai_responses` format) and the downstream declares `api_formats: [anthropic]`, auto-translation kicks in automatically — the `responses2anthropic` plugin is inserted into the pipeline.
+
+## Example 3: Chat Completions to Responses API
+
+Your app uses the classic OpenAI Chat Completions format, but your downstream only speaks the Responses API (e.g., a custom model server).
+
+```yaml
+downstreams:
+  - id: custom-responses
+    name: Custom Model (Responses)
+    api_formats: [openai_responses]
+    base_url: https://custom-model.example.com/v1
+    api_key: sk-custom-...
+    output_model_ids:
+      - my-custom-model
+```
+
+Auto-translation inserts `openai2responses` automatically when an OpenAI Chat Completions request resolves to this downstream.

@@ -37,6 +37,10 @@ internal/
 │   ├── custom_header.go  # Header injection plugin
 │   ├── openai2anthropic.go # OpenAI → Anthropic format conversion
 │   ├── anthropic2openai.go # Anthropic → OpenAI format conversion
+│   ├── openai2responses.go # OpenAI Chat Completions → Responses API
+│   ├── anthropic2responses.go # Anthropic Messages → Responses API
+│   ├── responses2openai.go # Responses API → OpenAI Chat Completions
+│   ├── responses2anthropic.go # Responses API → Anthropic Messages
 │   ├── anthropic_image_fix.go # Image extraction from tool results
 │   └── streaming.go      # SSE parsing and chunk transformation
 │
@@ -109,6 +113,8 @@ Client Request
 │ 5. Auto-         │  ← If request format != downstream api_formats,
 │    Translation   │     automatically insert format converter (prepended/
 │                   │     appended around rule pipelines)
+│                   │     Supports: OpenAI Chat Completions, Anthropic Messages,
+│                   │     OpenAI Responses API
 └────────┬────────┘
          │
 ┌────────▼────────┐

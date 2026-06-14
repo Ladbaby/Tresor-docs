@@ -189,9 +189,139 @@ Extracts images from nested `tool_result.content[]` arrays and promotes them to 
 
 **⚙️ Transforms:** Request only
 
+---
+
+### 🔄 `responses2openai`
+
+Converts OpenAI Responses API requests to Chat Completions format (and vice versa for responses).
+
+**Request transform:**
+- Maps `input[]` array items to OpenAI `messages[]` format
+- Converts `instructions` to system messages
+- Maps `function_call` items to tool_calls, `function_call_output` to tool messages
+- Converts `input_text`/`input_image` content parts to OpenAI format
+- Maps `reasoning.effort` to `reasoning_effort`
+- Maps `text.format` to `response_format`
+- Rewrites URL path from `/v1/responses` to `/v1/chat/completions`
+
+**Response transform:**
+- Converts OpenAI Chat Completions response to Responses API `output[]` array
+- Maps text content to `output_text` items
+- Maps tool_calls to `function_call` items
+
+**Streaming transform:**
+- Converts OpenAI SSE chunks to Responses API named events
+- Maps content deltas to `response.output_text.delta`
+- Maps tool call deltas to `response.output_item.added` / `response.function_call_arguments.delta`
+- Emits `response.created`, `response.in_progress`, `response.completed` lifecycle events
+
+**📐 Config schema:** No config required (`{}`)
+
+---
+
+### 🔄 `responses2anthropic`
+
+Converts OpenAI Responses API requests to Anthropic Messages format (and vice versa for responses).
+
+**Request transform:**
+- Maps `input[]` array items to Anthropic `messages[]` format
+- Converts `instructions` to Anthropic `system` field
+- Maps `function_call` items to `tool_use` content blocks
+- Maps `function_call_output` items to `tool_result` content blocks
+- Converts OpenAI tools to Anthropic format (`input_schema` instead of `parameters`)
+- Maps `reasoning.effort` to `thinking.budget_tokens`
+- Rewrites URL path from `/v1/responses` to `/v1/messages`
+- Sets Anthropic-specific headers (`anthropic-version`, `x-api-key`)
+
+**Response transform:**
+- Converts Anthropic Messages response to Responses API `output[]` array
+- Maps `text` content blocks to `output_text` items
+- Maps `tool_use` content blocks to `function_call` items
+
+**Streaming transform:**
+- Converts Anthropic SSE events to Responses API named events
+- Maps `message_start` to `response.created` + `response.in_progress`
+- Maps `content_block_delta` (text) to `response.output_text.delta`
+- Maps `content_block_delta` (input_json) to `response.function_call_arguments.delta`
+- Maps `message_stop` to `response.completed`
+
+**📐 Config schema:** No config required (`{}`)
+
+---
+
+### 🔄 `openai2responses`
+
+Converts OpenAI Chat Completions requests to Responses API format (and vice versa for responses).
+
+**Request transform:**
+- Maps OpenAI `messages[]` to Responses API `input[]` array
+- Extracts system messages into `instructions` field
+- Converts assistant `tool_calls` to `function_call` items
+- Converts `tool` messages to `function_call_output` items
+- Handles multi-modal content (text + images) as `input_text`/`input_image` parts
+- Maps `reasoning_effort` to `reasoning.effort`
+- Maps `response_format` to `text.format`
+- Rewrites URL path from `/v1/chat/completions` to `/v1/responses`
+
+**Response transform:**
+- Converts Responses API `output[]` array to OpenAI Chat Completions format
+- Maps `output_text` items to assistant message content
+- Maps `function_call` items to tool_calls
+
+**Streaming transform:**
+- Converts Responses API SSE events to OpenAI SSE chunks
+- Maps `response.output_text.delta` to content delta chunks
+- Maps `response.output_item.added` / `response.function_call_arguments.delta` to tool call chunks
+- Maps `response.completed` to final chunk with `[DONE]`
+
+**📐 Config schema:** No config required (`{}`)
+
+---
+
+### 🔄 `anthropic2responses`
+
+Converts Anthropic Messages requests to Responses API format (and vice versa for responses).
+
+**Request transform:**
+- Maps Anthropic `messages[]` to Responses API `input[]` array
+- Extracts `system` field to `instructions`
+- Converts `tool_use` content blocks to `function_call` items
+- Converts `tool_result` content blocks to `function_call_output` items
+- Handles image content blocks as `input_image` parts
+- Converts Anthropic tools to OpenAI format
+- Maps `thinking.budget_tokens` to `reasoning.effort`
+- Rewrites URL path from `/v1/messages` to `/v1/responses`
+
+**Response transform:**
+- Converts Responses API `output[]` array to Anthropic Messages format
+- Maps `output_text` items to `text` content blocks
+- Maps `function_call` items to `tool_use` content blocks
+
+**Streaming transform:**
+- Converts Responses API SSE events to Anthropic SSE events
+- Maps `response.created` to `message_start`
+- Maps `response.output_text.delta` to `content_block_delta` (text)
+- Maps `response.output_item.added` / `response.function_call_arguments.delta` to `content_block_start` / `content_block_delta` (tool_use)
+- Maps `response.completed` to `message_delta` + `message_stop`
+
+**📐 Config schema:** No config required (`{}`)
+
 ## ⚡ Auto-Translation
 
-Tresor can automatically insert format converters when the request format doesn't match the downstream's declared `api_formats`. The engine detects the input format from the request path (`/v1/chat/completions` → OpenAI, `/v1/messages` → Anthropic) and compares it against the downstream's format list. If there's a mismatch, the appropriate plugin (`openai2anthropic` or `anthropic2openai`) is automatically prepended to the request pipeline and appended to the response/stream pipelines — without any explicit rule.
+Tresor can automatically insert format converters when the request format doesn't match the downstream's declared `api_formats`. The engine detects the input format from the request path (`/v1/chat/completions` → OpenAI, `/v1/messages` → Anthropic, `/v1/responses` → OpenAI Responses API) and compares it against the downstream's format list. If there's a mismatch, the appropriate plugin is automatically selected and prepended to the request pipeline and appended to the response/stream pipelines — without any explicit rule.
+
+**Auto-translation decision tree:**
+
+| Input Format | Downstream Has | Plugin Selected |
+|---|---|---|
+| `openai` | `openai_responses` | `openai2responses` |
+| `openai` | `anthropic` (not `openai_responses`) | `openai2anthropic` |
+| `anthropic` | `openai_responses` | `anthropic2responses` |
+| `anthropic` | `openai` (not `openai_responses`) | `anthropic2openai` |
+| `openai_responses` | `openai` | `responses2openai` |
+| `openai_responses` | `anthropic` | `responses2anthropic` |
+
+When the downstream supports `openai_responses`, that format takes priority over direct OpenAI/Anthropic translation. This reflects the design principle that the Responses API serves as a **hub format**.
 
 ## 📐 Pipeline Configuration Format
 
@@ -200,7 +330,7 @@ Pipeline config is stored as JSON in the `rules.pipeline_config` column:
 ```json
 [
   {"plugin_id": "custom_header", "config": {"headers": {"X-Custom": "value"}}},
-  {"plugin_id": "openai2anthropic"}
+  {"plugin_id": "openai2responses"}
 ]
 ```
 
