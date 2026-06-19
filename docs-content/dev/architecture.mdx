@@ -52,7 +52,7 @@ internal/
 │   ├── config.go         # Runtime config endpoints (proxy mode, auth keys, password, default tab)
 │   └── embed.go          # Embedded web UI via //go:embed
 │
-├── middleware/            # Bearer-token auth for admin API
+├── middleware/            # Cookie-based session auth for admin API
 │   └── auth.go
 │
 ├── proxy/                 # Outbound proxy mode implementation
@@ -244,7 +244,7 @@ Along with default alias groups for `gpt-4o` and `claude-sonnet`.
 
 ### Protected Endpoints
 
-All other `/api/*` endpoints require the configured `admin_password` Bearer token. See the individual documentation pages for downstream, rule, alias, and config endpoints.
+All other `/api/*` endpoints require authentication. The admin API uses **cookie-based session authentication**: after logging in via `POST /api/auth/login`, a session cookie (`tresor_token`, Path=/api/, HttpOnly, SameSite=Lax, 365-day expiry) is issued. Authenticated requests send the cookie (for browser/SSE) or use it as a Bearer header. CLI commands use the raw `admin_password` as Bearer token (backwards compat). Session tokens persist across daemon restarts (stored in SQLite). Login is rate-limited (5 attempts per 60s per IP).
 
 Key alias endpoints include `POST /api/aliases/reorder` for drag-and-drop group reordering, which accepts `{"order": ["gpt-4o", "claude-sonnet"]}`.
 

@@ -14,7 +14,7 @@ Tresor is configured entirely via a single YAML file. All settings, downstreams,
 bind_addr: "127.0.0.1:11510"         # TCP address for gateway + admin API
 socket_path: "/tmp/tresor.sock"      # Optional Unix socket (admin only)
 db_path: "./tresor.db"               # SQLite database path
-admin_password: "secret"             # 🔐 Optional Bearer token for admin API
+admin_password: "secret"             # 🔐 Optional: admin password for cookie-based session auth
 
 # --- Proxy Settings ---
 proxy_mode: "auto"                   # Outbound proxy behavior
@@ -78,11 +78,11 @@ aliases:
         output_model_id: claude-sonnet-4-20250514
 
   - input_model_id: "^claude-.*"
+    is_regex: true
     options:
       - id: alias-claude-wildcard
         downstream_id: anthropic
         output_model_id: claude-sonnet-4-20250514
-        is_regex: true
 ```
 
 ## 🖥️ Server Settings
@@ -92,7 +92,7 @@ aliases:
 | `bind_addr` | string | TCP address for the gateway and admin API (e.g. `127.0.0.1:11510`) |
 | `socket_path` | string | Optional Unix Domain Socket path for admin API only |
 | `db_path` | string | SQLite database file path (`~` expands to home directory) |
-| `admin_password` | string | 🔐 Optional Bearer token required for admin API and web UI access |
+| `admin_password` | string | 🔐 Optional password for admin API and web UI. Creates a cookie-based session on login (persistent across restarts). CLI commands use the raw password as Bearer token for backwards compatibility. |
 
 ## 🌐 Proxy Settings
 
@@ -100,7 +100,7 @@ aliases:
 |---|---|---|
 | `proxy_mode` | string | Outbound proxy mode: `auto`, `env`, `windows`, or `none` |
 | `proxy_api_keys` | list | 🔑 Optional Bearer tokens that client requests must include |
-| `default_tab` | string | Default web UI tab: `downstreams`, `aliases`, `rules`, `plugins`, `settings`, `logs`, or `about` |
+| `default_tab` | string | Default web UI tab: `downstreams`, `aliases`, `rules`, `settings`, or `about` |
 | `log_level` | string | Request log verbosity: `debug`, `info`, `warn`, or `error` (default: `info`) |
 
 ## 🔌 Downstream `api_formats`
@@ -124,7 +124,12 @@ Each alias option within a group has these fields:
 | `id` | Yes | Unique identifier for this alias option |
 | `downstream_id` | Yes | Which downstream provider to forward to |
 | `output_model_id` | Yes | The model name to use when forwarding |
-| `is_regex` | No | Treat `input_model_id` as a regular expression (default: `false`) |
+
+Group-level fields (set on the alias group, not individual options):
+
+| Field | Required | Description |
+|---|---|---|
+| `is_regex` | No | Treat `input_model_id` as a regular expression pattern (default: `false`) |
 
 When `is_regex: true`, the group's `input_model_id` is a Go regular expression pattern. Requests whose model name matches the pattern are routed through this alias. See [Model Aliases](/Tresor-docs/docs/user/configuration/aliases) for details.
 
