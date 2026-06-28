@@ -151,6 +151,8 @@ Converts OpenAI Chat Completion format to Anthropic Messages format (and vice ve
 - Tracks state across SSE events (role deltas, content accumulation, finish reason)
 - Maps Anthropic's `message_start`, `content_block_start/delta/end`, `message_delta`, `message_stop` events to OpenAI's chunk format
 - Converts `end_turn` → `stop` for finish reasons
+- Always emits choice index `0` to ensure reasoning content and text aggregate on a single choice
+- Passes through thinking blocks for reasoning model compatibility
 
 **📐 Config schema:** No config required (`{}`)
 
@@ -240,10 +242,12 @@ Converts OpenAI Responses API requests to Anthropic Messages format (and vice ve
 
 **Streaming transform:**
 - Converts Anthropic SSE events to Responses API named events
-- Maps `message_start` to `response.created` + `response.in_progress`
-- Maps `content_block_delta` (text) to `response.output_text.delta`
+- Maps `message_start` to `response.created` + `response.in_progress` (with `created_at`/`model` fields)
+- Maps `content_block_delta` (text) to `response.output_text.delta` (with `item_id`/`output_index`/`logprobs`)
 - Maps `content_block_delta` (input_json) to `response.function_call_arguments.delta`
-- Maps `message_stop` to `response.completed`
+- Surfaces real `input_tokens`/`output_tokens` from upstream Anthropic `message_delta` on `response.completed.usage`
+- Includes output array in `response.completed`
+- Passes through thinking blocks for reasoning model compatibility
 
 **📐 Config schema:** No config required (`{}`)
 

@@ -200,6 +200,13 @@ The database uses WAL mode with a 5000ms busy timeout. Four tables:
 | `created_at` | DATETIME | Creation timestamp |
 | `updated_at` | DATETIME | Last update timestamp |
 
+**sessions** — Active admin sessions (multi-session support)
+
+| Column | Type | Description |
+|---|---|---|
+| `token` | TEXT PRIMARY KEY | Session token (UUID) |
+| `created_at` | DATETIME | Session creation timestamp |
+
 Indexes on foreign keys and query patterns ensure efficient lookups. Regex patterns are cached (via `sync.Map`) to avoid recompilation on every request.
 
 ### 🔄 Upsert Semantics
@@ -244,7 +251,7 @@ Along with default alias groups for `gpt-4o` and `claude-sonnet`.
 
 ### Protected Endpoints
 
-All other `/api/*` endpoints require authentication. The admin API uses **cookie-based session authentication**: after logging in via `POST /api/auth/login`, a session cookie (`tresor_token`, Path=/api/, HttpOnly, SameSite=Lax, 365-day expiry) is issued. Authenticated requests send the cookie (for browser/SSE) or use it as a Bearer header. CLI commands use the raw `admin_password` as Bearer token (backwards compat). Session tokens persist across daemon restarts (stored in SQLite). Login is rate-limited (5 attempts per 60s per IP).
+All other `/api/*` endpoints require authentication. The admin API uses **cookie-based session authentication with multi-session support**: after logging in via `POST /api/auth/login`, a session cookie (`tresor_token`, Path=/api/, HttpOnly, SameSite=Lax, 365-day expiry) is issued. Multiple simultaneous sessions are supported — logging in from a second browser doesn't invalidate the first. Logging out from one browser only clears that session; others remain active. Authenticated requests send the cookie (for browser/SSE) or use it as a Bearer header. CLI commands use the raw `admin_password` as Bearer token (backwards compat). Session tokens persist across daemon restarts (stored in SQLite). Login is rate-limited (5 attempts per 60s per IP). Changing the admin password clears all active sessions.
 
 Key alias endpoints include `POST /api/aliases/reorder` for drag-and-drop group reordering, which accepts `{"order": ["gpt-4o", "claude-sonnet"]}`.
 
