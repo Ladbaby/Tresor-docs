@@ -101,6 +101,7 @@ This example maps **any** model starting with `claude-` (e.g., `claude-sonnet-4`
 **Key behaviors:**
 - Exact-match aliases take priority over regex aliases. A request for `claude-sonnet` with an exact alias and a regex alias `^claude-.*` will use the exact match.
 - Regex aliases are **excluded** from the model discovery API (`/v1/models`, `/models`). Since they represent patterns rather than concrete model IDs, including them would mislead clients about available models.
+- Regex aliases display a purple "regex" badge in the web UI for easy identification.
 - Invalid regex patterns are rejected at creation time. The alias won't be saved if the pattern can't be compiled.
 
 ## 🔃 Group Reordering

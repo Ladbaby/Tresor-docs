@@ -26,25 +26,15 @@ The web UI supports **dark and light themes**. A theme toggle button in the side
 
 ### 🔗 Downstreams
 
-The **Downstreams** tab displays all configured LLM provider endpoints in a table.
+The **Downstreams** tab displays all configured LLM provider endpoints.
 
-**Table columns:**
-
-| Column | Content |
-|---|---|
-| Name | Provider display name |
-| Format | Color-coded badges showing API format(s) (OpenAI, Anthropic, OpenAI Responses) |
-| Base URL | Provider API endpoint |
-| API Key | Masked key (shown as `***`) |
-| Models | Model count badge + expandable list |
-| Actions | Edit / Delete buttons |
 
 **Actions:**
 - ➕ **Add Downstream** — Create a new provider endpoint with name, base URL, API key, and format selection (OpenAI/Anthropic/OpenAI Responses checkboxes)
-- ✏️ **Edit** — Modify any downstream's settings including format checkboxes (OpenAI, Anthropic, OpenAI Responses)
+- ✏️ **Edit** — All fields are editable.
 - 🔢 **Add Model** — Manually add model IDs to the downstream's `output_model_ids` list
 - 🔎 **Fetch Models** — Calls the provider's `/models` endpoint to auto-discover available models and add them with one click
-- 🗑️ **Delete** — Remove the downstream entirely (cascade: removes downstream ID from rule `match_downstreams` arrays, deletes pointing aliases)
+- 🗑️ **Delete** — Button on top-right corner. Remove the downstream entirely (cascade: removes downstream ID from rule `match_downstreams` arrays, deletes pointing aliases)
 
 ### 🏷️ Aliases
 

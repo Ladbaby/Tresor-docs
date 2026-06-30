@@ -54,6 +54,7 @@ Imagine you have agents on three machines, all calling OpenAI. You want to switc
 - 🔌 **Plugin Pipeline** — Chain multiple transformation plugins per rule (header injection, format conversion, image extraction, and more).
 - 📋 **Aggregated Model List** — Tresor exposes `/v1/models` that aggregates all known models from downstreams and exact-match aliases (regex aliases excluded), so OpenAI-compatible clients can discover available models.
 - 📊 **Request Logging** — Real-time gateway request logs via Server-Sent Events (SSE), displayed newest-first with a text filter for searching. Configurable log verbosity (debug, info, warn, error).
+- 🖼️ **Model & Provider Icons** — Visual icons for models and providers in the web UI, auto-matched based on provider patterns. Falls back to placeholder icons for unrecognized providers.
 - 🌐 **Embedded Web UI** — Manage everything from a browser-based dashboard served by the daemon itself. Features include a login screen, dark/light theme toggle, visual pipeline editor, request log viewer, and an About panel. No separate frontend needed.
 - 📝 **Single Config File** — All downstreams, rules, aliases, and settings live in one portable YAML file. Changes via API or UI write back automatically.
 - 🪶 **Zero External Dependencies** — Pure Go SQLite (no CGO), no external web framework, single compiled binary.

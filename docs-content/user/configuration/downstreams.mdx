@@ -8,7 +8,9 @@ import TabItem from '@theme/TabItem';
 
 # 🔗 Downstreams
 
-A **downstream** defines an LLM provider endpoint that Tresor can forward requests to. Each downstream has a unique ID, a base URL, an API key, a list of model IDs it can serve, and declares which API format(s) it speaks.
+A **downstream** defines an LLM provider endpoint that Tresor can forward requests to. Each downstream has a unique ID, a display name with icon, a base URL, an API key, a list of model IDs it can serve, and declares which API format(s) it speaks.
+
+**Visual Icons:** Each downstream displays a provider-specific icon in the web UI, auto-generated based on the base URL. Unrecognized providers show a placeholder icon.
 
 ## ⚙️ Configuration
 
@@ -110,7 +112,7 @@ You can still add API keys and model IDs via the web UI or admin API without edi
 
 ### 🖥️ Via Web UI
 
-The **Downstreams** tab shows all configured providers in a table with a Format column showing color-coded badges (OpenAI/Anthropic/OpenAI Responses). Click **Edit** to modify settings, add/remove model IDs, or fetch models from the provider.
+The **Downstreams** tab shows all configured providers with their icons.
 
 ### 💻 Via CLI
 
