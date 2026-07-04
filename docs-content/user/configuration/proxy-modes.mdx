@@ -56,10 +56,16 @@ proxy_api_keys:
   - sk-proxy-123
 ```
 
-Clients must then include a matching Bearer token: 🔑
+Clients must then include a matching token: 🔑
 
 ```
 Authorization: Bearer sk-proxy-123
+```
+
+Or use the `x-api-key` header (supported for Anthropic-format clients like the Claude Office plugin):
+
+```
+x-api-key: sk-proxy-123
 ```
 
 This is separate from `admin_password`, which protects the admin API and web UI.

@@ -26,25 +26,15 @@ The web UI supports **dark and light themes**. A theme toggle button in the side
 
 ### 🔗 Downstreams
 
-The **Downstreams** tab displays all configured LLM provider endpoints in a table.
+The **Downstreams** tab displays all configured LLM provider endpoints.
 
-**Table columns:**
-
-| Column | Content |
-|---|---|
-| Name | Provider display name |
-| Format | Color-coded badges showing API format(s) (OpenAI, Anthropic) |
-| Base URL | Provider API endpoint |
-| API Key | Masked key (shown as `***`) |
-| Models | Model count badge + expandable list |
-| Actions | Edit / Delete buttons |
 
 **Actions:**
-- ➕ **Add Downstream** — Create a new provider endpoint with name, base URL, API key, and format selection (OpenAI/Anthropic checkboxes)
-- ✏️ **Edit** — Modify any downstream's settings including format checkboxes
+- ➕ **Add Downstream** — Create a new provider endpoint with name, base URL, API key, and format selection (OpenAI/Anthropic/OpenAI Responses checkboxes)
+- ✏️ **Edit** — All fields are editable.
 - 🔢 **Add Model** — Manually add model IDs to the downstream's `output_model_ids` list
 - 🔎 **Fetch Models** — Calls the provider's `/models` endpoint to auto-discover available models and add them with one click
-- 🗑️ **Delete** — Remove the downstream entirely (cascade: removes downstream ID from rule `match_downstreams` arrays, deletes pointing aliases)
+- 🗑️ **Delete** — Button on top-right corner. Remove the downstream entirely (cascade: removes downstream ID from rule `match_downstreams` arrays, deletes pointing aliases)
 
 ### 🏷️ Aliases
 
@@ -77,7 +67,7 @@ The **Rules** tab shows all routing rules in a table with enable/disable toggle 
 **Actions:**
 - ➕ **Create Rule** — Define a new rule with name, path pattern, optional model filter, format filters (input format checkboxes, downstream format checkboxes, downstream multi-select)
 - ✏️ **Edit** — Modify rule settings including format filters and a **visual pipeline builder**:
-  - Format checkboxes for input and downstream format filters
+  - Format checkboxes for input and downstream format filters (OpenAI, Anthropic, OpenAI Responses)
   - Multi-select for matching downstreams
   - Select a plugin from a dropdown list
   - Configure plugin-specific options through dynamically generated fields (e.g., header key-value pairs for `custom_header`)
@@ -86,9 +76,9 @@ The **Rules** tab shows all routing rules in a table with enable/disable toggle 
 - 🔄 **Toggle Enable/Disable** — Activate or deactivate a rule without deleting it
 - 🗑️ **Delete** — Remove the rule
 
-### 🔌 Plugins
+### 🔌 Available Plugins
 
-The **Plugins** tab is a read-only reference showing all available built-in plugins:
+The **Available Plugins** section is displayed below the rules table on the **Rules** tab. It shows all 8 available built-in plugins as a read-only reference:
 
 | Column | Content |
 |---|---|
@@ -96,7 +86,9 @@ The **Plugins** tab is a read-only reference showing all available built-in plug
 | Description | 📝 What the plugin does |
 | Config Schema | 📐 JSON schema for valid configuration options |
 
-Use this tab to look up plugin IDs and configuration options when building pipeline configs.
+The list includes format converters for all three API formats (OpenAI Chat Completions, Anthropic Messages, OpenAI Responses API), header injection, and image extraction.
+
+Use this section to look up plugin IDs and configuration options when building pipeline configs.
 
 ### ⚙️ Settings
 
@@ -117,7 +109,7 @@ The **Settings** tab configures global gateway behavior. Changes take effect **i
 - Changing the password logs out the current session
 
 **Dashboard:**
-- Default Tab selector: `downstreams`, `aliases`, `rules`, `plugins`, `settings`, `logs`, `about`
+- Default Tab selector: `downstreams`, `aliases`, `rules`, `settings`, `about`
 - Controls which tab is shown on page load or refresh
 
 ### 📋 Logs

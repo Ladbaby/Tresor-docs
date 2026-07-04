@@ -27,6 +27,26 @@ This script:
 - Creates a config skeleton at `~/.config/tresor/config.yaml`
 - Checks if `~/.local/bin` is in your `$PATH` and warns if not
 
+### Options
+
+**`--prerelease`** — Include pre-release versions (installs the most recent release, including pre-releases):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Ladbaby/Tresor/main/setup.sh | bash -s -- --prerelease
+```
+
+**`TRESOR_VERSION`** — Pin to a specific version:
+
+```bash
+TRESOR_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/Ladbaby/Tresor/main/setup.sh | bash
+```
+
+**`TRESOR_PRERELEASE`** — Enable pre-releases via environment variable:
+
+```bash
+TRESOR_PRERELEASE=true curl -fsSL https://raw.githubusercontent.com/Ladbaby/Tresor/main/setup.sh | bash
+```
+
 > **Note:** This script only supports Linux and macOS. Windows users should [build from source](#build-from-source) or download a release binary manually from [GitHub Releases](https://github.com/ladbaby/tresor/releases).
 
 ### Windows
@@ -127,7 +147,7 @@ Any request sent to Tresor is intercepted, routed to the appropriate downstream,
 
 ### 4️⃣ Open the Web UI
 
-Navigate to `http://127.0.0.1:11510` in your browser to access the embedded dashboard. The web UI features a login screen (if `admin_password` is set), dark/light theme toggle, and tabs for managing downstreams, aliases, rules, plugins, settings, and an about panel.
+Navigate to `http://127.0.0.1:11510` in your browser to access the embedded dashboard. The web UI features a login screen (if `admin_password` is set), dark/light theme toggle, and tabs for managing downstreams, aliases, rules, settings, and an about panel.
 
 ## 📂 Config File Locations
 
