@@ -20,7 +20,7 @@ downstreams:
   - id: openai
     name: OpenAI
     api_formats: [openai]
-    base_url: https://api.openai.com/v1
+    base_url: https://api.openai.com
     api_key: sk-proj-...
     output_model_ids:
       - gpt-4o
@@ -64,7 +64,7 @@ Configure your application to use Tresor as the endpoint:
 ```python
 # Python example
 client = OpenAI(
-    base_url="http://127.0.0.1:11510/v1",
+    base_url="http://127.0.0.1:11510",
     api_key="sk-proxy-123"
 )
 

@@ -17,7 +17,7 @@ downstreams:
   - id: openai
     name: OpenAI
     api_formats: [openai]
-    base_url: https://api.openai.com/v1
+    base_url: https://api.openai.com
     api_key: sk-proj-...
     output_model_ids:
       - gpt-4o
@@ -83,7 +83,7 @@ If your config file does not define any downstreams, Tresor seeds three built-in
 
 | ID | Name | Base URL | Models |
 |---|---|---|---|
-| `openai-gpt4o` | OpenAI GPT-4o | `https://api.openai.com/v1` | gpt-4o, gpt-4o-mini, gpt-3.5-turbo |
+| `openai-gpt4o` | OpenAI GPT-4o | `https://api.openai.com` | gpt-4o, gpt-4o-mini, gpt-3.5-turbo |
 | `anthropic-sonnet` | Anthropic Claude Sonnet | `https://api.anthropic.com` | claude-sonnet-4-20250514 |
 | `anthropic-haiku` | Anthropic Claude Haiku | `https://api.anthropic.com` | claude-haiku-4.5 |
 
