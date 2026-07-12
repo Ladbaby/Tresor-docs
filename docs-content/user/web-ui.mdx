@@ -140,12 +140,13 @@ The **Logs** tab shows real-time gateway request logs via Server-Sent Events (SS
 Each inspect panel has a **Raw** tab and a **Parsed** tab. The Raw tab is a literal JSON view of the captured bytes. The Parsed tab reconstructs the body into a human-readable tree: system prompt, tools, messages, usage stats, and so on.
 
 :::tip Parsed-view display order
-For **Anthropic Messages** and **OpenAI Responses** requests, the Parsed tab does **not** mirror the raw JSON key order. The sections are emitted in the order the model actually consumes the prompt — i.e. the prompt-cache prefix hierarchy:
+For **Anthropic Messages**, **OpenAI Chat Completions**, and **OpenAI Responses** requests, the Parsed tab does **not** mirror the raw JSON key order. The sections are emitted in the order the model actually consumes the prompt:
 
 - **Anthropic Messages:** `tools → system → messages` ([docs](https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-use-with-prompt-caching))
+- **OpenAI Chat Completions:** `tools → system → messages` — OpenAI doesn't document an explicit order, so we follow the convention used by major chat templates (e.g. Llama 3, Qwen): the system-role message is hoisted out of `messages[]`, tools are injected at the top of that block, and the remaining messages render in array order.
 - **OpenAI Responses:** `tools → instructions → input[]` ([Codex agent loop blog](https://openai.com/index/unrolling-the-codex-agent-loop/))
 
-A small banner with a `?` tooltip appears at the top of the Parsed view for these formats so the order discrepancy is visible. For OpenAI Chat Completions, Gemini, and unrecognised formats the sections keep their raw JSON order, since those formats don't have a server-controlled cache prefix.
+A small banner with a `?` tooltip appears at the top of the Parsed view for these formats so the order discrepancy is visible. For Gemini and unrecognised formats the sections keep their raw JSON order.
   :::
 
 The SSE connection is only active while the Logs tab is visible; switching to another tab automatically disconnects it to save resources.
