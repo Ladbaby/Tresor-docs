@@ -96,6 +96,11 @@ Plugins execute **sequentially** — each plugin's output becomes the next plugi
 | `responses2anthropic` | Converts OpenAI Responses API requests to Anthropic Messages format (and vice versa for responses) |
 | `openai2responses` | Converts OpenAI Chat Completions requests to Responses API format (and vice versa for responses) |
 | `anthropic2responses` | Converts Anthropic Messages requests to Responses API format (and vice versa for responses) |
+| `openai2gemini` | Converts OpenAI Chat Completion format to Google Gemini generateContent format |
+| `anthropic2gemini` | Converts Anthropic Messages format to Google Gemini generateContent format |
+| `gemini2openai` | Converts Google Gemini generateContent format to OpenAI Chat Completion format (and vice versa) |
+| `gemini2anthropic` | Converts Google Gemini generateContent format to Anthropic Messages format (and vice versa) |
+| `gemini2responses` | Converts Google Gemini generateContent format to OpenAI Responses API format (and vice versa) |
 
 See the [/Tresor-docs/docs/dev/plugin-system](/Tresor-docs/docs/dev/plugin-system) documentation in the Developer Guide for details on each plugin's configuration options.
 
@@ -107,10 +112,16 @@ When a downstream declares `api_formats` and the incoming request uses a differe
 |---|---|---|
 | `openai` | `anthropic` | `openai2anthropic` |
 | `openai` | `openai_responses` | `openai2responses` |
+| `openai` | `gemini` | `openai2gemini` |
 | `anthropic` | `openai` | `anthropic2openai` |
 | `anthropic` | `openai_responses` | `anthropic2responses` |
+| `anthropic` | `gemini` | `anthropic2gemini` |
 | `openai_responses` | `openai` | `responses2openai` |
 | `openai_responses` | `anthropic` | `responses2anthropic` |
+| `openai_responses` | `gemini` | `responses2gemini` |
+| `gemini` | `openai` | `gemini2openai` |
+| `gemini` | `anthropic` | `gemini2anthropic` |
+| `gemini` | `openai_responses` | `gemini2responses` |
 
 Auto-translation transformers are prepended/appended around the collected rule pipelines, so explicit rule transformers still get applied.
 

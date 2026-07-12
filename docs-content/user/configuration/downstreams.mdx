@@ -51,7 +51,7 @@ downstreams:
 |---|---|---|
 | `id` | Yes | Unique identifier (alphanumeric, used to reference this downstream in rules and aliases) |
 | `name` | Yes | Display name for the web UI |
-| `api_formats` | Optional | List of API formats this downstream speaks (`openai`, `anthropic`, `openai_responses`). Enables auto-translation when the request format doesn't match. |
+| `api_formats` | Optional | List of API formats this downstream speaks (`openai`, `anthropic`, `openai_responses`, `gemini`). Enables auto-translation when the request format doesn't match. |
 | `base_url` | Yes | The provider's API base URL |
 | `api_key` | Optional | 🔑 API key for authentication (can be left empty and set later via web UI) |
 | `output_model_ids` | Required | List of model IDs this downstream can serve — used for automatic routing |
@@ -87,10 +87,16 @@ The `api_formats` field declares which API protocol(s) a downstream understands.
 |---|---|---|
 | `openai` (`/v1/chat/completions`) | `anthropic` | `openai2anthropic` |
 | `openai` (`/v1/chat/completions`) | `openai_responses` | `openai2responses` |
+| `openai` (`/v1/chat/completions`) | `gemini` | `openai2gemini` |
 | `anthropic` (`/v1/messages`) | `openai` | `anthropic2openai` |
 | `anthropic` (`/v1/messages`) | `openai_responses` | `anthropic2responses` |
+| `anthropic` (`/v1/messages`) | `gemini` | `anthropic2gemini` |
 | `openai_responses` (`/v1/responses`) | `openai` | `responses2openai` |
 | `openai_responses` (`/v1/responses`) | `anthropic` | `responses2anthropic` |
+| `openai_responses` (`/v1/responses`) | `gemini` | `responses2gemini` |
+| `gemini` (`/v1beta/models/{model}:generateContent`) | `openai` | `gemini2openai` |
+| `gemini` (`/v1beta/models/{model}:generateContent`) | `anthropic` | `gemini2anthropic` |
+| `gemini` (`/v1beta/models/{model}:generateContent`) | `openai_responses` | `gemini2responses` |
 
 The Responses API acts as a **hub format** — all three client formats can translate to and from it. This means you can connect any client to any downstream regardless of format mismatch.
 

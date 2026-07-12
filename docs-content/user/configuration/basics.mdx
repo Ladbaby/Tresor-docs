@@ -93,6 +93,12 @@ aliases:
 | `socket_path` | string | Optional Unix Domain Socket path for admin API only |
 | `db_path` | string | SQLite database file path (`~` expands to home directory) |
 | `admin_password` | string | 🔐 Optional password for admin API and web UI. Creates a cookie-based session on login (persistent across restarts). CLI commands use the raw password as Bearer token for backwards compatibility. |
+| `proxy_mode` | string | Outbound proxy mode: `auto`, `env`, `windows`, or `none` |
+| `proxy_api_keys` | list | 🔑 Optional Bearer tokens that client requests must include |
+| `default_tab` | string | Default web UI tab: `downstreams`, `aliases`, `rules`, `settings`, or `about` |
+| `log_level` | string | Request log verbosity: `debug`, `info`, `warn`, or `error` (default: `info`) |
+| `capture_payloads` | bool | Capture raw request/response bodies for the Logs inspector (default: `false`). When enabled, the most recent 100 requests are stored in memory and accessible via the Logs tab's "Inspect" action. |
+| `icon_cache_dir` | string | Directory for cached model icon SVGs (fetched from CDN at runtime). Defaults to `<db_dir>/tresor-icons/` if empty. `~` expands to home directory. |
 
 ## 🌐 Proxy Settings
 
@@ -105,11 +111,12 @@ aliases:
 
 ## 🔌 Downstream `api_formats`
 
-The `api_formats` field declares which API protocol(s) a downstream speaks. Three formats are supported:
+The `api_formats` field declares which API protocol(s) a downstream speaks. Four formats are supported:
 
 - `openai` — OpenAI Chat Completions (`/v1/chat/completions`)
 - `anthropic` — Anthropic Messages (`/v1/messages`)
 - `openai_responses` — OpenAI Responses API (`/v1/responses`)
+- `gemini` — Google Gemini generateContent (`/v1beta/models/{model}:generateContent`)
 
 This enables **auto-translation**: when a request arrives in a format that doesn't match the downstream's declared format, Tresor automatically inserts the appropriate format converter into the pipeline — no explicit rule needed.
 

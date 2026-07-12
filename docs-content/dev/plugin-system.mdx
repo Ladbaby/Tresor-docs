@@ -310,6 +310,110 @@ Converts Anthropic Messages requests to Responses API format (and vice versa for
 
 **📐 Config schema:** No config required (`{}`)
 
+---
+
+### 🔄 `openai2gemini`
+
+Converts OpenAI Chat Completion format to Google Gemini generateContent format.
+
+**Request transform:**
+- Maps `messages[]` to Gemini `contents[]` array
+- Extracts system messages into `systemInstruction`
+- Converts `tool_calls` to Gemini `functionDeclarations`
+- Maps `response_format` to `text.format`
+- Rewrites URL path to `/v1beta/models/{model}:generateContent` (or `:streamGenerateContent?alt=sse` for streaming)
+
+**Response transform:**
+- Converts Gemini JSON response to OpenAI Chat Completions format
+- Maps `candidates[].content.parts` to assistant message content
+- Converts usage metadata
+
+**Streaming transform:**
+- Converts Gemini SSE chunks to OpenAI SSE chunks
+
+**📐 Config schema:** No config required (`{}`)
+
+---
+
+### 🔄 `anthropic2gemini`
+
+Converts Anthropic Messages format to Google Gemini generateContent format.
+
+**Request transform:**
+- Maps `messages[]` to Gemini `contents[]` array
+- Extracts `system` field into `systemInstruction`
+- Converts `tool_use` to Gemini `functionDeclarations`
+- Maps `thinking.budget_tokens` to `thinkingConfig.budgetTokens`
+- Rewrites URL path to `/v1beta/models/{model}:generateContent`
+
+**Response transform:**
+- Converts Gemini JSON response to Anthropic Messages format
+- Maps `candidates[].content.parts` to text content blocks
+
+**Streaming transform:**
+- Converts Gemini SSE chunks to Anthropic SSE events
+- Passes through thinking blocks for reasoning model compatibility
+
+**📐 Config schema:** No config required (`{}`)
+
+---
+
+### 🔄 `gemini2openai`
+
+Converts Google Gemini generateContent format to OpenAI Chat Completion format (and vice versa for responses).
+
+**Request transform:**
+- Maps Gemini `contents[]` to OpenAI `messages[]`
+- Rewrites URL path from `/v1beta/models/{model}:generateContent` to `/v1/chat/completions`
+- Sets `Authorization: Bearer` header
+
+**Response transform:**
+- Converts OpenAI Chat Completions response to Gemini JSON format
+
+**Streaming transform:**
+- Converts OpenAI SSE chunks to Gemini SSE events
+
+**📐 Config schema:** No config required (`{}`)
+
+---
+
+### 🔄 `gemini2anthropic`
+
+Converts Google Gemini generateContent format to Anthropic Messages format (and vice versa for responses).
+
+**Request transform:**
+- Maps Gemini `contents[]` to Anthropic `messages[]`
+- Converts Gemini function declarations to Anthropic tools
+- Rewrites URL path to `/v1/messages`
+- Sets Anthropic-specific headers
+
+**Response transform:**
+- Converts Anthropic Messages response to Gemini JSON format
+
+**Streaming transform:**
+- Converts Anthropic SSE events to Gemini SSE events
+- Passes through thinking blocks
+
+**📐 Config schema:** No config required (`{}`)
+
+---
+
+### 🔄 `gemini2responses`
+
+Converts Google Gemini generateContent format to OpenAI Responses API format (and vice versa for responses).
+
+**Request transform:**
+- Maps Gemini `contents[]` to Responses API `input[]` array
+- Rewrites URL path to `/v1/responses`
+
+**Response transform:**
+- Converts Responses API `output[]` to Gemini JSON format
+
+**Streaming transform:**
+- Converts Responses API SSE events to Gemini SSE events
+
+**📐 Config schema:** No config required (`{}`)
+
 ## ⚡ Auto-Translation
 
 Tresor can automatically insert format converters when the request format doesn't match the downstream's declared `api_formats`. The engine detects the input format from the request path (`/v1/chat/completions` → OpenAI, `/v1/messages` → Anthropic, `/v1/responses` → OpenAI Responses API) and compares it against the downstream's format list. If there's a mismatch, the appropriate plugin is automatically selected and prepended to the request pipeline and appended to the response/stream pipelines — without any explicit rule.
@@ -319,11 +423,17 @@ Tresor can automatically insert format converters when the request format doesn'
 | Input Format | Downstream Has | Plugin Selected |
 |---|---|---|
 | `openai` | `openai_responses` | `openai2responses` |
+| `openai` | `gemini` | `openai2gemini` |
 | `openai` | `anthropic` (not `openai_responses`) | `openai2anthropic` |
 | `anthropic` | `openai_responses` | `anthropic2responses` |
+| `anthropic` | `gemini` | `anthropic2gemini` |
 | `anthropic` | `openai` (not `openai_responses`) | `anthropic2openai` |
+| `openai_responses` | `gemini` | `responses2gemini` |
 | `openai_responses` | `openai` | `responses2openai` |
 | `openai_responses` | `anthropic` | `responses2anthropic` |
+| `gemini` | `openai` | `gemini2openai` |
+| `gemini` | `anthropic` | `gemini2anthropic` |
+| `gemini` | `openai_responses` | `gemini2responses` |
 
 When the downstream supports `openai_responses`, that format takes priority over direct OpenAI/Anthropic translation. This reflects the design principle that the Responses API serves as a **hub format**.
 

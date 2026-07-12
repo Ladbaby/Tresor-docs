@@ -78,7 +78,7 @@ The **Rules** tab shows all routing rules in a table with enable/disable toggle 
 
 ### 🔌 Available Plugins
 
-The **Available Plugins** section is displayed below the rules table on the **Rules** tab. It shows all 8 available built-in plugins as a read-only reference:
+The **Available Plugins** section is displayed below the rules table on the **Rules** tab. It shows all 13 available built-in plugins as a read-only reference:
 
 | Column | Content |
 |---|---|
@@ -86,7 +86,7 @@ The **Available Plugins** section is displayed below the rules table on the **Ru
 | Description | 📝 What the plugin does |
 | Config Schema | 📐 JSON schema for valid configuration options |
 
-The list includes format converters for all three API formats (OpenAI Chat Completions, Anthropic Messages, OpenAI Responses API), header injection, and image extraction.
+The list includes format converters for all supported API formats (OpenAI Chat Completions, Anthropic Messages, OpenAI Responses API, and Google Gemini), header injection, and image extraction.
 
 Use this section to look up plugin IDs and configuration options when building pipeline configs.
 
@@ -135,8 +135,13 @@ The **Logs** tab shows real-time gateway request logs via Server-Sent Events (SS
 - ⏸ **Pause** — Temporarily stops rendering new log rows (keeps the SSE connection alive). Click ▶ Resume to continue rendering.
 - 🗑️ **Clear** — Removes all entries from the table and in-memory buffer.
 - 🔴 **Live indicator** — Shows connection status: "Live" (green), "Paused" (amber), "Offline" (red), "Disconnected" (grey).
+- 🔎 **Inspect** — Click on any log row to view the captured raw request and response bodies (only available when `capture_payloads: true` is enabled in the config). The inspector shows the original client payload and the original downstream response **before** any plugin transformation runs. A **Truncated** badge appears if either body exceeded the 1 MiB capture limit.
 
 The SSE connection is only active while the Logs tab is visible; switching to another tab automatically disconnects it to save resources.
+
+:::info Payload Capture
+Payload inspection requires `capture_payloads: true` in your config file. When enabled, Tresor stores the most recent 100 request/response bodies in memory (capped at ~1 MiB per direction). This feature is useful for debugging plugin pipelines or inspecting raw payloads, but adds a small per-request memory cost.
+:::
 
 ### ℹ️ About
 

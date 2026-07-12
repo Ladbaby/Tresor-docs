@@ -42,7 +42,13 @@ internal/
 │   ├── responses2openai.go # Responses API → OpenAI Chat Completions
 │   ├── responses2anthropic.go # Responses API → Anthropic Messages
 │   ├── anthropic_image_fix.go # Image extraction from tool results
-│   └── streaming.go      # SSE parsing and chunk transformation
+│   ├── openai2gemini.go   # OpenAI → Gemini format conversion
+│   ├── anthropic2gemini.go # Anthropic → Gemini format conversion
+│   ├── gemini2openai.go   # Gemini → OpenAI format conversion
+│   ├── gemini2anthropic.go # Gemini → Anthropic format conversion
+│   ├── gemini2responses.go # Gemini → Responses API conversion
+│   ├── streaming.go      # SSE parsing and chunk transformation
+│   └── streaming_test.go # Comprehensive streaming transform tests
 │
 ├── api/                   # Admin REST API + embedded web UI
 │   ├── router.go         # Route registration, method enforcement, auth endpoints
@@ -50,10 +56,21 @@ internal/
 │   ├── downstreams.go    # Downstream endpoints + plugins list + fetch-models
 │   ├── aliases.go        # Alias endpoints + group operations
 │   ├── config.go         # Runtime config endpoints (proxy mode, auth keys, password, default tab)
+│   ├── icons.go          # Model icon serving (public endpoint)
+│   ├── icons_admin.go    # Icon index refresh (admin endpoint)
 │   └── embed.go          # Embedded web UI via //go:embed
 │
 ├── middleware/            # Cookie-based session auth for admin API
 │   └── auth.go
+│
+├── icons/                 # Model icon fetching, pattern matching, CDN caching
+│   ├── fetcher.go        # Icon fetching and caching
+│   ├── index.go          # CDN index management
+│   ├── patterns.go       # Model-to-icon pattern matching
+│   └── ratelimit.go      # Rate limiting for icon fetcher
+│
+├── inspect/              # Bounded in-memory store for captured request/response bodies
+│   └── store.go          # Inspect store for Logs inspector
 │
 ├── proxy/                 # Outbound proxy mode implementation
 │   ├── proxy.go          # Mode resolution (auto/env/windows/none)
