@@ -140,13 +140,14 @@ The **Logs** tab shows real-time gateway request logs via Server-Sent Events (SS
 Each inspect panel has a **Raw** tab and a **Parsed** tab. The Raw tab is a literal JSON view of the captured bytes. The Parsed tab reconstructs the body into a human-readable tree: system prompt, tools, messages, usage stats, and so on.
 
 :::tip Parsed-view display order
-For **Anthropic Messages**, **OpenAI Chat Completions**, and **OpenAI Responses** requests, the Parsed tab does **not** mirror the raw JSON key order. The sections are emitted in the order the model actually consumes the prompt:
+For every format Tresor recognises, the Parsed tab does **not** mirror the raw JSON key order. The canonical sections are emitted in the order the model actually consumes the prompt:
 
 - **Anthropic Messages:** `tools → system → messages` ([docs](https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-use-with-prompt-caching))
 - **OpenAI Chat Completions:** `tools → system → messages` — OpenAI doesn't document an explicit order, so we follow the convention used by major chat templates (e.g. Llama 3, Qwen): the system-role message is hoisted out of `messages[]`, tools are injected at the top of that block, and the remaining messages render in array order.
 - **OpenAI Responses:** `tools → instructions → input[]` ([Codex agent loop blog](https://openai.com/index/unrolling-the-codex-agent-loop/))
+- **Gemini:** `systemInstruction → tools → contents` — Google doesn't publish an explicit prompt-cache hierarchy, but their official request examples (e.g. the [function_calling.sh shell snippet](https://ai.google.dev/api/generate-content)) use this top-level key order, and the [caching guide](https://ai.google.dev/gemini-api/docs/caching) recommends placing "large and common contents at the beginning of your prompt" for implicit cache hits.
 
-A small banner with a `?` tooltip appears at the top of the Parsed view for these formats so the order discrepancy is visible. For Gemini and unrecognised formats the sections keep their raw JSON order.
+A small banner with a `?` tooltip appears at the top of the Parsed view for these formats so the order discrepancy is visible. Unrecognised top-level fields (operational controls like `generationConfig`, `safetySettings`, `temperature`) still show up under the canonical sections as pretty-printed JSON.
   :::
 
 The SSE connection is only active while the Logs tab is visible; switching to another tab automatically disconnects it to save resources.
