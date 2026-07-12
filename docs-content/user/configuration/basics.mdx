@@ -23,6 +23,9 @@ proxy_api_keys:                      # 🔑 Optional: authenticate incoming prox
 
 default_tab: "downstreams"           # Default web UI tab on load
 
+capture_payloads: false              # Capture the raw incoming request body and the raw downstream response body
+icon_cache_dir: "~/.config/tresor/tresor-icons/" # Directory for cached model icon SVGs
+
 # --- LLM Provider Endpoints ---
 downstreams:
   - id: openai
