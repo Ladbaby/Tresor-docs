@@ -137,6 +137,17 @@ The **Logs** tab shows real-time gateway request logs via Server-Sent Events (SS
 - 🔴 **Live indicator** — Shows connection status: "Live" (green), "Paused" (amber), "Offline" (red), "Disconnected" (grey).
 - 🔎 **Inspect** — Click on any log row to view the captured raw request and response bodies (only available when `capture_payloads: true` is enabled in the config). The inspector shows the original client payload and the original downstream response **before** any plugin transformation runs. A **Truncated** badge appears if either body exceeded the 1 MiB capture limit.
 
+Each inspect panel has a **Raw** tab and a **Parsed** tab. The Raw tab is a literal JSON view of the captured bytes. The Parsed tab reconstructs the body into a human-readable tree: system prompt, tools, messages, usage stats, and so on.
+
+:::tip Parsed-view display order
+For **Anthropic Messages** and **OpenAI Responses** requests, the Parsed tab does **not** mirror the raw JSON key order. The sections are emitted in the order the model actually consumes the prompt — i.e. the prompt-cache prefix hierarchy:
+
+- **Anthropic Messages:** `tools → system → messages` ([docs](https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-use-with-prompt-caching))
+- **OpenAI Responses:** `tools → instructions → input[]` ([Codex agent loop blog](https://openai.com/index/unrolling-the-codex-agent-loop/))
+
+A small banner with a `?` tooltip appears at the top of the Parsed view for these formats so the order discrepancy is visible. For OpenAI Chat Completions, Gemini, and unrecognised formats the sections keep their raw JSON order, since those formats don't have a server-controlled cache prefix.
+  :::
+
 The SSE connection is only active while the Logs tab is visible; switching to another tab automatically disconnects it to save resources.
 
 :::info Payload Capture
