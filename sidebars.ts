@@ -12,8 +12,8 @@ const sidebars: SidebarsConfig = {
     'user/web-ui',
     {
       type: 'category',
-      label: 'Use Cases',
-      items: ['user/use-cases/ab-testing'],
+      label: 'LLM Apps',
+      items: ['user/llm-apps/claude-code'],
     },
   ],
 

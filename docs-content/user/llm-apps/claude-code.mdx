@@ -1,0 +1,162 @@
+---
+title: Claude Code
+description: Point Claude Code at Tresor and route every Claude model name to DeepSeek, MiniMax, llama.cpp, or any other configured downstream.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Claude Code
+
+[Claude Code](https://code.claude.com/docs/en/overview) is Anthropic's official CLI agent. By pointing it at a running Tresor instance, you can keep the Anthropic client experience while **hot-switching** the underlying model between Anthropic, DeepSeek, MiniMax, a local `llama.cpp` server, or any other configured downstream — all from the web UI.
+
+No need to worry about the different API format underlying model is using, Tresor will **auto-translate** between the Anthropic API (Claude Code) to other API formats (e.g., gpt-5.5 using OpenAI Responses).
+
+This page shows how to wire Claude Code to Tresor.
+
+## ✅ Prerequisites
+
+- Installed Tresor following [installation guide](/Tresor-docs/docs/user/getting-started/installation).
+- [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) installed.
+
+## 1. Prepare `config.yaml`
+
+
+
+```yaml title="config.yaml"
+bind_addr: 127.0.0.1:11510
+proxy_api_keys:
+  - sk-proxy-123
+... # Omitted showing other settings here
+downstreams:
+    - id: llama-cpp
+      name: llama.cpp
+      base_url: http://127.0.0.1:3000 # change to your actual llama.cpp listening port
+      api_formats:
+        - openai
+        - anthropic
+      output_model_ids:
+        - qwen3.6:27b-mtp-coder
+        - qwen3.6:27b-mtp:instruct
+    - id: deepseek
+      name: DeepSeek
+      base_url: https://api.deepseek.com/anthropic
+      api_formats:
+        - anthropic
+      output_model_ids:
+        - deepseek-v4-flash
+        - deepseek-v4-pro
+    - id: minimax
+      name: MiniMax
+      base_url: https://api.minimaxi.com/anthropic
+      api_formats:
+        - anthropic
+      output_model_ids:
+        - MiniMax-M2.5
+        - MiniMax-M2.7
+        - MiniMax-M3
+aliases:
+    - input_model_id: claude-opus.*
+      is_regex: true
+      options:
+        - id: alias-minimax-m3
+          downstream_id: minimax
+          output_model_id: MiniMax-M3
+        - id: alias-deepseek-pro
+          downstream_id: deepseek
+          output_model_id: deepseek-v4-pro
+    - input_model_id: claude-sonnet
+      options:
+        - id: alias-llama-cpp-qwen-instruct
+          downstream_id: llama-cpp
+          output_model_id: qwen3.6:27b-mtp:instruct
+        - id: alias-deepseek-flash
+          downstream_id: deepseek
+          output_model_id: deepseek-v4-flash
+        - id: alias-minimax-m2-7
+          downstream_id: minimax
+          output_model_id: MiniMax-M2.7
+    - input_model_id: claude-haiku.*
+      is_regex: true
+      options:
+        - id: alias-minimax-m2-5
+          downstream_id: minimax
+          output_model_id: MiniMax-M2.5
+```
+
+## 2. Start Tresor
+
+```bash
+tresor run --config ~/.config/tresor/config.yaml
+```
+
+## 3. Configure Claude Code
+
+
+<Tabs>
+  <TabItem value="bash" label="Linux / macOS" default>
+    ```bash
+    export ANTHROPIC_BASE_URL="http://127.0.0.1:11510"
+    export ANTHROPIC_AUTH_TOKEN="sk-proxy-123"
+    export ANTHROPIC_MODEL="claude-sonnet"
+    export ANTHROPIC_DEFAULT_OPUS_MODEL="claude-opus" # can be omitted, since we have used wildcard alias in Tresor
+    export ANTHROPIC_DEFAULT_SONNET_MODEL="claude-sonnet"
+    export ANTHROPIC_DEFAULT_HAIKU_MODEL="claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
+    export CLAUDE_CODE_SUBAGENT_MODEL="claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
+    ```
+  </TabItem>
+  <TabItem value="powershell" label="Windows (PowerShell)">
+    ```powershell
+    $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:11510"
+    $env:ANTHROPIC_AUTH_TOKEN = "sk-proxy-123"
+    $env:ANTHROPIC_MODEL = "claude-sonnet"
+    $env:ANTHROPIC_DEFAULT_OPUS_MODEL = "claude-opus" # can be omitted, since we have used wildcard alias in Tresorv
+    $env:ANTHROPIC_DEFAULT_SONNET_MODEL = "claude-sonnet"
+    $env:ANTHROPIC_DEFAULT_HAIKU_MODEL = "claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
+    $env:CLAUDE_CODE_SUBAGENT_MODEL = "claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
+    ```
+  </TabItem>
+</Tabs>
+
+
+:::tip Persist the variables
+Drop the `export` lines into your shell profile (`~/.bashrc`, `~/.zshrc`, or `$PROFILE` on PowerShell) so every new shell inherits them. Claude Code only reads the variables at launch — restart the CLI after editing your profile.
+:::
+
+## 4. Launch Claude Code
+
+```bash
+cd /path/to/my-project
+claude
+```
+
+Claude Code will send the model name you set in `ANTHROPIC_MODEL` to Tresor, which will resolve it through the matching `aliases` entry and forward the request to the **active** downstream for that alias.
+
+You can even switch the model in Claude Code to Opus or Haiku via `/model` command: they will be matched by the regex wildcard alias `claue-opus.*` and `claue-haiku.*`, and mapped to the model you specify in the Aliases tab.
+
+## 5. Hot-switch from the web UI
+
+Open `http://127.0.0.1:11510` in a browser, go to the **Aliases** tab, and click any sibling option card to make it active. Claude Code's *next* request will be routed to the new downstream — no restart of either Tresor or Claude Code is required. 🎉
+
+For example, flip `claude-sonnet` from `deepseek-v4-flash` to `MiniMax-M2.7` with a single click, and the agent immediately starts using MiniMax on the following turn.
+
+## 7. Using Web Search in Claude Code
+
+Tresor is fully API-compatible with the Anthropic Messages endpoint, so the **Web Search** tool works the same way it does with the official Anthropic API: when Claude Code's model decides a question needs fresh information, it invokes the Web Search tool and the search runs through the active downstream provider.
+
+If the active downstream is DeepSeek, the search and the summarising LLM call both go through DeepSeek, so each search may incur extra token cost (one extra LLM call to summarise the retrieved pages).
+
+If the active downstream is a local `llama.cpp` server, Web Search is not available unless that backend exposes the tool itself.
+
+
+## 🔧 Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `401 Unauthorized` from Tresor | `proxy_api_keys` is set but `ANTHROPIC_AUTH_TOKEN` doesn't match | Set `ANTHROPIC_AUTH_TOKEN` to one of the keys in `proxy_api_keys`, or empty the list in `config.yaml` |
+| `404 model not found` from Tresor | Alias exists but the chosen downstream isn't reachable | Open **Logs**, click the failing row, check the downstream error. Confirm `base_url` and that the local `llama-server` is up |
+| Responses come back from the wrong model | An alias is missing or matched a different regex | In the **Aliases** tab, verify the active card for the input model; regex aliases need `is_regex: true` |
+
+## 📚 See also
+
+- [DeepSeek guide for Claude Code](https://api-docs.deepseek.com/quick_start/agent_integrations/claude_code/)
