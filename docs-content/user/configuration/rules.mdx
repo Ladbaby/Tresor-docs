@@ -92,6 +92,7 @@ Plugins execute **sequentially** — each plugin's output becomes the next plugi
 | `openai2anthropic` | 🔄 Convert OpenAI Chat Completion format to Anthropic Messages format (and vice versa for responses) |
 | `anthropic2openai` | 🔄 Convert Anthropic Messages format to OpenAI Chat Completion format (and vice versa for responses) |
 | `fix_anthropic_images` | 🖼️ Extract images from nested `tool_result.content[]` arrays and promote them to top-level message content |
+| `fix_anthropic_usage` | 🧮 Normalize the Anthropic Messages `usage` block — adds missing `cache_creation_input_tokens` / `cache_read_input_tokens` fields in `message_start` and synthesizes a `usage` block in `message_delta` when the upstream omits it. Useful with providers such as MiniMax-M3 that report incomplete usage. |
 | `responses2openai` | Converts OpenAI Responses API requests to Chat Completions format (and vice versa for responses) |
 | `responses2anthropic` | Converts OpenAI Responses API requests to Anthropic Messages format (and vice versa for responses) |
 | `openai2responses` | Converts OpenAI Chat Completions requests to Responses API format (and vice versa for responses) |
