@@ -181,6 +181,7 @@ The reverse of `openai2anthropic` — converts Anthropic Messages format to Open
 ### 🖼️ `fix_anthropic_images`
 
 Extracts images from nested `tool_result.content[]` arrays and promotes them to top-level message content. Designed for llama.cpp-compatible backends that expect flat message structures.
+Refer to https://github.com/ggml-org/llama.cpp/pull/22536
 
 **Behavior:**
 - Identifies image blocks inside `tool_result.content[]` arrays

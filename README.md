@@ -35,6 +35,6 @@ npm run serve
 
 ## ✏️ Editing Docs
 
-Docs use MDX format. Internal links should use **relative paths** (e.g., `docs/user/configuration/basics`) — Docusaurus automatically prepends the `baseUrl`.
+Docs use MDX format. Internal links should use **relative paths** (e.g., `docs/user/configuration`) — Docusaurus automatically prepends the `baseUrl`.
 
 See the [Contributing](docs-content/dev/contributing.mdx) page for full conventions.

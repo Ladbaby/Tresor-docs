@@ -64,7 +64,7 @@ const config: Config = {
           label: 'Developer Guide',
         },
         {
-          href: 'https://github.com/ladbaby/tresor',
+          href: 'https://github.com/ladbaby/Tresor-docs',
           label: 'GitHub',
           position: 'right',
         },
@@ -76,8 +76,8 @@ const config: Config = {
         {
           title: 'User Guide',
           items: [
-            {label: 'Getting Started', to: 'docs/user/intro'},
-            {label: 'Configuration', to: 'docs/user/configuration/basics'},
+            {label: 'Getting Started', to: 'docs/user/getting-started/intro'},
+            {label: 'Configuration', to: 'docs/user/getting-started/configuration'},
             {label: 'CLI Reference', to: 'docs/user/cli-reference'},
             {label: 'Web UI', to: 'docs/user/web-ui'},
           ],
@@ -96,7 +96,7 @@ const config: Config = {
           items: [
             {
               label: 'Tresor Source',
-              href: 'https://github.com/ladbaby/tresor',
+              href: 'https://github.com/ladbaby/Tresor',
             },
           ],
         },

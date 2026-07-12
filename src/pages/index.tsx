@@ -70,7 +70,7 @@ function HomePage() {
             icon="📘"
             title="User Guide"
             description="Get started, configure your gateway, and manage providers through CLI or web UI."
-            href="/Tresor-docs/docs/user/intro"
+            href="/Tresor-docs/docs/user/getting-started/intro"
           />
           <DocCard
             icon="🔧"

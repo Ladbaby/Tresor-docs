@@ -1,0 +1,231 @@
+---
+title: Configuration Basics
+description: Understanding the Tresor YAML configuration file
+---
+
+# ⚙️ Configuration Basics
+
+Tresor is configured entirely via a single YAML file. All settings, downstreams, rules, and aliases live in one portable file that can be version-controlled and shared across environments.
+
+## 📐 Config File Structure
+
+```yaml
+# Tresor Configuration
+# Copy this to config.yaml and customize for your setup.
+#
+# NOTE: Comments in this file are NOT preserved when the admin UI or CLI
+# performs mutations (create/update/delete). The YAML write-back generates
+# a clean file. If you add comments, they will be removed on the first
+# mutation. To preserve them, re-add comments after mutations or avoid
+# editing the config via the admin interface.
+
+# Server settings
+bind_addr: "127.0.0.1:11510"
+# socket_path: "/tmp/tresor.sock"   # Optional Unix Domain Socket (admin API only). Don't use it on Windows
+db_path: "~/.config/tresor/tresor.db"             # SQLite database path (~ expands to home dir)
+admin_password: "admin"               # Optional Bearer token for admin API auth
+proxy_api_keys:                        # Optional: require clients to authenticate
+  - sk-proxy-123                       # Clients send "Authorization: Bearer sk-proxy-123"
+
+# Outbound proxy mode for downstream requests.
+# "auto" (default): Windows system proxy > env vars (HTTP_PROXY/HTTPS_PROXY) > direct
+# "env": Environment variables only
+# "windows": Windows registry proxy + env fallback
+# "none": Direct connection, no proxy
+proxy_mode: "auto"
+
+# Default dashboard tab on page load or refresh.
+# Values: downstreams, aliases, rules, settings, about
+default_tab: "downstreams"
+
+# Request log verbosity: debug, info, warn, error (default: info)
+log_level: "info"
+
+# Capture the raw incoming request body and the raw downstream response body
+# for the most recent 100 requests in memory, and expose them via the Web UI
+# Logs tab (click any row to inspect). The capture is taken **before** any
+# plugin runs, so the inspector shows the original client payload and the
+# original downstream response, not the post-pipeline output. Disabled by
+# default because it adds a small per-request memory cost (capped at ~1 MiB
+# per direction). Persisted to YAML so the choice survives daemon restarts.
+capture_payloads: false
+
+# Directory for cached model icon SVGs (fetched at runtime from a public CDN).
+# If empty/unset, defaults to <db_dir>/tresor-icons (e.g. ~/.config/tresor/tresor-icons/).
+# Tilde (~) is expanded to the user's home directory.
+icon_cache_dir: "~/.config/tresor/tresor-icons/"
+
+# Downstream LLM providers
+downstreams:
+  - id: openai
+    name: OpenAI
+    api_formats: [openai]
+    base_url: https://api.openai.com
+    api_key: ""                          # Set your API key here, e.g. sk-...
+    output_model_ids:                    # Known output models for this provider
+      - gpt-4o
+      - gpt-4o-mini
+
+  - id: openai-responses
+    name: OpenAI Responses
+    api_formats: [openai_responses]
+    base_url: https://api.openai.com
+    api_key: ""                          # Set your API key here
+    output_model_ids:                    # Known output models for this provider
+      - gpt-5.5
+
+  - id: anthropic
+    name: Anthropic
+    api_formats: [anthropic]
+    base_url: https://api.anthropic.com
+    api_key: ""                          # Set your API key here
+    output_model_ids:                    # Known output models for this provider
+      - claude-sonnet-5
+      - claude-haiku-4-5
+
+  - id: gemini
+    name: Google Gemini
+    api_formats: [gemini]
+    base_url: https://generativelanguage.googleapis.com
+    api_key: ""                          # Set your API key here
+    output_model_ids:                    # Known output models for this provider
+      - gemini-3.5-flash
+      - gemini-3.0-pro
+
+# Routing rules (OPTIONAL) — customize forwarding with transform pipelines.
+# Rules are NOT required for normal forwarding: model resolution uses aliases and
+# downstream output_model_ids automatically. Rules only add plugin pipelines;
+# they never override the resolved downstream. Multiple rules can match a single
+# request; their pipelines are concatenated in priority order.
+#
+# Matching criteria (all optional, OR logic):
+#   match_format: input request formats (e.g. [openai, anthropic])
+#   match_downstream_format: downstream API formats
+#   match_downstreams: downstream IDs to match against
+#
+# Priority: exact path+model > exact path > wildcard path (*)
+#
+# Uncomment to enable optional rules:
+# rules:
+# Example: Fix the image reading problem in Claude Code + llama.cpp. Refer to https://github.com/ggml-org/llama.cpp/pull/22536
+    # - id: anthropic_image_fix
+    #   name: Anthropic Image Fix
+    #   pattern_path: '*'
+    #   match_format:
+    #     - anthropic
+    #   pipeline_config:
+    #     - plugin_id: fix_anthropic_images
+    #   is_enabled: true
+
+# Example: Route OpenAI chat completions through a custom header transformer
+#  - id: chat-custom-header
+#    name: Chat with Custom Header
+#    pattern_path: /v1/chat/completions
+#    match_format: [openai]               # Only match OpenAI-format requests
+#    match_downstream_format: [openai]    # Only match OpenAI-format downstreams
+#    match_downstreams: [openai]          # Only match the "openai" downstream
+#    pipeline_config:
+#      - plugin_id: custom_header
+#        config:
+#          headers:
+#            X-Custom-Header: my-value
+#    is_enabled: true
+
+# Model aliases — group by input model, list output options
+# Groups are ordered by array position; web UI supports drag-and-drop reordering.
+aliases:
+# Example: regex alias to match all Claude models, and re-route to gpt-5.5
+  - input_model_id: "claude-.*"
+    is_regex: true
+    options:
+      - id: alias-claude-wildcard
+        downstream_id: openai-responses
+        output_model_id: gpt-5.5
+
+  - input_model_id: claude-opus-4-8
+    options:
+      - id: alias-gpt4o-openai
+        downstream_id: openai
+        output_model_id: gpt-4o
+
+      - id: alias-claude-sonnet-anthropic
+        downstream_id: anthropic
+        output_model_id: claude-sonnet-5
+
+  - input_model_id: claude-fable-5
+    options:
+      - id: alias-gemini-google
+        downstream_id: gemini
+        output_model_id: gemini-3.5-flash
+```
+
+## 🖥️ Server Settings
+
+| Field | Type | Description |
+|---|---|---|
+| `bind_addr` | string | TCP address for the gateway and admin API (e.g. `127.0.0.1:11510`) |
+| `socket_path` | string | Optional Unix Domain Socket path for admin API only |
+| `db_path` | string | SQLite database file path (`~` expands to home directory) |
+| `admin_password` | string | 🔐 Optional password for admin API and web UI. Creates a cookie-based session on login (persistent across restarts). CLI commands use the raw password as Bearer token for backwards compatibility. |
+| `proxy_mode` | string | Outbound proxy mode: `auto`, `env`, `windows`, or `none` |
+| `proxy_api_keys` | list | 🔑 Optional Bearer tokens that client requests must include |
+| `default_tab` | string | Default web UI tab: `downstreams`, `aliases`, `rules`, `settings`, or `about` |
+| `log_level` | string | Request log verbosity: `debug`, `info`, `warn`, or `error` (default: `info`) |
+| `capture_payloads` | bool | Capture raw request/response bodies for the Logs inspector (default: `false`). When enabled, the most recent 100 requests are stored in memory and accessible via the Logs tab's "Inspect" action. |
+| `icon_cache_dir` | string | Directory for cached model icon SVGs (fetched from CDN at runtime). Defaults to `<db_dir>/tresor-icons/` if empty. `~` expands to home directory. |
+
+## 🌐 Proxy Settings
+
+| Field | Type | Description |
+|---|---|---|
+| `proxy_mode` | string | Outbound proxy mode: `auto`, `env`, `windows`, or `none` |
+| `proxy_api_keys` | list | 🔑 Optional Bearer tokens that client requests must include |
+| `default_tab` | string | Default web UI tab: `downstreams`, `aliases`, `rules`, `settings`, or `about` |
+| `log_level` | string | Request log verbosity: `debug`, `info`, `warn`, or `error` (default: `info`) |
+
+## 🔌 Downstream `api_formats`
+
+The `api_formats` field declares which API protocol(s) a downstream speaks. Four formats are supported:
+
+- `openai` — OpenAI Chat Completions (`/v1/chat/completions`)
+- `anthropic` — Anthropic Messages (`/v1/messages`)
+- `openai_responses` — OpenAI Responses API (`/v1/responses`)
+- `gemini` — Google Gemini generateContent (`/v1beta/models/{model}:generateContent`)
+
+This enables **auto-translation**: when a request arrives in a format that doesn't match the downstream's declared format, Tresor automatically inserts the appropriate format converter into the pipeline — no explicit rule needed.
+
+For example, if a downstream declares `api_formats: [anthropic]` and receives a request at `/v1/chat/completions` (OpenAI format), Tresor automatically prepends the `openai2anthropic` transformer. Similarly, if a downstream declares `api_formats: [openai_responses]` and receives an OpenAI Chat Completions request, the `openai2responses` transformer is inserted automatically.
+
+## 🏷️ Alias Option Fields
+
+Each alias option within a group has these fields:
+
+| Field | Required | Description |
+|---|---|---|
+| `id` | Yes | Unique identifier for this alias option |
+| `downstream_id` | Yes | Which downstream provider to forward to |
+| `output_model_id` | Yes | The model name to use when forwarding |
+
+Group-level fields (set on the alias group, not individual options):
+
+| Field | Required | Description |
+|---|---|---|
+| `is_regex` | No | Treat `input_model_id` as a regular expression pattern (default: `false`) |
+
+When `is_regex: true`, the group's `input_model_id` is a Go regular expression pattern. Requests whose model name matches the pattern are routed through this alias. 
+
+Alias groups are ordered by their position in the YAML array. In the web UI, groups can be reordered via drag-and-drop.
+
+## 🔄 Upsert on Startup
+
+On startup, Tresor **upserts** YAML data into SQLite:
+
+- ➕ **New rows** (IDs not in DB) are inserted
+- 🔄 **Existing rows** (matched by ID) are updated with YAML values
+- 💾 **DB-only rows** (not in YAML) are preserved — this means you can manage everything from the web UI or CLI and your changes persist across restarts
+
+## ↩️ YAML Write-Back
+
+Every mutation made via the web UI or admin API (creating, updating, or deleting downstreams, aliases, or rules) triggers an **atomic write back** to the YAML config file. This keeps the config file in sync with runtime state — no manual editing needed after initial setup.
+
+The write-back uses a tmp-file-plus-rename pattern for atomicity, so you never see a partially written config. ✨

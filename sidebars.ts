@@ -6,19 +6,14 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Getting Started',
-      items: ['user/intro', 'user/getting-started/installation'],
-    },
-    {
-      type: 'category',
-      label: 'Configuration',
-      items: ['user/configuration/basics', 'user/configuration/downstreams', 'user/configuration/rules', 'user/configuration/aliases', 'user/configuration/proxy-modes'],
+      items: ['user/getting-started/intro', 'user/getting-started/installation', 'user/getting-started/configuration'],
     },
     'user/cli-reference',
     'user/web-ui',
     {
       type: 'category',
       label: 'Use Cases',
-      items: ['user/use-cases/provider-switching', 'user/use-cases/model-aliasing', 'user/use-cases/ab-testing'],
+      items: ['user/use-cases/ab-testing'],
     },
   ],
 
