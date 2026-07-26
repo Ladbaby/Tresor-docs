@@ -28,8 +28,9 @@ internal/
 │   └── write_config.go   # YAML write-back on mutation
 │
 ├── engine/                # Core gateway handler + pipeline execution
-│   ├── engine.go         # Gateway forwarding, model resolution, auth, auto-translation
+│   ├── engine.go         # Gateway forwarding, model resolution, auth, auto-translation, retry on empty response
 │   ├── pipeline.go       # Transformer orchestration, streaming
+│   ├── retry.go          # Empty response detection + retry with exponential backoff
 │   └── types.go          # Interfaces (RequestTransformer, etc.)
 │
 ├── plugins/               # Plugin registry + built-in transformers
@@ -56,7 +57,7 @@ internal/
 │   ├── rules.go          # Rule endpoints
 │   ├── downstreams.go    # Downstream endpoints + plugins list + fetch-models
 │   ├── aliases.go        # Alias endpoints + group operations
-│   ├── config.go         # Runtime config endpoints (proxy mode, auth keys, password, default tab)
+│   ├── config.go         # Runtime config endpoints (proxy mode, auth keys, password, default tab, retry on empty)
 │   ├── icons.go          # Model icon serving (public endpoint)
 │   ├── icons_admin.go    # Icon index refresh (admin endpoint)
 │   └── embed.go          # Embedded web UI via //go:embed
@@ -146,16 +147,47 @@ Client Request
 └────────┬────────┘
          │
 ┌────────▼────────┐
-│ 8. Response      │  ← Execute response transformers sequentially
+│ 8. Retry on     │  ← (if retry_on_empty is enabled)
+│    Empty        │     If downstream returns HTTP 200 but produces no
+│    Response     │     content (empty choices, thinking-only output,
+│                 │     etc.), retry up to 3 times with exponential
+│                 │     backoff. Retries are transparent to the client.
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ 9. Response      │  ← Execute response transformers sequentially
 │    Pipeline      │     Non-streaming: full body transform
 │                   │     Streaming (SSE): event-by-event transform
 └────────┬────────┘
          │
 ┌────────▼────────┐
-│ 9. Return to     │  ← Final response to client
+│ 10. Return to    │  ← Final response to client
 │    Client        │
 └──────────────────┘
 ```
+
+### Retry
+
+When `retry_on_empty: true` is set in the config, the gateway automatically retries downstream requests that return **HTTP 200 OK but produce no useful content**. This protects against scenarios where:
+
+- The downstream LLM server accepts the request but produces no text output (transient server-side issues)
+- A model generates only "thinking" or "reasoning" blocks without actual text content
+- The response is garbled or empty for other reasons
+
+**How it works:**
+
+- **Only retries on HTTP 200 with empty content.** Non-200 responses (4xx, 5xx) are never retried — LLM client SDKs handle their own retry logic for HTTP errors.
+- **Maximum 3 retries** with exponential backoff (500ms, 1s, 2s base) and 0–25% random jitter.
+- **Streaming responses:** A `bufferedWriter` holds all SSE events until content is confirmed. When the first content-producing line is detected (text, tool calls, etc.), the buffer flushes to the client. If no content arrives, the stream is discarded and retried.
+- **Non-streaming responses:** The full body is read, response transformers are applied, then the format-specific empty check runs. Empty bodies are discarded and retried.
+- **Empty detection per format:**
+  - **OpenAI Chat Completions:** Empty choices, or no text/tool_calls/refusal in both `message` and `delta` fields
+  - **Anthropic Messages:** Empty content array, or blocks containing only `thinking` (no `text`, no `tool_use`)
+  - **OpenAI Responses:** Empty output array, or message items with no `output_text`
+  - **Google Gemini:** Empty candidates, or parts with no `text`/`functionCall` (parts with `thought:true` excluded)
+- **Transparent to client:** The client sees nothing during retries. Only the final successful response is delivered.
+- **Exhaustion:** If all retries are exhausted, the gateway returns HTTP 502 with error "empty response after retries exhausted".
+- **Client disconnection** during retry aborts the loop immediately.
 
 ## 📡 Aggregated Model List
 
@@ -274,5 +306,5 @@ Key alias endpoints include `POST /api/aliases/reorder` for drag-and-drop group 
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/api/config` | Get current runtime settings (proxy mode, proxy keys, password status, default tab, log level) |
+| GET | `/api/config` | Get current runtime settings (proxy mode, proxy keys, password status, default tab, log level, retry on empty) |
 | PUT | `/api/config` | Update runtime settings live (pushes changes to running engine + auth middleware, writes back to YAML) |

@@ -48,12 +48,13 @@ Imagine you have agents on three machines, all calling OpenAI. You want to switc
 ## ✨ Core Features
 
 - ⚡ **Hot-Switch Models** — Map one model name to any backend model and switch on the fly. Your app requests `gpt-4o`; Tresor can route it to Claude Sonnet, Opus, or keep it on GPT-4o — all without restarting.
-- 🔄 **Auto-Translation** — Automatically convert between OpenAI, Anthropic, OpenAI Responses, and Google Gemini formats. Your app sends an OpenAI request; Tresor forwards it to an Anthropic, Gemini, or any other downstream and converts the response back — no rule configuration needed.
+- 🎭 **Auto-Translation** — Automatically convert between OpenAI, Anthropic, OpenAI Responses, and Google Gemini formats. Your app sends an OpenAI request; Tresor forwards it to an Anthropic, Gemini, or any other downstream and converts the response back — no rule configuration needed.
 - 🔍 **Traffic Inspection** (off by default) — Inspect raw incoming requests and downstream LLM responses, by clicking the log entries. Curious about what your LLM Apps are actually sending to LLMs? Then this is for you! Works similar to [claude-tap](https://github.com/liaohch3/claude-tap).
 - 🌐 **Embedded Web UI** — Manage everything from a browser dashboard. No separate frontend deployment.
-- 🔌 **Plugin Pipeline** — Chain transformation plugins per rule (header injection, image fix, format conversion, and more). Thirteen built-in plugins cover all common format combinations.
+- 🔌 **Plugin Pipeline** — Chain transformation plugins per rule (header injection, image fix, format conversion, and more). Fourteen built-in plugins cover all common format combinations.
 - 📝 **Single Config File** — All settings in one portable YAML file. Changes via the web UI write back automatically.
 - 🔑 **Proxy Authentication** — Require clients to authenticate via `Authorization: Bearer` or `x-api-key` headers (supports Anthropic-format clients like Claude Office plugin).
+- 🔄 **Retry on Empty Response** — Automatically retry downstream requests that return HTTP 200 but produce no content (e.g., thinking-only responses, empty completions). Up to 3 retries with exponential backoff. Transparent to the client.
 - 🪶 **Zero External Dependencies** — Pure Go SQLite (no CGO), no external web framework, single compiled binary.
 
 ## 🔄 How It Works
@@ -67,7 +68,8 @@ When a request hits Tresor:
 5. 📏 **Rule Matching** — Collect all matching rules for pipeline transforms (rules never override the resolved downstream; multiple rules can match and their pipelines are concatenated)
 6. ⚡ **Auto-Translation** — If the request format (OpenAI Chat Completions, Anthropic Messages, or OpenAI Responses API) doesn't match the downstream's declared format, automatically insert the appropriate format converter (e.g., `openai2responses`, `responses2anthropic`)
 7. ⚙️ **Transform & Forward** — Run request through configured transformers, then forward to the resolved downstream
-8. ↩️ **Transform Response** — Run the downstream's response through response transformers before returning to the client
+8. 🔄 **Retry on Empty Response** — (if enabled) If the downstream returns HTTP 200 but produces no content, retry up to 3 times with exponential backoff. Retries are transparent to the client.
+9. ↩️ **Transform Response** — Run the downstream's response through response transformers before returning to the client
 
 ## 🏗️ Key Design Decisions
 

@@ -50,6 +50,12 @@ log_level: "info"
 # per direction). Persisted to YAML so the choice survives daemon restarts.
 capture_payloads: false
 
+# Automatically retry requests when the downstream LLM returns an empty
+# response (HTTP 200 OK but no content generated). Retries up to 3 times
+# with exponential backoff. Thinking/reasoning-only responses are treated
+# as empty. Disabled by default.
+retry_on_empty: false
+
 # Directory for cached model icon SVGs (fetched at runtime from a public CDN).
 # If empty/unset, defaults to <db_dir>/tresor-icons (e.g. ~/.config/tresor/tresor-icons/).
 # Tilde (~) is expanded to the user's home directory.
@@ -173,6 +179,7 @@ aliases:
 | `log_level` | string | Request log verbosity: `debug`, `info`, `warn`, or `error` (default: `info`) |
 | `capture_payloads` | bool | Capture raw request/response bodies for the Logs inspector (default: `false`). When enabled, the most recent 100 requests are stored in memory and accessible via the Logs tab's "Inspect" action. |
 | `icon_cache_dir` | string | Directory for cached model icon SVGs (fetched from CDN at runtime). Defaults to `<db_dir>/tresor-icons/` if empty. `~` expands to home directory. |
+| `retry_on_empty` | bool | Automatically retry requests when the downstream returns HTTP 200 but produces no content (default: `false`). Retries up to 3 times with exponential backoff. Thinking/reasoning-only responses are treated as empty. Retries are transparent to the client. |
 
 ## 🌐 Proxy Settings
 

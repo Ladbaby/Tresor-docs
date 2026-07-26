@@ -112,6 +112,14 @@ The **Settings** tab configures global gateway behavior. Changes take effect **i
 - Default Tab selector: `downstreams`, `aliases`, `rules`, `settings`, `about`
 - Controls which tab is shown on page load or refresh
 
+**Retry:**
+- Checkbox: "Retry on empty response"
+- Toggles automatic retry when the downstream returns HTTP 200 but produces no content
+- Tooltip explains that non-200 responses (4xx, 5xx) are never retried
+- Retries up to 3 times with exponential backoff
+- Thinking/reasoning-only responses are treated as empty
+- Disabled by default
+
 ### 📋 Logs
 
 The **Logs** tab shows real-time gateway request logs via Server-Sent Events (SSE). Entries are sorted **newest first**, so the most recent request appears at the top.
