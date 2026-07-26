@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.1">
 <title data-rh="true">Web UI Guide | Tresor</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://ladbaby.github.io/Tresor-docs/docs/user/web-ui"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Web UI Guide | Tresor"><meta data-rh="true" name="description" content="Manage Tresor from the embedded browser dashboard"><meta data-rh="true" property="og:description" content="Manage Tresor from the embedded browser dashboard"><link data-rh="true" rel="icon" href="/Tresor-docs/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://ladbaby.github.io/Tresor-docs/docs/user/web-ui"><link data-rh="true" rel="alternate" href="https://ladbaby.github.io/Tresor-docs/docs/user/web-ui" hreflang="en"><link data-rh="true" rel="alternate" href="https://ladbaby.github.io/Tresor-docs/docs/user/web-ui" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Web UI Guide","item":"https://ladbaby.github.io/Tresor-docs/docs/user/web-ui"}]}</script><link rel="stylesheet" href="/Tresor-docs/assets/css/styles.772472de.css">
-<script src="/Tresor-docs/assets/js/runtime~main.c31ad460.js" defer="defer"></script>
+<script src="/Tresor-docs/assets/js/runtime~main.83c43335.js" defer="defer"></script>
 <script src="/Tresor-docs/assets/js/main.0d868e71.js" defer="defer"></script>
 </head>
 <body>
@@ -89,6 +89,15 @@
 <ul>
 <li class="">Default Tab selector: <code>downstreams</code>, <code>aliases</code>, <code>rules</code>, <code>settings</code>, <code>about</code></li>
 <li class="">Controls which tab is shown on page load or refresh</li>
+</ul>
+<p><strong>Retry:</strong></p>
+<ul>
+<li class="">Checkbox: &quot;Retry on empty response&quot;</li>
+<li class="">Toggles automatic retry when the downstream returns HTTP 200 but produces no content</li>
+<li class="">Tooltip explains that non-200 responses (4xx, 5xx) are never retried</li>
+<li class="">Retries up to 3 times with exponential backoff</li>
+<li class="">Thinking/reasoning-only responses are treated as empty</li>
+<li class="">Disabled by default</li>
 </ul>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="-logs">📋 Logs<a href="#-logs" class="hash-link" aria-label="Direct link to 📋 Logs" title="Direct link to 📋 Logs" translate="no">​</a></h3>
 <p>The <strong>Logs</strong> tab shows real-time gateway request logs via Server-Sent Events (SSE). Entries are sorted <strong>newest first</strong>, so the most recent request appears at the top.</p>
