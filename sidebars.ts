@@ -8,14 +8,14 @@ const sidebars: SidebarsConfig = {
       label: 'Getting Started',
       items: ['user/getting-started/intro', 'user/getting-started/installation', 'user/getting-started/configuration'],
     },
-    'user/cli-reference',
-    'user/web-ui',
     {
-      type: 'category',
-      label: 'LLM Apps',
-      items: ['user/llm-apps/claude-code'],
+        type: 'category',
+        label: 'Configure LLM Apps',
+        items: ['user/llm-apps/claude-code', 'user/llm-apps/codex'],
     },
-  ],
+    'user/web-ui',
+    'user/cli-reference',
+],
 
   // Developer Guide sidebar
   devSidebar: [
