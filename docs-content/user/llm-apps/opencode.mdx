@@ -1,0 +1,158 @@
+---
+title: OpenCode
+description: Point OpenCode at Tresor and route every model name to DeepSeek, MiniMax, llama.cpp, or any other configured downstream.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# OpenCode
+
+[OpenCode](https://opencode.ai) is an open-source AI coding assistant available in terminal, web, and other forms.
+Although OpenCode natively supports a wide range of providers, pointing it to Tresor gives you:
+- Centralized management of different models and providers. No need to re-configure OpenCode when you switch LLM providers, just change the activated model in the alias group of Tresor.
+- No need to worry about the different API format underlying model is using, Tresor will **auto-translate** between the OpenAI API (OpenCode) to other API formats (e.g., Anthropic messages for Claude models).
+
+However, it also comes with drawbacks:
+- If you use alias to map model names in Tresor, it will lead to less precise control over model-specific configurations, like the reasoning effort and context length.
+
+
+This page shows how to wire OpenCode to Tresor.
+
+## ✅ Prerequisites
+
+- Installed Tresor following [installation guide](/Tresor-docs/docs/user/getting-started/installation).
+- [OpenCode](https://opencode.ai/download) installed.
+
+## 1. Configure Tresor
+
+There are two ways to prepare Tresor:
+
+### 1.1 Option 1: via Web UI
+
+Web UI is more intuitive, but require more manual operations.
+
+1. In "Downstreams" tab
+
+    - Click <kbd>+ Add Provider</kbd> to add the LLM provider you are about to use.
+2. In "Aliases" tab
+
+    - Click <kbd>+ New Alias Group</kbd>
+        - Input Model ID: `model-opencode`
+        - Leave "Regex Pattern" unchecked.
+        - Select the Downstream and Output Model IDs you added previously.
+3. In "Settings" tab
+
+    - Click <kbd>+ Add API Key</kbd> under "Proxy Authentication" section (e.g, `sk-proxy-123`). Copy it, and we are about to fill it into `apiKey` in the following section.
+
+### 1.2 Option 2: via `config.yaml`
+
+Editing yaml is less intuitive, but require less manual operations.
+
+The following example `config.yaml` uses 3 downstream providers.
+Replace them based on your actual providers.
+
+```yaml title="~/.config/tresor/config.yaml"
+bind_addr: 127.0.0.1:11510
+proxy_api_keys:
+  - sk-proxy-123
+... # Omitted showing other settings here
+downstreams:
+    - id: llama-cpp
+      name: llama.cpp
+      base_url: http://127.0.0.1:3000 # change to your actual llama.cpp listening port
+      api_formats:
+        - openai
+        - anthropic
+      output_model_ids:
+        - qwen3.6:27b-mtp:instruct
+    - id: deepseek
+      name: DeepSeek
+      base_url: https://api.deepseek.com/anthropic
+      api_formats:
+        - anthropic
+      output_model_ids:
+        - deepseek-v4-flash
+        - deepseek-v4-pro
+    - id: minimax
+      name: MiniMax
+      base_url: https://api.minimaxi.com/anthropic
+      api_formats:
+        - anthropic
+      output_model_ids:
+        - MiniMax-M2.5
+        - MiniMax-M2.7
+        - MiniMax-M3
+aliases:
+    - input_model_id: model-opencode
+      options:
+        - id: alias-deepseek-pro
+          downstream_id: deepseek
+          output_model_id: deepseek-v4-pro
+        - id: alias-deepseek-flash
+          downstream_id: deepseek
+          output_model_id: deepseek-v4-flash
+        - id: alias-minimax-m3
+          downstream_id: minimax
+          output_model_id: MiniMax-M3
+        - id: alias-llama-cpp-qwen-instruct
+          downstream_id: llama-cpp
+          output_model_id: qwen3.6:27b-mtp:instruct
+```
+
+Restart Tresor to apply the changes in yaml.
+
+## 2. Configure OpenCode
+
+OpenCode supports connecting to OpenAI-compatible endpoints. Point it at your Tresor instance:
+
+```json title="~/.config/opencode/opencode.json"
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "Tresor": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Tresor (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:11510/v1",
+        "apiKey": "sk-proxy-123"
+      },
+      "models": {
+        "model-opencode": {
+          "name": "model-opencode (local)",
+          "limit": {
+            "context": 262144,
+            "output": 32000
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## 3. Launch OpenCode
+
+```bash
+cd /path/to/my-project
+opencode
+```
+
+OpenCode will send the model name `model-opencode` to Tresor, which will forward the request to the active downstream for that alias.
+
+## 4. Hot-switch from the web UI
+
+Open `http://127.0.0.1:11510` in a browser, go to the **Aliases** tab, and click any sibling option card to make it active.
+OpenCode's *next* request will be routed to the new downstream — no restart of either Tresor or OpenCode is required. 🎉
+
+For example, flip `model-opencode` from `deepseek-v4-pro` to `MiniMax-M3` with a single click, and the agent immediately starts using MiniMax on the following turn.
+
+## 🔧 Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `401 Unauthorized` from Tresor | `proxy_api_keys` is set but `apiKey` doesn't match | Set `apiKey` to one of the keys in `proxy_api_keys`, or empty the list in `config.yaml` |
+
+## 📚 See also
+
+- [DeepSeek guide for OpenCode](https://api-docs.deepseek.com/quick_start/agent_integrations/opencode)

@@ -6,12 +6,20 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Getting Started',
-      items: ['user/getting-started/intro', 'user/getting-started/installation', 'user/getting-started/configuration'],
+      items: [
+        'user/getting-started/intro',
+        'user/getting-started/installation',
+        'user/getting-started/configuration'
+      ],
     },
     {
-        type: 'category',
-        label: 'Configure LLM Apps',
-        items: ['user/llm-apps/claude-code', 'user/llm-apps/codex'],
+      type: 'category',
+      label: 'Configure LLM Apps',
+      items: [
+        'user/llm-apps/claude-code',
+        'user/llm-apps/codex',
+        'user/llm-apps/opencode'
+      ],
     },
     'user/web-ui',
     'user/cli-reference',
