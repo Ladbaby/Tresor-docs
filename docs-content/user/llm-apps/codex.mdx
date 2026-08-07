@@ -1,0 +1,200 @@
+---
+title: Codex
+description: Point Codex (CLI, ChatGPT desktop, VS Code extension) at Tresor and route through DeepSeek or any other Responses API-compatible downstream.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Codex
+
+[Codex](https://openai.com/codex) is OpenAI's AI coding assistant. 
+It talks to models via the [OpenAI Responses API](https://developers.openai.com/api/reference/responses/overview/). 
+By pointing Codex at a running Tresor instance, you can keep the Codex client experience while **hot-switching** the underlying model between Anthropic, DeepSeek, MiniMax, a local `llama.cpp` server, or any other configured downstream — all from the web UI.
+
+All Codex clients — **Codex CLI**, the **ChatGPT desktop app**, and the **Codex IDE extension for VS Code** — share the same configuration file (`~/.codex/config.toml`). Configure it once, and the model is available in all three clients.
+
+No need to worry about the different API format underlying model is using, Tresor will **auto-translate** between the OpenAI Responses API (Codex) to other API formats (e.g., claude-opus-5 using the Anthropic API).
+
+This page shows how to wire Codex to Tresor.
+
+## ✅ Prerequisites
+
+- Installed Tresor following [installation guide](/Tresor-docs/docs/user/getting-started/installation).
+- [Codex CLI](https://openai.com/codex) installed (or ChatGPT desktop app / Codex VS Code extension).
+- Launch Codex at least once so that the `~/.codex` directory is created.
+
+## 1. Configure Tresor
+
+There are two ways to prepare Tresor:
+
+### 1.1 Option 1: via Web UI
+
+Web UI is more intuitive, but require more manual operations.
+
+1. In "Downstreams" tab
+
+    - Click <kbd>+ Add Provider</kbd> to add the LLM provider you are about to use.
+2. In "Aliases" tab
+
+    - Click <kbd>+ New Alias Group</kbd>
+        - Input Model ID: `gpt-.*`
+            > You can alternatively add three different alias groups `gpt-.*sol`, `gpt-.*terra`, and `gpt-.*luna` to achieve more precise mapping control.
+        - Checked "Regex Pattern"
+        - Select the Downstream and Output Model IDs you added previously.
+3. In "Settings" tab
+
+    - Click <kbd>+ Add API Key</kbd> under "Proxy Authentication" section (e.g, `sk-proxy-123`). Copy it, and we are about to fill it into `experimental_bearer_token` in the following section.
+
+### 1.2 Option 2: via `config.yaml`
+
+Editing yaml is less intuitive, but require less manual operations.
+
+The following example `config.yaml` uses 3 downstream providers.
+Replace them based on your actual providers.
+
+```yaml title="~/.config/tresor/config.yaml"
+bind_addr: 127.0.0.1:11510
+proxy_api_keys:
+  - sk-proxy-123
+... # Omitted showing other settings here
+downstreams:
+    - id: llama-cpp
+      name: llama.cpp
+      base_url: http://127.0.0.1:3000 # change to your actual llama.cpp listening port
+      api_formats:
+        - openai
+        - anthropic
+      output_model_ids:
+        - qwen3.6:27b-mtp-coder
+        - qwen3.6:27b-mtp:instruct
+    - id: deepseek
+      name: DeepSeek
+      base_url: https://api.deepseek.com
+      api_formats:
+        - openai_responses
+      output_model_ids:
+        - deepseek-v4-flash
+        - deepseek-v4-pro
+    - id: minimax
+      name: MiniMax
+      base_url: https://api.minimaxi.com/anthropic
+      api_formats:
+        - anthropic
+      output_model_ids:
+        - MiniMax-M2.5
+        - MiniMax-M2.7
+        - MiniMax-M3
+aliases:
+    - input_model_id: gpt-.*sol
+      is_regex: true
+      announced_names:
+        - gpt-5.6-sol
+      options:
+        - id: alias-minimax-m3
+          downstream_id: minimax
+          output_model_id: MiniMax-M3
+        - id: alias-deepseek-pro
+          downstream_id: deepseek
+          output_model_id: deepseek-v4-pro
+    - input_model_id: gpt-.*terra
+      is_regex: true
+      announced_names:
+        - gpt-5.6-terra
+      options:
+        - id: alias-llama-cpp-qwen-instruct
+          downstream_id: llama-cpp
+          output_model_id: qwen3.6:27b-mtp:instruct
+        - id: alias-deepseek-flash
+          downstream_id: deepseek
+          output_model_id: deepseek-v4-flash
+        - id: alias-minimax-m2-7
+          downstream_id: minimax
+          output_model_id: MiniMax-M2.7
+    - input_model_id: gpt-.*luna
+      is_regex: true
+      announced_names:
+        - gpt-5.6-luna
+      options:
+        - id: alias-minimax-m2-5
+          downstream_id: minimax
+          output_model_id: MiniMax-M2.5
+    - input_model_id: gpt-.*
+      is_regex: true
+      announced_names:
+        - gpt-5.5
+        - gpt-5.4
+      options:
+        - id: alias-minimax-m2-5-fallback
+          downstream_id: minimax
+          output_model_id: MiniMax-M2.5
+```
+
+> If a not-announced name like `gpt-5.3` requests Tresor, the most precisely matched alias will still handle it (in this case, `gpt-.*`). Optional announced names does not limit the capability of regex alias group's model name matching.
+
+Restart Tresor to apply the changes in yaml.
+
+## 2. Configure Codex
+
+<Tabs>
+  <TabItem value="manual" label="Manual Setup">
+    ### (Optional) Login to Your OpenAI Account
+
+    If you login before changing `config.toml`, you will be able to use remote control through the same account after changing `config.toml`.
+
+    ### Edit `config.toml`
+
+    ```toml title="~/.codex/config.toml"
+    model_provider = "tresor"
+    model = "gpt-5.6-sol"
+    model_reasoning_effort = "high"
+
+    [model_providers.tresor]
+    name = "tresor"
+    base_url = "http://127.0.0.1:11510/v1"
+    experimental_bearer_token = "sk-proxy-123"
+    wire_api = "responses"
+    requires_openai_auth = true
+    ```
+  </TabItem>
+</Tabs>
+
+## 3. Launch Codex
+
+Once configured, all three Codex clients read the same `~/.codex/config.toml` — no per-client configuration is needed:
+
+* **Codex CLI**: enter your project directory and run the `codex` command.
+
+  ```bash
+  cd /path/to/my-project
+  codex
+  ```
+
+* **ChatGPT desktop app**: shares the same configuration as Codex CLI; simply install the app and start using it.
+
+* **Codex IDE extension for VS Code**: shares the same configuration as Codex CLI; simply install the extension and start using it.
+
+Try to send a message.
+**If you see the request in Tresor's Logs tab, the configuration is in effect.**
+
+### Session History After Switching Providers
+
+If your previous sessions seem to be missing after switching to Tresor, don't worry — nothing is deleted. Codex stores session history in separate groups by login method: sessions created with an official ChatGPT subscription and sessions created with a third-party API (such as Tresor) are kept apart, and only the group matching the current configuration is shown. Restoring the previous configuration brings the earlier sessions back, while the Tresor sessions become hidden in turn. Restart the ChatGPT client after switching for the change to take effect.
+
+## 5. Hot-switch from the web UI
+
+Open `http://127.0.0.1:11510` in a browser, go to the **Aliases** tab, and click any sibling option card to make it active.
+Codex's *next* request will be routed to the new downstream — no restart of either Tresor or Codex is required. 🎉
+
+For example, if you have multiple downstreams configured (DeepSeek, a local `llama.cpp` server, etc.), flip between them with a single click from the web UI, and the agent immediately starts using the new model on the following turn.
+
+## 🔧 Troubleshooting
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `401 Unauthorized` from Tresor | `proxy_api_keys` is set but `experimental_bearer_token` in `config.toml` doesn't match | Set `experimental_bearer_token` to one of the keys in `proxy_api_keys`. |
+| `404 model not found` from Tresor | "model" in `~/.codex/config.toml` doesn't match any alias. | Verify "model" can match at least one alias. |
+
+## 📚 See also
+
+- [DeepSeek guide for Codex](https://api-docs.deepseek.com/quick_start/agent_integrations/codex/)
