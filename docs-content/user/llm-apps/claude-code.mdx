@@ -19,11 +19,36 @@ This page shows how to wire Claude Code to Tresor.
 - Installed Tresor following [installation guide](/Tresor-docs/docs/user/getting-started/installation).
 - [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) installed.
 
-## 1. Prepare `config.yaml`
+## 1. Configure Tresor
 
+There are two ways to prepare Tresor:
 
+### 1.1 Option 1: via Web UI
 
-```yaml title="config.yaml"
+Web UI is more intuitive, but require more manual operations.
+
+1. In "Downstreams" tab
+
+    - Click <kbd>+ Add Provider</kbd> to add the LLM provider you are about to use.
+2. In "Aliases" tab
+
+    - Click <kbd>+ New Alias Group</kbd>
+        - Input Model ID: `claude-opus.*`
+        - Checked "Regex Pattern"
+        - Select the Downstream and Output Model IDs you added previously.
+    - Repeat the above add new alias group process to add `claude-sonnet.*` and `claude-haiku.*`
+3. In "Settings" tab
+
+    - Click <kbd>+ Add API Key</kbd> under "Proxy Authentication" section (e.g, `sk-proxy-123`). Copy it, and we are about to fill it into `ANTHROPIC_AUTH_TOKEN` in the following section.
+
+### 1.2 Option 2: via `config.yaml`
+
+Editing yaml is less intuitive, but require less manual operations.
+
+The following example `config.yaml` uses 3 downstream providers.
+Replace them based on your actual providers.
+
+```yaml title="~/.config/tresor/config.yaml"
 bind_addr: 127.0.0.1:11510
 proxy_api_keys:
   - sk-proxy-123
@@ -94,13 +119,10 @@ aliases:
           output_model_id: MiniMax-M2.5
 ```
 
-## 2. Start Tresor
+Restart Tresor to apply the changes in yaml.
 
-```bash
-tresor run --config ~/.config/tresor/config.yaml
-```
 
-## 3. Configure Claude Code
+## 2. Configure Claude Code
 
 
 <Tabs>
@@ -133,7 +155,7 @@ tresor run --config ~/.config/tresor/config.yaml
 Drop the `export` lines into your shell profile (`~/.bashrc`, `~/.zshrc`, or `$PROFILE` on PowerShell) so every new shell inherits them. Claude Code only reads the variables at launch — restart the CLI after editing your profile.
 :::
 
-## 4. Launch Claude Code
+## 3. Launch Claude Code
 
 ```bash
 cd /path/to/my-project
@@ -144,13 +166,14 @@ Claude Code will send the model name you set in `ANTHROPIC_MODEL` to Tresor, whi
 
 You can even switch the model in Claude Code to Opus, Sonnet, or Haiku via `/model` command: they will be matched by the regex wildcard alias `claue-opus.*`, `claude-sonnet.*`, and `claue-haiku.*`, and mapped to the model you specify in the Aliases tab.
 
-## 5. Hot-switch from the web UI
+## 4. Hot-switch from the web UI
 
-Open `http://127.0.0.1:11510` in a browser, go to the **Aliases** tab, and click any sibling option card to make it active. Claude Code's *next* request will be routed to the new downstream — no restart of either Tresor or Claude Code is required. 🎉
+Open `http://127.0.0.1:11510` in a browser, go to the **Aliases** tab, and click any sibling option card to make it active.
+Claude Code's *next* request will be routed to the new downstream — no restart of either Tresor or Claude Code is required. 🎉
 
 For example, flip `claude-sonnet` from `deepseek-v4-flash` to `MiniMax-M2.7` with a single click, and the agent immediately starts using MiniMax on the following turn.
 
-## 7. Using Web Search in Claude Code
+## 5. Using Web Search in Claude Code
 
 Tresor is fully API-compatible with the Anthropic Messages endpoint, so the **Web Search** tool works the same way it does with the official Anthropic API: when Claude Code's model decides a question needs fresh information, it invokes the Web Search tool and the search runs through the active downstream provider.
 
