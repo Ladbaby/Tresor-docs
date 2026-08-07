@@ -119,6 +119,8 @@ aliases:
           output_model_id: MiniMax-M2.5
 ```
 
+> If a not-announced name like `claude-opus-4-8` requests Tresor, the most precisely matched alias will still handle it (in this case, `claude-opus.*`). Optional announced names does not limit the capability of regex alias group's model name matching.
+
 Restart Tresor to apply the changes in yaml.
 
 
