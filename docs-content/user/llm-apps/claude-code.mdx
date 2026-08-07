@@ -58,6 +58,9 @@ downstreams:
 aliases:
     - input_model_id: claude-opus.*
       is_regex: true
+      announced_names:
+        - claude-opus
+        - claude-opus-5
       options:
         - id: alias-minimax-m3
           downstream_id: minimax
@@ -65,7 +68,11 @@ aliases:
         - id: alias-deepseek-pro
           downstream_id: deepseek
           output_model_id: deepseek-v4-pro
-    - input_model_id: claude-sonnet
+    - input_model_id: claude-sonnet.*
+      is_regex: true
+      announced_names:
+        - claude-sonnet
+        - claude-sonnet-5
       options:
         - id: alias-llama-cpp-qwen-instruct
           downstream_id: llama-cpp
@@ -78,6 +85,9 @@ aliases:
           output_model_id: MiniMax-M2.7
     - input_model_id: claude-haiku.*
       is_regex: true
+      announced_names:
+        - claude-haiku
+        - claude-haiku-4-5
       options:
         - id: alias-minimax-m2-5
           downstream_id: minimax
@@ -98,9 +108,9 @@ tresor run --config ~/.config/tresor/config.yaml
     ```bash
     export ANTHROPIC_BASE_URL="http://127.0.0.1:11510"
     export ANTHROPIC_AUTH_TOKEN="sk-proxy-123"
-    export ANTHROPIC_MODEL="claude-sonnet"
+    export ANTHROPIC_MODEL="claude-sonnet" # can be omitted, since we have used wildcard alias in Tresor
     export ANTHROPIC_DEFAULT_OPUS_MODEL="claude-opus" # can be omitted, since we have used wildcard alias in Tresor
-    export ANTHROPIC_DEFAULT_SONNET_MODEL="claude-sonnet"
+    export ANTHROPIC_DEFAULT_SONNET_MODEL="claude-sonnet" # can be omitted, since we have used wildcard alias in Tresor
     export ANTHROPIC_DEFAULT_HAIKU_MODEL="claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
     export CLAUDE_CODE_SUBAGENT_MODEL="claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
     ```
@@ -109,9 +119,9 @@ tresor run --config ~/.config/tresor/config.yaml
     ```powershell
     $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:11510"
     $env:ANTHROPIC_AUTH_TOKEN = "sk-proxy-123"
-    $env:ANTHROPIC_MODEL = "claude-sonnet"
-    $env:ANTHROPIC_DEFAULT_OPUS_MODEL = "claude-opus" # can be omitted, since we have used wildcard alias in Tresorv
-    $env:ANTHROPIC_DEFAULT_SONNET_MODEL = "claude-sonnet"
+    $env:ANTHROPIC_MODEL = "claude-sonnet" # can be omitted, since we have used wildcard alias in Tresor
+    $env:ANTHROPIC_DEFAULT_OPUS_MODEL = "claude-opus" # can be omitted, since we have used wildcard alias in Tresor
+    $env:ANTHROPIC_DEFAULT_SONNET_MODEL = "claude-sonnet" # can be omitted, since we have used wildcard alias in Tresor
     $env:ANTHROPIC_DEFAULT_HAIKU_MODEL = "claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
     $env:CLAUDE_CODE_SUBAGENT_MODEL = "claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
     ```
@@ -132,7 +142,7 @@ claude
 
 Claude Code will send the model name you set in `ANTHROPIC_MODEL` to Tresor, which will resolve it through the matching `aliases` entry and forward the request to the **active** downstream for that alias.
 
-You can even switch the model in Claude Code to Opus or Haiku via `/model` command: they will be matched by the regex wildcard alias `claue-opus.*` and `claue-haiku.*`, and mapped to the model you specify in the Aliases tab.
+You can even switch the model in Claude Code to Opus, Sonnet, or Haiku via `/model` command: they will be matched by the regex wildcard alias `claue-opus.*`, `claude-sonnet.*`, and `claue-haiku.*`, and mapped to the model you specify in the Aliases tab.
 
 ## 5. Hot-switch from the web UI
 
