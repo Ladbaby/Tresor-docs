@@ -1,0 +1,194 @@
+---
+title: WorkBuddy/CodeBuddy
+description: Point WorkBuddy/CodeBuddy at Tresor and route every model name to DeepSeek, MiniMax, llama.cpp, or any other configured downstream.
+---
+
+# WorkBuddy/CodeBuddy
+
+[WorkBuddy](https://www.workbuddy.ai/)/[CodeBuddy](https://www.codebuddy.ai/) is one of Tencent's AI agent and coding assistant.
+Although WorkBuddy/CodeBuddy supports custom models through local configuration files, pointing it to Tresor gives you:
+- Centralized management of different models and providers. No need to re-configure WorkBuddy when you switch LLM providers, just change the activated model in the alias group of Tresor.
+- No need to worry about the different API format underlying model is using, Tresor will **auto-translate** between the OpenAI Chat Completion API (WorkBuddy) to other API formats (e.g., Anthropic messages for Claude models).
+
+However, it also comes with drawbacks:
+- If you use alias to map model names in Tresor, it will lead to less precise control over model-specific configurations, like the reasoning effort and context length.
+
+
+This page shows how to wire WorkBuddy/CodeBuddy to Tresor.
+
+## ✅ Prerequisites
+
+- Installed Tresor following [installation guide](/Tresor-docs/docs/user/getting-started/installation).
+- [WorkBuddy](https://www.workbuddy.ai/)/[CodeBuddy](https://www.codebuddy.ai/) installed.
+
+## 1. Configure Tresor
+
+There are two ways to prepare Tresor:
+
+### 1.1 Option 1: via Web UI
+
+Web UI is more intuitive, but require more manual operations.
+
+1. In "Downstreams" tab
+
+    - Click <kbd>+ Add Provider</kbd> to add the LLM provider you are about to use.
+2. In "Aliases" tab
+
+    - Click <kbd>+ New Alias Group</kbd>
+        - Input Model ID: `model-workbuddy`
+        - Leave "Regex Pattern" unchecked.
+        - Select the Downstream and Output Model IDs you added previously.
+    - (Optional) Repeat the above steps to add `model-codebuddy`.
+3. In "Settings" tab
+
+    - Click <kbd>+ Add API Key</kbd> under "Proxy Authentication" section (e.g, `sk-proxy-123`). Copy it, and we are about to fill it into `apiKey` in the following section.
+
+### 1.2 Option 2: via `config.yaml`
+
+Editing yaml is less intuitive, but require less manual operations.
+
+The following example `config.yaml` uses 3 downstream providers.
+Replace them based on your actual providers.
+
+```yaml title="~/.config/tresor/config.yaml"
+bind_addr: 127.0.0.1:11510
+proxy_api_keys:
+  - sk-proxy-123
+... # Omitted showing other settings here
+downstreams:
+    - id: llama-cpp
+      name: llama.cpp
+      base_url: http://127.0.0.1:3000 # change to your actual llama.cpp listening port
+      api_formats:
+        - openai
+        - anthropic
+      output_model_ids:
+        - qwen3.6:27b-mtp:instruct
+    - id: deepseek
+      name: DeepSeek
+      base_url: https://api.deepseek.com/anthropic
+      api_formats:
+        - anthropic
+      output_model_ids:
+        - deepseek-v4-flash
+        - deepseek-v4-pro
+    - id: minimax
+      name: MiniMax
+      base_url: https://api.minimaxi.com/anthropic
+      api_formats:
+        - anthropic
+      output_model_ids:
+        - MiniMax-M2.5
+        - MiniMax-M2.7
+        - MiniMax-M3
+aliases:
+    - input_model_id: model-codebuddy
+      options:
+        - id: alias-deepseek-pro
+          downstream_id: deepseek
+          output_model_id: deepseek-v4-pro
+        - id: alias-minimax-m3
+          downstream_id: minimax
+          output_model_id: MiniMax-M3
+    - input_model_id: model-workbuddy
+      options:
+        - id: alias-deepseek-flash
+          downstream_id: deepseek
+          output_model_id: deepseek-v4-flash
+        - id: alias-minimax-m2-7
+          downstream_id: minimax
+          output_model_id: MiniMax-M2.7
+        - id: alias-llama-cpp-qwen-instruct
+          downstream_id: llama-cpp
+          output_model_id: qwen3.6:27b-mtp:instruct
+```
+
+> CodeBuddy is more programming-oriented, while WorkBuddy is for general everyday tasks. Therefore, the example config use more powerful models for CodeBuddy by default. Adjust per your need.
+
+Restart Tresor to apply the changes in yaml.
+
+## 2. Configure WorkBuddy/CodeBuddy
+
+WorkBuddy/CodeBuddy supports custom models through local `models.json` configuration files. Point it at your Tresor instance:
+
+Create or edit the user-level configuration file:
+
+```
+C:\Users\<your-username>\.codebuddy\models.json
+```
+
+To apply the configuration only to one project, create the project-level configuration file instead:
+
+```
+<your-project>\.codebuddy\models.json
+```
+
+Then add the following configuration:
+
+```json title="~/.codebuddy/models.json"
+{
+  "models": [
+    {
+      "id": "model-workbuddy",
+      "name": "model-workbuddy",
+      "vendor": "Tresor",
+      "url": "http://127.0.0.1:11510/v1/chat/completions",
+      "apiKey": "sk-proxy-123",
+      "maxInputTokens": 262144,
+      "maxOutputTokens": 32000,
+      "supportsToolCall": true,
+      "supportsImages": true,
+      "relatedModels": {
+        "lite": "model-codebuddy",
+        "reasoning": "model-workbuddy"
+      }
+    },
+    {
+      "id": "model-codebuddy",
+      "name": "model-codebuddy",
+      "vendor": "Tresor",
+      "url": "http://127.0.0.1:11510/v1/chat/completions",
+      "apiKey": "sk-proxy-123",
+      "maxInputTokens": 262144,
+      "maxOutputTokens": 32000,
+      "supportsToolCall": true,
+      "supportsImages": true
+    }
+  ],
+  "availableModels": [
+    "model-workbuddy",
+    "model-codebuddy"
+  ]
+}
+```
+
+> **Note:** Save `models.json` as UTF-8 without BOM. Some desktop versions may fail to read local model configuration files saved with a UTF-8 BOM header.
+
+## 3. Restart and Select the Model
+
+Fully quit WorkBuddy/CodeBuddy, then open it again.
+
+In the model selector, choose:
+
+```
+model-workbuddy
+```
+
+WorkBuddy/CodeBuddy will send the model name `model-workbuddy` to Tresor, which will forward the request to the active downstream for that alias.
+
+## 4. Hot-switch from the web UI
+
+Open `http://127.0.0.1:11510` in a browser, go to the **Aliases** tab, and click any sibling option card to make it active.
+WorkBuddy/CodeBuddy's *next* request will be routed to the new downstream — no restart of either Tresor or WorkBuddy/CodeBuddy is required. 🎉
+
+For example, flip `model-workbuddy` from `deepseek-v4-pro` to `MiniMax-M3` with a single click, and the agent immediately starts using MiniMax on the following turn.
+
+## 🔧 Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `Authentication Fails` or `401` from Tresor | `proxy_api_keys` is set but `apiKey` doesn't match | Set `apiKey` to one of the keys in `proxy_api_keys`, or empty the list in `config.yaml` |
+
+## 📚 See also
+
+- [DeepSeek guide for WorkBuddy/CodeBuddy](https://api-docs.deepseek.com/quick_start/agent_integrations/workbuddy)
