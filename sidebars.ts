@@ -19,7 +19,8 @@ const sidebars: SidebarsConfig = {
         'user/llm-apps/claude-code',
         'user/llm-apps/codex',
         'user/llm-apps/opencode',
-        'user/llm-apps/openclaw'
+        'user/llm-apps/openclaw',
+        'user/llm-apps/workbuddy'
       ],
     },
     'user/web-ui',
