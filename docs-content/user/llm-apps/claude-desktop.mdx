@@ -1,0 +1,190 @@
+---
+title: Claude Desktop (Cowork)
+description: Point Claude Desktop (Cowork) at Tresor and route every Claude model name to DeepSeek, MiniMax, llama.cpp, or any other configured downstream.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Claude Desktop (Cowork)
+
+[Claude Desktop](https://claude.com/download) is Anthropic's official desktop app containing both Claude Cowork and Claude Code (CLI agent). By pointing it at a running Tresor instance, you can keep the Anthropic client experience while **hot-switching** the underlying model between Anthropic, DeepSeek, MiniMax, a local `llama.cpp` server, or any other configured downstream — all from the web UI.
+
+No need to worry about the different API format underlying model is using, Tresor will **auto-translate** between the Anthropic API (Claude Desktop) to other API formats (e.g., gpt-5.5 using OpenAI Responses).
+
+This page shows how to wire Claude Desktop to Tresor.
+
+## ✅ Prerequisites
+
+- Installed Tresor following [installation guide](/Tresor-docs/docs/user/getting-started/installation).
+- [Claude app](https://claude.com/download) installed.
+
+## 1. Configure Tresor
+
+There are two ways to prepare Tresor:
+
+### 1.1 Option 1: via Web UI
+
+Web UI is more intuitive, but require more manual operations.
+
+1. In "Downstreams" tab
+
+    - Click <kbd>+ Add Provider</kbd> to add the LLM provider you are about to use.
+2. In "Aliases" tab
+
+    - Click <kbd>+ New Alias Group</kbd>
+        - Input Model ID: `claude-opus.*`
+        - Checked "Regex Pattern"
+        - Select the Downstream and Output Model IDs you added previously.
+    - Repeat the above add new alias group process to add `claude-sonnet.*` and `claude-haiku.*`
+    - Click <kbd>+ Add Name</kbd>:
+        - For alias `claude-opus.*`: Add announced name `claude-opus`
+        - For alias `claude-sonnet.*`: Add announced name `claude-sonnet`
+        - For alias `claude-haiku.*`: Add announced name `claude-haiku`
+
+        > WARNING: Unlike [Claude Code's setup guide](/Tresor-docs/docs/user/llm-apps/claude-code), announced names are **required** to allow Claude Desktop to detect available models!
+
+3. In "Settings" tab
+
+    - Click <kbd>+ Add API Key</kbd> under "Proxy Authentication" section (e.g, `sk-proxy-123`). Copy it, and we are about to fill it into `ANTHROPIC_AUTH_TOKEN` in the following section.
+
+### 1.2 Option 2: via `config.yaml`
+
+Editing yaml is less intuitive, but require less manual operations.
+
+The following example `config.yaml` uses 3 downstream providers.
+Replace them based on your actual providers.
+
+```yaml title="~/.config/tresor/config.yaml"
+bind_addr: 127.0.0.1:11510
+proxy_api_keys:
+  - sk-proxy-123
+... # Omitted showing other settings here
+downstreams:
+    - id: llama-cpp
+      name: llama.cpp
+      base_url: http://127.0.0.1:3000 # change to your actual llama.cpp listening port
+      api_formats:
+        - openai
+        - anthropic
+      output_model_ids:
+        - qwen3.6:27b-mtp-coder
+        - qwen3.6:27b-mtp:instruct
+    - id: deepseek
+      name: DeepSeek
+      base_url: https://api.deepseek.com/anthropic
+      api_formats:
+        - anthropic
+      output_model_ids:
+        - deepseek-v4-flash
+        - deepseek-v4-pro
+    - id: minimax
+      name: MiniMax
+      base_url: https://api.minimaxi.com/anthropic
+      api_formats:
+        - anthropic
+      output_model_ids:
+        - MiniMax-M2.5
+        - MiniMax-M2.7
+        - MiniMax-M3
+aliases:
+    - input_model_id: claude-opus.*
+      is_regex: true
+      announced_names:
+        - claude-opus
+        - claude-opus-5
+      options:
+        - id: alias-minimax-m3
+          downstream_id: minimax
+          output_model_id: MiniMax-M3
+        - id: alias-deepseek-pro
+          downstream_id: deepseek
+          output_model_id: deepseek-v4-pro
+    - input_model_id: claude-sonnet.*
+      is_regex: true
+      announced_names:
+        - claude-sonnet
+        - claude-sonnet-5
+      options:
+        - id: alias-llama-cpp-qwen-instruct
+          downstream_id: llama-cpp
+          output_model_id: qwen3.6:27b-mtp:instruct
+        - id: alias-deepseek-flash
+          downstream_id: deepseek
+          output_model_id: deepseek-v4-flash
+        - id: alias-minimax-m2-7
+          downstream_id: minimax
+          output_model_id: MiniMax-M2.7
+    - input_model_id: claude-haiku.*
+      is_regex: true
+      announced_names:
+        - claude-haiku
+        - claude-haiku-4-5
+      options:
+        - id: alias-minimax-m2-5
+          downstream_id: minimax
+          output_model_id: MiniMax-M2.5
+```
+
+> If a not-announced name like `claude-opus-4-8` requests Tresor, the most precisely matched alias will still handle it (in this case, `claude-opus.*`). Optional announced names does not limit the capability of regex alias group's model name matching.
+
+Restart Tresor to apply the changes in yaml.
+
+
+## 2. Configure Claude Desktop
+
+### Step 1: Enable Developer Mode
+
+Launch Claude Desktop — you do not need to sign in.
+Open <kbd>Help</kbd> > <kbd>Troubleshooting</kbd> > <kbd>Enable Developer Mode</kbd>.
+This adds a <kbd>Developer</kbd> menu to your menu bar.
+
+![](image/2026-08-08-23-00-21.png)
+
+### Step 2: Open Configure Third-Party Inference
+
+Click <kbd>Developer</kbd> > <kbd>Configure Third-Party Inference…</kbd> in the menu bar
+
+![](image/2026-08-08-23-04-29.png)
+
+### Step 3: Enter Gateway Credentials
+
+Set the connection to **Gateway** and enter your Tresor credentials:
+
+|Field|	Value|
+|---|---|
+|Gateway base URL|http://127.0.0.1:11510
+|Gateway API key|One of your Tresor API key in proxy_api_keys field (e.g., `sk-proxy-123`)
+|Gateway auth scheme|	bearer
+
+![](image/2026-08-08-23-11-01.png)
+
+Click Apply locally to save your settings.
+
+## 3. Launch Claude Desktop
+
+Fully quit Claude Desktop and reopen it.
+On the start screen, choose Continue with Gateway (shown as “Local configuration”).
+No Anthropic account is needed.
+
+The model picker will now display the models available through your Tresor connection (`claude-opus`, `claude-sonnet`, and `claude-haiku`).
+
+## 4. Hot-switch from the web UI
+
+Open `http://127.0.0.1:11510` in a browser, go to the **Aliases** tab, and click any sibling option card to make it active.
+Claude Desktop's *next* request will be routed to the new downstream — no restart of either Tresor or Claude Code is required. 🎉
+
+For example, flip `claude-sonnet` from `deepseek-v4-flash` to `MiniMax-M2.7` with a single click, and the agent immediately starts using MiniMax on the following turn.
+
+## 5. Using Web Search in Claude Code
+
+Tresor is fully API-compatible with the Anthropic Messages endpoint, so the **Web Search** tool works the same way it does with the official Anthropic API: when Claude Desktop's model decides a question needs fresh information, it invokes the Web Search tool and the search runs through the active downstream provider.
+
+If the active downstream is DeepSeek, the search and the summarising LLM call both go through DeepSeek, so each search may incur extra token cost (one extra LLM call to summarise the retrieved pages).
+
+If the active downstream is a local `llama.cpp` server, Web Search is not available unless that backend exposes the tool itself.
+
+## 📚 See also
+
+- [openrouter guide for Claude Desktop](https://openrouter.ai/docs/cookbook/coding-agents/claude-desktop-integration): Some images in this tutorial are taken from openrouter.
+- [LiteLLM guide for Claude Desktop](https://docs.litellm.ai/docs/tutorials/claude_desktop_cowork)

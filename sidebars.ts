@@ -17,6 +17,7 @@ const sidebars: SidebarsConfig = {
       label: 'Configure LLM Apps',
       items: [
         'user/llm-apps/claude-code',
+        'user/llm-apps/claude-desktop',
         'user/llm-apps/codex',
         'user/llm-apps/opencode',
         'user/llm-apps/openclaw',
