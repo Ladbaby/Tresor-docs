@@ -1,6 +1,6 @@
 ---
 title: Claude Code
-description: Point Claude Code at Tresor and route every Claude model name to DeepSeek, MiniMax, llama.cpp, or any other configured downstream.
+description: Point Claude Code CLI or VS Code extension at Tresor and route every Claude model name to DeepSeek, MiniMax, llama.cpp, or any other configured downstream.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -8,16 +8,18 @@ import TabItem from '@theme/TabItem';
 
 # Claude Code
 
-[Claude Code](https://code.claude.com/docs/en/overview) is Anthropic's official CLI agent. By pointing it at a running Tresor instance, you can keep the Anthropic client experience while **hot-switching** the underlying model between Anthropic, DeepSeek, MiniMax, a local `llama.cpp` server, or any other configured downstream — all from the web UI.
+[Claude Code](https://code.claude.com/docs/en/overview) is Anthropic's official CLI agent, which also has a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code).
+By pointing it at a running Tresor instance, you can keep the Anthropic client experience while **hot-switching** the underlying model between Anthropic, DeepSeek, MiniMax, a local `llama.cpp` server, or any other configured downstream — all from the web UI.
 
 No need to worry about the different API format underlying model is using, Tresor will **auto-translate** between the Anthropic API (Claude Code) to other API formats (e.g., gpt-5.5 using OpenAI Responses).
 
-This page shows how to wire Claude Code to Tresor.
+This page shows how to wire Claude Code CLI or VS Code extension to Tresor.
+For Claude Code inside Claude Desktop, follow [Claude Desktop guide](/Tresor-docs/docs/user/llm-apps/claude-desktop) instead.
 
 ## ✅ Prerequisites
 
 - Installed Tresor following [installation guide](/Tresor-docs/docs/user/getting-started/installation).
-- [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) installed.
+- [Claude Code CLI](https://docs.claude.com/en/docs/claude-code/overview) or [VS Code extension](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code) installed.
 
 ## 1. Configure Tresor
 
@@ -126,6 +128,7 @@ Restart Tresor to apply the changes in yaml.
 
 ## 2. Configure Claude Code
 
+For Claude Code CLI:
 
 <Tabs>
   <TabItem value="bash" label="Linux / macOS" default>
@@ -157,12 +160,59 @@ Restart Tresor to apply the changes in yaml.
 Drop the `export` lines into your shell profile (`~/.bashrc`, `~/.zshrc`, or `$PROFILE` on PowerShell) so every new shell inherits them. Claude Code only reads the variables at launch — restart the CLI after editing your profile.
 :::
 
+---
+
+For Claude Code extension in VS Code, in VS Code's setting page:
+
+1. Enable "Claude Code: Disable Login Prompt"
+2. Enable "Claude Code: Hide Onboarding"
+3. In "Claude Code: Environment Variables", click "Edit in settings.json", and add the following lines:
+
+    ```json
+    "claudeCode.environmentVariables": [
+        {
+            "name": "ANTHROPIC_BASE_URL",
+            "value": "http://127.0.0.1:11510"
+        },
+        {
+            "name": "ANTHROPIC_AUTH_TOKEN",
+            "value": "sk-proxy-123"
+        },
+        {
+            "name": "ANTHROPIC_MODEL",
+            "value": "claude-sonnet"
+        },
+        {
+            "name": "ANTHROPIC_DEFAULT_OPUS_MODEL",
+            "value": "claude-opus"
+        },
+        {
+            "name": "ANTHROPIC_DEFAULT_SONNET_MODEL",
+            "value": "claude-sonnet"
+        },
+        {
+            "name": "ANTHROPIC_DEFAULT_HAIKU_MODEL",
+            "value": "claude-haiku"
+        },
+        {
+            "name": "CLAUDE_CODE_SUBAGENT_MODEL",
+            "value": "claude-haiku"
+        }
+    ],
+    ```
+
+> WARNING: For **remote connections**, if you set "ANTHROPIC_BASE_URL" to "http://127.0.0.1:11510", then Claude Code extension will try to connect port 11510 of remote server. In this case, you can either install Tresor also on that remote server (two Tresor instances), or host a single Tresor instance on a public server, set Tresor's `bind_addr` to "0.0.0.0:11510", then set "ANTHROPIC_BASE_URL" to "http://YOUR_PUBLIC_SERVER_IP:11510". If you need encrypted connection to this remote Tresor instance instead, consider using Zerotier/Tailscale, or Nginx+certbot to enable HTTPS connections.
+
 ## 3. Launch Claude Code
+
+For CLI:
 
 ```bash
 cd /path/to/my-project
 claude
 ```
+
+For VS Code extension, just restart VS Code and start using.
 
 Claude Code will send the model name you set in `ANTHROPIC_MODEL` to Tresor, which will resolve it through the matching `aliases` entry and forward the request to the **active** downstream for that alias.
 
