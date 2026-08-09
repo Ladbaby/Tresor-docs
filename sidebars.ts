@@ -18,6 +18,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'user/llm-apps/claude-code',
         'user/llm-apps/claude-desktop',
+        'user/llm-apps/claude-office',
         'user/llm-apps/codex',
         'user/llm-apps/opencode',
         'user/llm-apps/openclaw',
