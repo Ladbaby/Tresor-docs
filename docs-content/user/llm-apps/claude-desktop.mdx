@@ -23,113 +23,111 @@ This page shows how to wire Claude Desktop to Tresor.
 
 There are two ways to prepare Tresor:
 
-### 1.1 Option 1: via Web UI
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but require more manual operations.
 
-Web UI is more intuitive, but require more manual operations.
+    1. In "Downstreams" tab
 
-1. In "Downstreams" tab
+        - Click <kbd>+ Add Provider</kbd> to add the LLM provider you are about to use.
+    2. In "Aliases" tab
 
-    - Click <kbd>+ Add Provider</kbd> to add the LLM provider you are about to use.
-2. In "Aliases" tab
+        - Click <kbd>+ New Alias Group</kbd>
+            - Input Model ID: `claude-opus.*`
+            - Checked "Regex Pattern"
+            - Select the Downstream and Output Model IDs you added previously.
+        - Repeat the above add new alias group process to add `claude-sonnet.*` and `claude-haiku.*`
+        - Click <kbd>+ Add Name</kbd>:
+            - For alias `claude-opus.*`: Add announced name `claude-opus`
+            - For alias `claude-sonnet.*`: Add announced name `claude-sonnet`
+            - For alias `claude-haiku.*`: Add announced name `claude-haiku`
 
-    - Click <kbd>+ New Alias Group</kbd>
-        - Input Model ID: `claude-opus.*`
-        - Checked "Regex Pattern"
-        - Select the Downstream and Output Model IDs you added previously.
-    - Repeat the above add new alias group process to add `claude-sonnet.*` and `claude-haiku.*`
-    - Click <kbd>+ Add Name</kbd>:
-        - For alias `claude-opus.*`: Add announced name `claude-opus`
-        - For alias `claude-sonnet.*`: Add announced name `claude-sonnet`
-        - For alias `claude-haiku.*`: Add announced name `claude-haiku`
+            > WARNING: Unlike [Claude Code's setup guide](/Tresor-docs/docs/user/llm-apps/claude-code), announced names are **required** to allow Claude Desktop to detect available models!
+    3. In "Settings" tab
 
-        > WARNING: Unlike [Claude Code's setup guide](/Tresor-docs/docs/user/llm-apps/claude-code), announced names are **required** to allow Claude Desktop to detect available models!
+        - Click <kbd>+ Add API Key</kbd> under "Proxy Authentication" section (e.g, `sk-proxy-123`). Copy it, and we are about to fill it into `ANTHROPIC_AUTH_TOKEN` in the following section.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing yaml is less intuitive, but require less manual operations.
 
-3. In "Settings" tab
+    The following example `config.yaml` uses 3 downstream providers.
+    Replace them based on your actual providers.
 
-    - Click <kbd>+ Add API Key</kbd> under "Proxy Authentication" section (e.g, `sk-proxy-123`). Copy it, and we are about to fill it into "Gateway API key" in the following section.
-
-### 1.2 Option 2: via `config.yaml`
-
-Editing yaml is less intuitive, but require less manual operations.
-
-The following example `config.yaml` uses 3 downstream providers.
-Replace them based on your actual providers.
-
-```yaml title="~/.config/tresor/config.yaml"
-bind_addr: 127.0.0.1:11510
-proxy_api_keys:
-  - sk-proxy-123
-... # Omitted showing other settings here
-downstreams:
-    - id: llama-cpp
-      name: llama.cpp
-      base_url: http://127.0.0.1:3000 # change to your actual llama.cpp listening port
-      api_formats:
-        - openai
-        - anthropic
-      output_model_ids:
-        - qwen3.6:27b-mtp-coder
-        - qwen3.6:27b-mtp:instruct
-    - id: deepseek
-      name: DeepSeek
-      base_url: https://api.deepseek.com/anthropic
-      api_formats:
-        - anthropic
-      output_model_ids:
-        - deepseek-v4-flash
-        - deepseek-v4-pro
-    - id: minimax
-      name: MiniMax
-      base_url: https://api.minimaxi.com/anthropic
-      api_formats:
-        - anthropic
-      output_model_ids:
-        - MiniMax-M2.5
-        - MiniMax-M2.7
-        - MiniMax-M3
-aliases:
-    - input_model_id: claude-opus.*
-      is_regex: true
-      announced_names:
-        - claude-opus
-        - claude-opus-5
-      options:
-        - id: alias-minimax-m3
-          downstream_id: minimax
-          output_model_id: MiniMax-M3
-        - id: alias-deepseek-pro
-          downstream_id: deepseek
-          output_model_id: deepseek-v4-pro
-    - input_model_id: claude-sonnet.*
-      is_regex: true
-      announced_names:
-        - claude-sonnet
-        - claude-sonnet-5
-      options:
-        - id: alias-llama-cpp-qwen-instruct
-          downstream_id: llama-cpp
-          output_model_id: qwen3.6:27b-mtp:instruct
-        - id: alias-deepseek-flash
-          downstream_id: deepseek
-          output_model_id: deepseek-v4-flash
-        - id: alias-minimax-m2-7
-          downstream_id: minimax
-          output_model_id: MiniMax-M2.7
-    - input_model_id: claude-haiku.*
-      is_regex: true
-      announced_names:
-        - claude-haiku
-        - claude-haiku-4-5
-      options:
-        - id: alias-minimax-m2-5
-          downstream_id: minimax
-          output_model_id: MiniMax-M2.5
-```
+    ```yaml title="~/.config/tresor/config.yaml"
+    bind_addr: 127.0.0.1:11510
+    proxy_api_keys:
+    - sk-proxy-123
+    ... # Omitted showing other settings here
+    downstreams:
+        - id: llama-cpp
+        name: llama.cpp
+        base_url: http://127.0.0.1:3000 # change to your actual llama.cpp listening port
+        api_formats:
+            - openai
+            - anthropic
+        output_model_ids:
+            - qwen3.6:27b-mtp-coder
+            - qwen3.6:27b-mtp:instruct
+        - id: deepseek
+        name: DeepSeek
+        base_url: https://api.deepseek.com/anthropic
+        api_formats:
+            - anthropic
+        output_model_ids:
+            - deepseek-v4-flash
+            - deepseek-v4-pro
+        - id: minimax
+        name: MiniMax
+        base_url: https://api.minimaxi.com/anthropic
+        api_formats:
+            - anthropic
+        output_model_ids:
+            - MiniMax-M2.5
+            - MiniMax-M2.7
+            - MiniMax-M3
+    aliases:
+        - input_model_id: claude-opus.*
+        is_regex: true
+        announced_names:
+            - claude-opus
+            - claude-opus-5
+        options:
+            - id: alias-minimax-m3
+            downstream_id: minimax
+            output_model_id: MiniMax-M3
+            - id: alias-deepseek-pro
+            downstream_id: deepseek
+            output_model_id: deepseek-v4-pro
+        - input_model_id: claude-sonnet.*
+        is_regex: true
+        announced_names:
+            - claude-sonnet
+            - claude-sonnet-5
+        options:
+            - id: alias-llama-cpp-qwen-instruct
+            downstream_id: llama-cpp
+            output_model_id: qwen3.6:27b-mtp:instruct
+            - id: alias-deepseek-flash
+            downstream_id: deepseek
+            output_model_id: deepseek-v4-flash
+            - id: alias-minimax-m2-7
+            downstream_id: minimax
+            output_model_id: MiniMax-M2.7
+        - input_model_id: claude-haiku.*
+        is_regex: true
+        announced_names:
+            - claude-haiku
+            - claude-haiku-4-5
+        options:
+            - id: alias-minimax-m2-5
+            downstream_id: minimax
+            output_model_id: MiniMax-M2.5
+    ```
+    Restart Tresor to apply the changes in yaml.
+  </TabItem>
+</Tabs>
 
 > If a not-announced name like `claude-opus-4-8` requests Tresor, the most precisely matched alias will still handle it (in this case, `claude-opus.*`). Optional announced names does not limit the capability of regex alias group's model name matching.
-
-Restart Tresor to apply the changes in yaml.
-
 
 ## 2. Configure Claude Desktop
 
