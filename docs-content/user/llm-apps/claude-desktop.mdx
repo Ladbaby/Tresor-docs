@@ -46,7 +46,7 @@ Web UI is more intuitive, but require more manual operations.
 
 3. In "Settings" tab
 
-    - Click <kbd>+ Add API Key</kbd> under "Proxy Authentication" section (e.g, `sk-proxy-123`). Copy it, and we are about to fill it into `ANTHROPIC_AUTH_TOKEN` in the following section.
+    - Click <kbd>+ Add API Key</kbd> under "Proxy Authentication" section (e.g, `sk-proxy-123`). Copy it, and we are about to fill it into "Gateway API key" in the following section.
 
 ### 1.2 Option 2: via `config.yaml`
 
@@ -176,7 +176,7 @@ Claude Desktop's *next* request will be routed to the new downstream — no rest
 
 For example, flip `claude-sonnet` from `deepseek-v4-flash` to `MiniMax-M2.7` with a single click, and the agent immediately starts using MiniMax on the following turn.
 
-## 5. Using Web Search in Claude Code
+## 5. Using Web Search in Claude Desktop
 
 Tresor is fully API-compatible with the Anthropic Messages endpoint, so the **Web Search** tool works the same way it does with the official Anthropic API: when Claude Desktop's model decides a question needs fresh information, it invokes the Web Search tool and the search runs through the active downstream provider.
 
