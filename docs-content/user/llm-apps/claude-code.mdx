@@ -25,194 +25,203 @@ For Claude Code inside Claude Desktop, follow [Claude Desktop guide](/Tresor-doc
 
 There are two ways to prepare Tresor:
 
-### 1.1 Option 1: via Web UI
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but require more manual operations.
 
-Web UI is more intuitive, but require more manual operations.
+    1. In "Downstreams" tab
 
-1. In "Downstreams" tab
+        - Click <kbd>+ Add Provider</kbd> to add the LLM provider you are about to use.
+    2. In "Aliases" tab
 
-    - Click <kbd>+ Add Provider</kbd> to add the LLM provider you are about to use.
-2. In "Aliases" tab
+        - Click <kbd>+ New Alias Group</kbd>
+            - Input Model ID: `claude-opus.*`
+            - Checked "Regex Pattern"
+            - Select the Downstream and Output Model IDs you added previously.
+        - Repeat the above add new alias group process to add `claude-sonnet.*` and `claude-haiku.*`
+    3. In "Settings" tab
 
-    - Click <kbd>+ New Alias Group</kbd>
-        - Input Model ID: `claude-opus.*`
-        - Checked "Regex Pattern"
-        - Select the Downstream and Output Model IDs you added previously.
-    - Repeat the above add new alias group process to add `claude-sonnet.*` and `claude-haiku.*`
-3. In "Settings" tab
+        - Click <kbd>+ Add API Key</kbd> under "Proxy Authentication" section (e.g, `sk-proxy-123`). Copy it, and we are about to fill it into `ANTHROPIC_AUTH_TOKEN` in the following section.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing yaml is less intuitive, but require less manual operations.
 
-    - Click <kbd>+ Add API Key</kbd> under "Proxy Authentication" section (e.g, `sk-proxy-123`). Copy it, and we are about to fill it into `ANTHROPIC_AUTH_TOKEN` in the following section.
+    The following example `config.yaml` uses 3 downstream providers.
+    Replace them based on your actual providers.
 
-### 1.2 Option 2: via `config.yaml`
-
-Editing yaml is less intuitive, but require less manual operations.
-
-The following example `config.yaml` uses 3 downstream providers.
-Replace them based on your actual providers.
-
-```yaml title="~/.config/tresor/config.yaml"
-bind_addr: 127.0.0.1:11510
-proxy_api_keys:
-  - sk-proxy-123
-... # Omitted showing other settings here
-downstreams:
-    - id: llama-cpp
-      name: llama.cpp
-      base_url: http://127.0.0.1:3000 # change to your actual llama.cpp listening port
-      api_formats:
-        - openai
-        - anthropic
-      output_model_ids:
-        - qwen3.6:27b-mtp-coder
-        - qwen3.6:27b-mtp:instruct
-    - id: deepseek
-      name: DeepSeek
-      base_url: https://api.deepseek.com/anthropic
-      api_formats:
-        - anthropic
-      output_model_ids:
-        - deepseek-v4-flash
-        - deepseek-v4-pro
-    - id: minimax
-      name: MiniMax
-      base_url: https://api.minimaxi.com/anthropic
-      api_formats:
-        - anthropic
-      output_model_ids:
-        - MiniMax-M2.5
-        - MiniMax-M2.7
-        - MiniMax-M3
-aliases:
-    - input_model_id: claude-opus.*
-      is_regex: true
-      announced_names:
-        - claude-opus
-        - claude-opus-5
-      options:
-        - id: alias-minimax-m3
-          downstream_id: minimax
-          output_model_id: MiniMax-M3
-        - id: alias-deepseek-pro
-          downstream_id: deepseek
-          output_model_id: deepseek-v4-pro
-    - input_model_id: claude-sonnet.*
-      is_regex: true
-      announced_names:
-        - claude-sonnet
-        - claude-sonnet-5
-      options:
-        - id: alias-llama-cpp-qwen-instruct
-          downstream_id: llama-cpp
-          output_model_id: qwen3.6:27b-mtp:instruct
-        - id: alias-deepseek-flash
-          downstream_id: deepseek
-          output_model_id: deepseek-v4-flash
-        - id: alias-minimax-m2-7
-          downstream_id: minimax
-          output_model_id: MiniMax-M2.7
-    - input_model_id: claude-haiku.*
-      is_regex: true
-      announced_names:
-        - claude-haiku
-        - claude-haiku-4-5
-      options:
-        - id: alias-minimax-m2-5
-          downstream_id: minimax
-          output_model_id: MiniMax-M2.5
-```
+    ```yaml title="~/.config/tresor/config.yaml"
+    bind_addr: 127.0.0.1:11510
+    proxy_api_keys:
+    - sk-proxy-123
+    ... # Omitted showing other settings here
+    downstreams:
+        - id: llama-cpp
+        name: llama.cpp
+        base_url: http://127.0.0.1:3000 # change to your actual llama.cpp listening port
+        api_formats:
+            - openai
+            - anthropic
+        output_model_ids:
+            - qwen3.6:27b-mtp-coder
+            - qwen3.6:27b-mtp:instruct
+        - id: deepseek
+        name: DeepSeek
+        base_url: https://api.deepseek.com/anthropic
+        api_formats:
+            - anthropic
+        output_model_ids:
+            - deepseek-v4-flash
+            - deepseek-v4-pro
+        - id: minimax
+        name: MiniMax
+        base_url: https://api.minimaxi.com/anthropic
+        api_formats:
+            - anthropic
+        output_model_ids:
+            - MiniMax-M2.5
+            - MiniMax-M2.7
+            - MiniMax-M3
+    aliases:
+        - input_model_id: claude-opus.*
+        is_regex: true
+        announced_names:
+            - claude-opus
+            - claude-opus-5
+        options:
+            - id: alias-minimax-m3
+            downstream_id: minimax
+            output_model_id: MiniMax-M3
+            - id: alias-deepseek-pro
+            downstream_id: deepseek
+            output_model_id: deepseek-v4-pro
+        - input_model_id: claude-sonnet.*
+        is_regex: true
+        announced_names:
+            - claude-sonnet
+            - claude-sonnet-5
+        options:
+            - id: alias-llama-cpp-qwen-instruct
+            downstream_id: llama-cpp
+            output_model_id: qwen3.6:27b-mtp:instruct
+            - id: alias-deepseek-flash
+            downstream_id: deepseek
+            output_model_id: deepseek-v4-flash
+            - id: alias-minimax-m2-7
+            downstream_id: minimax
+            output_model_id: MiniMax-M2.7
+        - input_model_id: claude-haiku.*
+        is_regex: true
+        announced_names:
+            - claude-haiku
+            - claude-haiku-4-5
+        options:
+            - id: alias-minimax-m2-5
+            downstream_id: minimax
+            output_model_id: MiniMax-M2.5
+    ```
+    Restart Tresor to apply the changes in yaml.
+  </TabItem>
+</Tabs>
 
 > If a not-announced name like `claude-opus-4-8` requests Tresor, the most precisely matched alias will still handle it (in this case, `claude-opus.*`). Optional announced names does not limit the capability of regex alias group's model name matching.
 
-Restart Tresor to apply the changes in yaml.
 
 
 ## 2. Configure Claude Code
 
-For Claude Code CLI:
-
 <Tabs>
-  <TabItem value="bash" label="Linux / macOS" default>
-    ```bash
-    export ANTHROPIC_BASE_URL="http://127.0.0.1:11510"
-    export ANTHROPIC_AUTH_TOKEN="sk-proxy-123"
-    export ANTHROPIC_MODEL="claude-sonnet" # can be omitted, since we have used wildcard alias in Tresor
-    export ANTHROPIC_DEFAULT_OPUS_MODEL="claude-opus" # can be omitted, since we have used wildcard alias in Tresor
-    export ANTHROPIC_DEFAULT_SONNET_MODEL="claude-sonnet" # can be omitted, since we have used wildcard alias in Tresor
-    export ANTHROPIC_DEFAULT_HAIKU_MODEL="claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
-    export CLAUDE_CODE_SUBAGENT_MODEL="claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
-    ```
+  <TabItem value="cli" label="Claude Code CLI" default>
+    <Tabs>
+    <TabItem value="bash" label="Linux / macOS" default>
+        ```bash
+        export ANTHROPIC_BASE_URL="http://127.0.0.1:11510"
+        export ANTHROPIC_AUTH_TOKEN="sk-proxy-123"
+        export ANTHROPIC_MODEL="claude-sonnet" # can be omitted, since we have used wildcard alias in Tresor
+        export ANTHROPIC_DEFAULT_OPUS_MODEL="claude-opus" # can be omitted, since we have used wildcard alias in Tresor
+        export ANTHROPIC_DEFAULT_SONNET_MODEL="claude-sonnet" # can be omitted, since we have used wildcard alias in Tresor
+        export ANTHROPIC_DEFAULT_HAIKU_MODEL="claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
+        export CLAUDE_CODE_SUBAGENT_MODEL="claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
+        ```
+    </TabItem>
+    <TabItem value="powershell" label="Windows (PowerShell)">
+        ```powershell
+        $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:11510"
+        $env:ANTHROPIC_AUTH_TOKEN = "sk-proxy-123"
+        $env:ANTHROPIC_MODEL = "claude-sonnet" # can be omitted, since we have used wildcard alias in Tresor
+        $env:ANTHROPIC_DEFAULT_OPUS_MODEL = "claude-opus" # can be omitted, since we have used wildcard alias in Tresor
+        $env:ANTHROPIC_DEFAULT_SONNET_MODEL = "claude-sonnet" # can be omitted, since we have used wildcard alias in Tresor
+        $env:ANTHROPIC_DEFAULT_HAIKU_MODEL = "claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
+        $env:CLAUDE_CODE_SUBAGENT_MODEL = "claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
+        ```
+    </TabItem>
+    </Tabs>
+    :::tip Persist the variables
+    Drop the `export` lines into your shell profile (`~/.bashrc`, `~/.zshrc`, or `$PROFILE` on PowerShell) so every new shell inherits them. Claude Code only reads the variables at launch — restart the CLI after editing your profile.
+    :::
   </TabItem>
-  <TabItem value="powershell" label="Windows (PowerShell)">
-    ```powershell
-    $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:11510"
-    $env:ANTHROPIC_AUTH_TOKEN = "sk-proxy-123"
-    $env:ANTHROPIC_MODEL = "claude-sonnet" # can be omitted, since we have used wildcard alias in Tresor
-    $env:ANTHROPIC_DEFAULT_OPUS_MODEL = "claude-opus" # can be omitted, since we have used wildcard alias in Tresor
-    $env:ANTHROPIC_DEFAULT_SONNET_MODEL = "claude-sonnet" # can be omitted, since we have used wildcard alias in Tresor
-    $env:ANTHROPIC_DEFAULT_HAIKU_MODEL = "claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
-    $env:CLAUDE_CODE_SUBAGENT_MODEL = "claude-haiku" # can be omitted, since we have used wildcard alias in Tresor
-    ```
+  <TabItem value="extension" label="VS Code extension">
+    In VS Code's setting page:
+
+    1. Enable "Claude Code: Disable Login Prompt"
+    2. Enable "Claude Code: Hide Onboarding"
+    3. In "Claude Code: Environment Variables", click "Edit in settings.json", and add the following lines:
+
+        ```json
+        "claudeCode.environmentVariables": [
+            {
+                "name": "ANTHROPIC_BASE_URL",
+                "value": "http://127.0.0.1:11510"
+            },
+            {
+                "name": "ANTHROPIC_AUTH_TOKEN",
+                "value": "sk-proxy-123"
+            },
+            {
+                "name": "ANTHROPIC_MODEL",
+                "value": "claude-sonnet"
+            },
+            {
+                "name": "ANTHROPIC_DEFAULT_OPUS_MODEL",
+                "value": "claude-opus"
+            },
+            {
+                "name": "ANTHROPIC_DEFAULT_SONNET_MODEL",
+                "value": "claude-sonnet"
+            },
+            {
+                "name": "ANTHROPIC_DEFAULT_HAIKU_MODEL",
+                "value": "claude-haiku"
+            },
+            {
+                "name": "CLAUDE_CODE_SUBAGENT_MODEL",
+                "value": "claude-haiku"
+            }
+        ],
+        ```
+
+    :::warning
+    For **remote connections**, if you set "ANTHROPIC_BASE_URL" to "http://127.0.0.1:11510", then Claude Code extension will try to connect port 11510 of remote server. In this case, you can either:
+    - Map your PC's port 11510 to remote server's port 11510 using SSH RemoteForward (`-R 11510:localhost:11510`).
+    - host a single Tresor instance on a public server, set Tresor's `bind_addr` to "0.0.0.0:11510", then set "ANTHROPIC_BASE_URL" to "http://YOUR_PUBLIC_SERVER_IP:11510". If you need encrypted connection to this remote Tresor instance instead, consider using Zerotier/Tailscale, or Nginx+certbot to enable HTTPS connections.
+    - install Tresor also on that remote server (two Tresor instances).
+    :::
   </TabItem>
 </Tabs>
 
-
-:::tip Persist the variables
-Drop the `export` lines into your shell profile (`~/.bashrc`, `~/.zshrc`, or `$PROFILE` on PowerShell) so every new shell inherits them. Claude Code only reads the variables at launch — restart the CLI after editing your profile.
-:::
-
----
-
-For Claude Code extension in VS Code, in VS Code's setting page:
-
-1. Enable "Claude Code: Disable Login Prompt"
-2. Enable "Claude Code: Hide Onboarding"
-3. In "Claude Code: Environment Variables", click "Edit in settings.json", and add the following lines:
-
-    ```json
-    "claudeCode.environmentVariables": [
-        {
-            "name": "ANTHROPIC_BASE_URL",
-            "value": "http://127.0.0.1:11510"
-        },
-        {
-            "name": "ANTHROPIC_AUTH_TOKEN",
-            "value": "sk-proxy-123"
-        },
-        {
-            "name": "ANTHROPIC_MODEL",
-            "value": "claude-sonnet"
-        },
-        {
-            "name": "ANTHROPIC_DEFAULT_OPUS_MODEL",
-            "value": "claude-opus"
-        },
-        {
-            "name": "ANTHROPIC_DEFAULT_SONNET_MODEL",
-            "value": "claude-sonnet"
-        },
-        {
-            "name": "ANTHROPIC_DEFAULT_HAIKU_MODEL",
-            "value": "claude-haiku"
-        },
-        {
-            "name": "CLAUDE_CODE_SUBAGENT_MODEL",
-            "value": "claude-haiku"
-        }
-    ],
-    ```
-
-> WARNING: For **remote connections**, if you set "ANTHROPIC_BASE_URL" to "http://127.0.0.1:11510", then Claude Code extension will try to connect port 11510 of remote server. In this case, you can either install Tresor also on that remote server (two Tresor instances), or host a single Tresor instance on a public server, set Tresor's `bind_addr` to "0.0.0.0:11510", then set "ANTHROPIC_BASE_URL" to "http://YOUR_PUBLIC_SERVER_IP:11510". If you need encrypted connection to this remote Tresor instance instead, consider using Zerotier/Tailscale, or Nginx+certbot to enable HTTPS connections.
-
 ## 3. Launch Claude Code
 
-For CLI:
+<Tabs>
+  <TabItem value="cli" label="Claude Code CLI" default>
 
-```bash
-cd /path/to/my-project
-claude
-```
-
-For VS Code extension, just restart VS Code and start using.
+    ```bash
+    cd /path/to/my-project
+    claude
+    ```
+  </TabItem>
+  <TabItem value="extension" label="VS Code extension">
+    Just restart VS Code and start using.
+  </TabItem>
+</Tabs>
 
 Claude Code will send the model name you set in `ANTHROPIC_MODEL` to Tresor, which will resolve it through the matching `aliases` entry and forward the request to the **active** downstream for that alias.
 
