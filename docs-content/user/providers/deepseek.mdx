@@ -1,0 +1,62 @@
+---
+title: DeepSeek
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# DeepSeek
+
+[[official website]](https://platform.deepseek.com/)
+
+DeepSeek models can be added to Tresor via API key authentication.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but require more manual operations.
+
+    In "Downstreams" tab
+
+        - If DeepSeek does not appear in the list of providers, click <kbd>+ Add Provider</kbd>.
+        - Enter `DeepSeek` or anything you like as the provider name.
+        - Under "API Formats", select <kbd>OpenAI</kbd>, <kbd>OpenAI Responses</kbd>, and <kbd>Anthropic</kbd>.
+        - Under "Authentication", select <kbd>API key</kbd>, and enter the API key you obtained from [DeepSeek official website](https://platform.deepseek.com/) (usually starts with `sk-`).
+        - Under "API Host", enter `https://api.deepseek.com`.
+        - Click <kbd>Advanced</kbd>. Under "Per-format URLs", enter `https://api.deepseek.com/anthropic`.
+        - Finally, under "Models", click <kbd>⟳ Fetch Models</kbd>, and add the models you need.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing yaml is less intuitive, but require less manual operations.
+
+    The following example `config.yaml` uses 3 downstream providers.
+    Replace them based on your actual providers.
+
+    ```yaml title="~/.config/tresor/config.yaml"
+    ... # Omitted showing other settings here
+    downstreams:
+      - id: deepseek
+        name: DeepSeek
+        base_url: https://api.deepseek.com
+        api_formats:
+            - openai
+            - openai_responses
+            - anthropic
+        output_model_ids:
+            - deepseek-flash
+            - deepseek-v4-pro
+        is_enabled: true
+        auth:
+            type: api_key
+            api_key: sk-YOUR-DEEPSEEK-API-KEY
+        format_urls:
+            anthropic: https://api.deepseek.com/anthropic
+    ```
+    Restart Tresor to apply the changes in yaml.
+  </TabItem>
+</Tabs>
+
+Done! Clients accessing Tresor can use the models from DeepSeek now!
+
+## 📚 Next step
+
+- [Configure your LLM Apps](/Tresor-docs/docs/user/llm-apps/claude-code)

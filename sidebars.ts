@@ -14,6 +14,13 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Add LLMs',
+      items: [
+        'user/providers/deepseek',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Configure LLM Apps',
       items: [
         'user/llm-apps/claude-code',

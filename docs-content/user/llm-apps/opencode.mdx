@@ -65,15 +65,23 @@ downstreams:
         - openai
         - anthropic
       output_model_ids:
-        - qwen3.6:27b-mtp:instruct
+        - qwen3.8:27b:instruct
     - id: deepseek
-      name: DeepSeek
-      base_url: https://api.deepseek.com/anthropic
-      api_formats:
-        - anthropic
-      output_model_ids:
-        - deepseek-v4-flash
-        - deepseek-v4-pro
+        name: DeepSeek
+        base_url: https://api.deepseek.com
+        api_formats:
+            - openai
+            - openai_responses
+            - anthropic
+        output_model_ids:
+            - deepseek-flash
+            - deepseek-v4-pro
+        is_enabled: true
+        auth:
+            type: api_key
+            api_key: sk-YOUR-DEEPSEEK-API-KEY
+        format_urls:
+            anthropic: https://api.deepseek.com/anthropic
     - id: minimax
       name: MiniMax
       base_url: https://api.minimaxi.com/anthropic
@@ -91,13 +99,13 @@ aliases:
           output_model_id: deepseek-v4-pro
         - id: alias-deepseek-flash
           downstream_id: deepseek
-          output_model_id: deepseek-v4-flash
+          output_model_id: deepseek-flash
         - id: alias-minimax-m3
           downstream_id: minimax
           output_model_id: MiniMax-M3
         - id: alias-llama-cpp-qwen-instruct
           downstream_id: llama-cpp
-          output_model_id: qwen3.6:27b-mtp:instruct
+          output_model_id: qwen3.8:27b:instruct
 ```
 
 Restart Tresor to apply the changes in yaml.

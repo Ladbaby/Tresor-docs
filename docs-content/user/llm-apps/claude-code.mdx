@@ -55,24 +55,32 @@ There are two ways to prepare Tresor:
     - sk-proxy-123
     ... # Omitted showing other settings here
     downstreams:
-        - id: llama-cpp
+      - id: llama-cpp
         name: llama.cpp
         base_url: http://127.0.0.1:3000 # change to your actual llama.cpp listening port
         api_formats:
             - openai
             - anthropic
         output_model_ids:
-            - qwen3.6:27b-mtp-coder
-            - qwen3.6:27b-mtp:instruct
-        - id: deepseek
+            - qwen3.8:27b-coder
+            - qwen3.8:27b:instruct
+      - id: deepseek
         name: DeepSeek
-        base_url: https://api.deepseek.com/anthropic
+        base_url: https://api.deepseek.com
         api_formats:
+            - openai
+            - openai_responses
             - anthropic
         output_model_ids:
-            - deepseek-v4-flash
+            - deepseek-flash
             - deepseek-v4-pro
-        - id: minimax
+        is_enabled: true
+        auth:
+            type: api_key
+            api_key: sk-YOUR-DEEPSEEK-API-KEY
+        format_urls:
+            anthropic: https://api.deepseek.com/anthropic
+      - id: minimax
         name: MiniMax
         base_url: https://api.minimaxi.com/anthropic
         api_formats:
@@ -82,40 +90,40 @@ There are two ways to prepare Tresor:
             - MiniMax-M2.7
             - MiniMax-M3
     aliases:
-        - input_model_id: claude-opus.*
+      - input_model_id: claude-opus.*
         is_regex: true
         announced_names:
             - claude-opus
             - claude-opus-5
         options:
-            - id: alias-minimax-m3
+          - id: alias-minimax-m3
             downstream_id: minimax
             output_model_id: MiniMax-M3
-            - id: alias-deepseek-pro
+          - id: alias-deepseek-pro
             downstream_id: deepseek
             output_model_id: deepseek-v4-pro
-        - input_model_id: claude-sonnet.*
+      - input_model_id: claude-sonnet.*
         is_regex: true
         announced_names:
             - claude-sonnet
             - claude-sonnet-5
         options:
-            - id: alias-llama-cpp-qwen-instruct
+          - id: alias-llama-cpp-qwen-instruct
             downstream_id: llama-cpp
-            output_model_id: qwen3.6:27b-mtp:instruct
-            - id: alias-deepseek-flash
+            output_model_id: qwen3.8:27b:instruct
+          - id: alias-deepseek-flash
             downstream_id: deepseek
-            output_model_id: deepseek-v4-flash
-            - id: alias-minimax-m2-7
+            output_model_id: deepseek-flash
+          - id: alias-minimax-m2-7
             downstream_id: minimax
             output_model_id: MiniMax-M2.7
-        - input_model_id: claude-haiku.*
+      - input_model_id: claude-haiku.*
         is_regex: true
         announced_names:
             - claude-haiku
             - claude-haiku-4-5
         options:
-            - id: alias-minimax-m2-5
+          - id: alias-minimax-m2-5
             downstream_id: minimax
             output_model_id: MiniMax-M2.5
     ```
@@ -232,7 +240,7 @@ You can even switch the model in Claude Code to Opus, Sonnet, or Haiku via `/mod
 Open `http://127.0.0.1:11510` in a browser, go to the **Aliases** tab, and click any sibling option card to make it active.
 Claude Code's *next* request will be routed to the new downstream — no restart of either Tresor or Claude Code is required. 🎉
 
-For example, flip `claude-sonnet` from `deepseek-v4-flash` to `MiniMax-M2.7` with a single click, and the agent immediately starts using MiniMax on the following turn.
+For example, flip `claude-sonnet` from `deepseek-flash` to `MiniMax-M2.7` with a single click, and the agent immediately starts using MiniMax on the following turn.
 
 ## 5. Using Web Search in Claude Code
 
