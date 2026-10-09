@@ -1,0 +1,64 @@
+---
+title: Xiaomi (MiMo)
+description: Add Xiaomi MiMo models to Tresor using an API key.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Xiaomi (MiMo)
+
+[[official website]](https://platform.xiaomimimo.com/)
+
+MiMo models can be added to Tresor via API key authentication.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but requires more manual operations.
+
+    In the "Downstreams" tab:
+
+    - Click <kbd>+ Add Provider</kbd> if Xiaomi is not already listed.
+    - Enter `Xiaomi MiMo` or any name you like.
+    - Under "API Formats", select <kbd>OpenAI</kbd>, <kbd>OpenAI Responses</kbd>, and <kbd>Anthropic</kbd>.
+    - Under "Authentication", select <kbd>API key</kbd> and enter a key from [MiMo Open Platform](https://platform.xiaomimimo.com/).
+    - Under "API Host", enter `https://api.xiaomimimo.com`.
+    - Click <kbd>Advanced</kbd>. Under "Per-format URLs", set the Anthropic entry to `https://api.xiaomimimo.com/anthropic`.
+    - Under "Models", click <kbd>Fetch Models</kbd> and add the models you need. If discovery is unavailable, enter the exact model IDs shown in your console.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing YAML is less intuitive, but requires fewer manual operations.
+
+    Replace `YOUR-MIMO-API-KEY` with your API key and `YOUR-MIMO-MODEL-ID` with an exact model ID from your console.
+
+    ```yaml title="~/.config/tresor/config.yaml"
+    # Other settings omitted. Add this entry to your existing downstreams list.
+    downstreams:
+      - id: mimo
+        name: Xiaomi MiMo
+        base_url: https://api.xiaomimimo.com
+        api_formats:
+          - openai
+          - openai_responses
+          - anthropic
+        output_model_ids:
+          - YOUR-MIMO-MODEL-ID
+        is_enabled: true
+        auth:
+          type: api_key
+          api_key: YOUR-MIMO-API-KEY
+        format_urls:
+          anthropic: https://api.xiaomimimo.com/anthropic
+    ```
+
+    Restart Tresor to apply the YAML changes.
+  </TabItem>
+</Tabs>
+
+The example uses pay-as-you-go access. MiMo Token Plan keys and pay-as-you-go keys are separate; a Token Plan may require a dedicated base URL. Copy both the key and endpoint from that plan's console instead of assuming the URLs above apply.
+
+Done! Clients accessing Tresor can now use your configured MiMo models.
+
+## Next step
+
+- [Configure your LLM Apps](/Tresor-docs/docs/user/llm-apps/claude-code)

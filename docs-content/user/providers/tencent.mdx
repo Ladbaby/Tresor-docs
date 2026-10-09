@@ -1,0 +1,70 @@
+---
+title: Tencent (HY)
+description: Add Tencent HY models to Tresor using TokenHub API credentials.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Tencent (HY)
+
+[[official website]](https://cloud.tencent.com/document/product/1729/111008)
+
+Tencent HY models can be added to Tresor via API key authentication. Older Hunyuan access is migrating to TokenHub. The setup below uses the explicitly documented TokenHub OpenAI Chat Completions endpoint; confirm your model's invocation details in TokenHub before configuring it.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but requires more manual operations.
+
+    In the "Downstreams" tab:
+
+    - Click <kbd>+ Add Provider</kbd> if Tencent is not already listed.
+    - Enter `Tencent HY` or any name you like.
+    - Under "API Formats", select <kbd>OpenAI</kbd>.
+    - Under "Authentication", select <kbd>API key</kbd> and enter a key from **TokenHub API Key Management**. Migrated models require replacement TokenHub credentials, not an old Hunyuan key.
+    - Under "API Host", enter `https://tokenhub.tencentmaas.com`.
+    - Under "Models", click <kbd>Fetch Models</kbd>. If discovery is unavailable, manually add the exact model ID displayed under TokenHub **Online Inference** or on the model-detail page.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing YAML is less intuitive, but requires fewer manual operations.
+
+    Replace `YOUR-TOKENHUB-API-KEY` and `YOUR-HY-MODEL-ID` with the credentials and exact model ID from your TokenHub invocation page.
+
+    ```yaml title="~/.config/tresor/config.yaml"
+    # Other settings omitted. Add this entry to your existing downstreams list.
+    downstreams:
+      - id: tencent
+        name: Tencent HY
+        base_url: https://tokenhub.tencentmaas.com
+        api_formats:
+          - openai
+        output_model_ids:
+          - YOUR-HY-MODEL-ID
+        is_enabled: true
+        auth:
+          type: api_key
+          api_key: YOUR-TOKENHUB-API-KEY
+    ```
+
+    Restart Tresor to apply the YAML changes.
+  </TabItem>
+</Tabs>
+
+## Responses and Anthropic compatibility
+
+The supplied compatibility report identifies `hy4-preview` as supporting OpenAI Chat Completions, Responses, and Anthropic Messages. However, it does not establish stable universal TokenHub URLs for the latter two formats. **Do not infer these URLs from the Chat endpoint.**
+
+If your model's current invocation page explicitly provides Responses or Anthropic endpoints:
+
+1. Enable only the additional formats documented for that model.
+2. Under **Advanced**, set each format's **Per-format URL** to the endpoint's origin/base and its request path to the documented path.
+3. In YAML, add the corresponding `openai_responses` or `anthropic` entry to `api_formats`, and configure `format_urls` and `format_paths` so their concatenation equals the full documented URL.
+4. Confirm the required credential and test a request before relying on the new format.
+
+For an older model that still explicitly uses the legacy Hunyuan API, its Chat host is `https://api.hunyuan.cloud.tencent.com` with the `/v1/chat/completions` path. Use that only when the current model instructions still require it; migrated models should use TokenHub.
+
+Done! Clients accessing Tresor can now use your configured HY models.
+
+## Next step
+
+- [Configure your LLM Apps](/Tresor-docs/docs/user/llm-apps/claude-code)

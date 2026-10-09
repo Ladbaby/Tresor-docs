@@ -1,0 +1,60 @@
+---
+title: Anthropic (Claude)
+description: Add Anthropic Claude models to Tresor using an API key.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Anthropic (Claude)
+
+[[official website]](https://console.anthropic.com/)
+
+Claude models can be added to Tresor via API key authentication. Use the native Anthropic format for full Claude functionality.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but requires more manual operations.
+
+    In the "Downstreams" tab:
+
+    - Click <kbd>+ Add Provider</kbd> if Anthropic is not already listed.
+    - Enter `Anthropic` or any name you like.
+    - Under "API Formats", select <kbd>Anthropic</kbd>.
+    - Under "Authentication", select <kbd>API key</kbd> and enter a key from [Anthropic API Keys](https://console.anthropic.com/settings/keys).
+    - Under "API Host", enter `https://api.anthropic.com`.
+    - Under "Models", click <kbd>Fetch Models</kbd> and add the models you need. If discovery is unavailable, enter model IDs from your Anthropic console manually.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing YAML is less intuitive, but requires fewer manual operations.
+
+    Replace `YOUR-ANTHROPIC-API-KEY` with your API key. The model IDs below follow Tresor's example configuration; replace them with models available to your account.
+
+    ```yaml title="~/.config/tresor/config.yaml"
+    # Other settings omitted. Add this entry to your existing downstreams list.
+    downstreams:
+      - id: anthropic
+        name: Anthropic
+        base_url: https://api.anthropic.com
+        api_formats:
+          - anthropic
+        output_model_ids:
+          - claude-sonnet-5
+          - claude-haiku-4-5
+        is_enabled: true
+        auth:
+          type: api_key
+          api_key: YOUR-ANTHROPIC-API-KEY
+    ```
+
+    Restart Tresor to apply the YAML changes.
+  </TabItem>
+</Tabs>
+
+To enable Anthropic's optional Chat Completions compatibility, also select **OpenAI** in the Web UI or add `openai` to `api_formats`; the API host stays the same.
+
+Done! Clients accessing Tresor can now use your configured Claude models.
+
+## Next step
+
+- [Configure your LLM Apps](/Tresor-docs/docs/user/llm-apps/claude-code)

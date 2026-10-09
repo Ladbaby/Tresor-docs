@@ -1,0 +1,60 @@
+---
+title: xAI (Grok)
+description: Add xAI Grok models to Tresor using an API key.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# xAI (Grok)
+
+[[official website]](https://console.x.ai/)
+
+Grok models can be added to Tresor via API key authentication. This page configures the direct API, not a Grok subscription or OAuth login.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but requires more manual operations.
+
+    In the "Downstreams" tab:
+
+    - Click <kbd>+ Add Provider</kbd> if xAI is not already listed.
+    - Enter `xAI` or any name you like.
+    - Under "API Formats", select <kbd>OpenAI</kbd> and <kbd>OpenAI Responses</kbd>.
+    - Under "Authentication", select <kbd>API key</kbd> and enter a key from [xAI Console](https://console.x.ai/).
+    - Under "API Host", enter `https://api.x.ai`.
+    - Under "Models", click <kbd>Fetch Models</kbd> and add the models you need. If discovery is unavailable, enter model IDs from the console manually.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing YAML is less intuitive, but requires fewer manual operations.
+
+    Replace `YOUR-XAI-API-KEY` with your API key and confirm the example model is available to your account.
+
+    ```yaml title="~/.config/tresor/config.yaml"
+    # Other settings omitted. Add this entry to your existing downstreams list.
+    downstreams:
+      - id: xai
+        name: xAI
+        base_url: https://api.x.ai
+        api_formats:
+          - openai
+          - openai_responses
+        output_model_ids:
+          - grok-4
+        is_enabled: true
+        auth:
+          type: api_key
+          api_key: YOUR-XAI-API-KEY
+    ```
+
+    Restart Tresor to apply the YAML changes.
+  </TabItem>
+</Tabs>
+
+For xAI's U.S.-only inference endpoint, use `https://us.api.x.ai` as the API host or `base_url`. Check regional availability and pricing before switching.
+
+Done! Clients accessing Tresor can now use your configured Grok models.
+
+## Next step
+
+- [Configure your LLM Apps](/Tresor-docs/docs/user/llm-apps/claude-code)

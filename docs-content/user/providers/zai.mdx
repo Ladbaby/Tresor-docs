@@ -1,0 +1,95 @@
+---
+title: Z.AI (GLM)
+description: Add Z.AI GLM models to Tresor with general API or Coding Plan credentials.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Z.AI (GLM)
+
+[[official website]](https://z.ai/)
+
+GLM models can be added to Tresor via API key authentication. The general API and GLM Coding Plan use different endpoints. Start with the general API configuration below, or use the separate Coding Plan profile later on this page.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but requires more manual operations.
+
+    In the "Downstreams" tab:
+
+    - Click <kbd>+ Add Provider</kbd> if Z.AI is not already listed.
+    - Enter `Z.AI` or any name you like.
+    - Under "API Formats", select only <kbd>OpenAI</kbd> for the general API.
+    - Under "Authentication", select <kbd>API key</kbd> and enter a key from the API Keys management page linked in [Z.AI's quick-start](https://docs.z.ai/guides/overview/quick-start).
+    - Under "API Host", enter `https://api.z.ai`.
+    - Click <kbd>Advanced</kbd> and set the OpenAI per-format request path to `/api/paas/v4/chat/completions`.
+    - Under "Models", click <kbd>Fetch Models</kbd>. If discovery is unavailable, manually add the exact GLM model IDs shown in your console.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing YAML is less intuitive, but requires fewer manual operations.
+
+    Replace the API key and model ID placeholders with values from your Z.AI console.
+
+    ```yaml title="~/.config/tresor/config.yaml"
+    # Other settings omitted. Add this entry to your existing downstreams list.
+    downstreams:
+      - id: zai
+        name: Z.AI
+        base_url: https://api.z.ai
+        api_formats:
+          - openai
+        format_paths:
+          openai: /api/paas/v4/chat/completions
+        output_model_ids:
+          - YOUR-GLM-MODEL-ID
+        is_enabled: true
+        auth:
+          type: api_key
+          api_key: YOUR-ZAI-API-KEY
+    ```
+
+    Restart Tresor to apply the YAML changes.
+  </TabItem>
+</Tabs>
+
+## GLM Coding Plan
+
+Create a separate downstream for the Coding Plan. In the Web UI, select **OpenAI**, **OpenAI Responses**, and **Anthropic**, use `https://api.z.ai` as the API host, and set these request paths under **Advanced**:
+
+| Format | Per-format request path |
+|---|---|
+| OpenAI | `/api/coding/paas/v4/chat/completions` |
+| OpenAI Responses | `/api/v1/responses` |
+| Anthropic | `/api/anthropic/v1/messages` |
+
+Use the credentials issued for your Coding Plan, not an unrelated general API key. The equivalent YAML entry is:
+
+```yaml
+downstreams:
+  - id: zai-coding
+    name: Z.AI Coding Plan
+    base_url: https://api.z.ai
+    api_formats:
+      - openai
+      - openai_responses
+      - anthropic
+    format_paths:
+      openai: /api/coding/paas/v4/chat/completions
+      openai_responses: /api/v1/responses
+      anthropic: /api/anthropic/v1/messages
+    output_model_ids:
+      - YOUR-CODING-PLAN-MODEL-ID
+    is_enabled: true
+    auth:
+      type: api_key
+      api_key: YOUR-ZAI-CODING-PLAN-API-KEY
+```
+
+Merge this entry into your existing `downstreams` list and restart Tresor. Using the wrong endpoint can prevent use of Coding Plan quota; team credentials may also differ from ordinary Z.AI keys.
+
+Done! Clients accessing Tresor can now use your configured GLM models.
+
+## Next step
+
+- [Configure your LLM Apps](/Tresor-docs/docs/user/llm-apps/claude-code)

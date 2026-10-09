@@ -1,0 +1,66 @@
+---
+title: MiniMax
+description: Add MiniMax models to Tresor using an API key.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# MiniMax
+
+[[official website]](https://platform.minimax.io/)
+
+MiniMax models can be added to Tresor via API key authentication. The example below uses the international platform.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but requires more manual operations.
+
+    In the "Downstreams" tab:
+
+    - Click <kbd>+ Add Provider</kbd> if MiniMax is not already listed.
+    - Enter `MiniMax` or any name you like.
+    - Under "API Formats", select <kbd>OpenAI</kbd>, <kbd>OpenAI Responses</kbd>, and <kbd>Anthropic</kbd>.
+    - Under "Authentication", select <kbd>API key</kbd> and enter a key created under "API Keys" on [MiniMax Platform](https://platform.minimax.io/).
+    - Under "API Host", enter `https://api.minimax.io`.
+    - Click <kbd>Advanced</kbd>. Under "Per-format URLs", set the Anthropic entry to `https://api.minimax.io/anthropic`.
+    - Under "Models", click <kbd>Fetch Models</kbd> and add the models you need. If discovery is unavailable, enter exact model IDs from the console manually.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing YAML is less intuitive, but requires fewer manual operations.
+
+    Replace `YOUR-MINIMAX-API-KEY` with your API key. The model ID below follows Tresor's example configuration; confirm it is available on your platform or replace it with one from your console.
+
+    ```yaml title="~/.config/tresor/config.yaml"
+    # Other settings omitted. Add this entry to your existing downstreams list.
+    downstreams:
+      - id: minimax
+        name: MiniMax
+        base_url: https://api.minimax.io
+        api_formats:
+          - openai
+          - openai_responses
+          - anthropic
+        output_model_ids:
+          - MiniMax-M3
+        is_enabled: true
+        auth:
+          type: api_key
+          api_key: YOUR-MINIMAX-API-KEY
+        format_urls:
+          anthropic: https://api.minimax.io/anthropic
+    ```
+
+    Restart Tresor to apply the YAML changes.
+  </TabItem>
+</Tabs>
+
+For the China platform used in Tresor's example configuration, use `https://api.minimaxi.com` as the API host or `base_url`, and `https://api.minimaxi.com/anthropic` for the Anthropic per-format URL. Use credentials issued for the corresponding platform.
+
+Pay-as-you-go API keys and **M Plan Subscription Keys** are separate. M Plan users should obtain their Subscription Key under **Billing → M Plan** and follow the plan's endpoint instructions rather than assuming an ordinary API key uses subscription quota.
+
+Done! Clients accessing Tresor can now use your configured MiniMax models.
+
+## Next step
+
+- [Configure your LLM Apps](/Tresor-docs/docs/user/llm-apps/claude-code)

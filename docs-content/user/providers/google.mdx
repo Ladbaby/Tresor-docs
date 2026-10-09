@@ -1,0 +1,79 @@
+---
+title: Google (Gemini)
+description: Add Google Gemini models to Tresor using an AI Studio API key.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Google (Gemini)
+
+[[official website]](https://aistudio.google.com/)
+
+Gemini models can be added to Tresor via API key authentication. This is the Gemini Developer API, not a Gemini subscription or a regional Vertex AI deployment.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but requires more manual operations.
+
+    In the "Downstreams" tab:
+
+    - Click <kbd>+ Add Provider</kbd> if Google is not already listed.
+    - Enter `Google Gemini` or any name you like.
+    - Under "API Formats", select <kbd>Gemini</kbd>.
+    - Under "Authentication", select <kbd>API key</kbd> and enter a key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+    - Under "API Host", enter `https://generativelanguage.googleapis.com`.
+    - Under "Models", click <kbd>Fetch Models</kbd> and add the models you need. If discovery is unavailable, enter model IDs from AI Studio manually.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing YAML is less intuitive, but requires fewer manual operations.
+
+    Replace `YOUR-GEMINI-API-KEY` with your API key. The model ID below follows Tresor's example configuration; replace it with a model available to your account.
+
+    ```yaml title="~/.config/tresor/config.yaml"
+    # Other settings omitted. Add this entry to your existing downstreams list.
+    downstreams:
+      - id: gemini
+        name: Google Gemini
+        base_url: https://generativelanguage.googleapis.com
+        api_formats:
+          - gemini
+        output_model_ids:
+          - gemini-3.8-flash
+        is_enabled: true
+        auth:
+          type: api_key
+          api_key: YOUR-GEMINI-API-KEY
+    ```
+
+    Restart Tresor to apply the YAML changes.
+  </TabItem>
+</Tabs>
+
+## Optional OpenAI compatibility
+
+Google also supports OpenAI Chat Completions in a separate namespace. To enable it alongside Gemini:
+
+- Select **OpenAI** under "API Formats".
+- Click **Advanced** and set the OpenAI entry under "Per-format URLs" to `https://generativelanguage.googleapis.com`.
+- Set its per-format request path to `/v1beta/openai/chat/completions`.
+
+The equivalent additions to the downstream YAML entry are:
+
+```yaml
+api_formats:
+  - gemini
+  - openai
+format_urls:
+  openai: https://generativelanguage.googleapis.com
+format_paths:
+  openai: /v1beta/openai/chat/completions
+```
+
+Do not select **OpenAI Responses** or **Anthropic**: the supplied compatibility report does not document these endpoints for the Gemini Developer API. Google's Interactions API is distinct from Tresor's native Gemini `generateContent` integration.
+
+Done! Clients accessing Tresor can now use your configured Gemini models.
+
+## Next step
+
+- [Configure your LLM Apps](/Tresor-docs/docs/user/llm-apps/claude-code)

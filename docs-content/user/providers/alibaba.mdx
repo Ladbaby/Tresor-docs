@@ -1,0 +1,85 @@
+---
+title: Alibaba (Qwen)
+description: Add Alibaba Model Studio Qwen models to Tresor with regional API credentials.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Alibaba (Qwen)
+
+[[official website]](https://www.alibabacloud.com/help/en/model-studio/)
+
+Qwen models can be added to Tresor via API key authentication through Alibaba Cloud Model Studio. Pay-as-you-go access supports OpenAI Chat Completions, OpenAI Responses, and Anthropic Messages. The example below uses Singapore's shared endpoint.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but requires more manual operations.
+
+    In the "Downstreams" tab:
+
+    - Click <kbd>+ Add Provider</kbd> if Alibaba is not already listed.
+    - Enter `Alibaba Qwen` or any name you like.
+    - Under "API Formats", select <kbd>OpenAI</kbd>, <kbd>OpenAI Responses</kbd>, and <kbd>Anthropic</kbd>.
+    - Under "Authentication", select <kbd>API key</kbd> and enter a **Singapore-region** key obtained using [Alibaba's API key guide](https://www.alibabacloud.com/help/en/model-studio/get-api-key).
+    - Under "API Host", enter `https://dashscope-intl.aliyuncs.com`.
+    - Click <kbd>Advanced</kbd> and set the per-format request paths listed below.
+    - Under "Models", click <kbd>Fetch Models</kbd>. If discovery is unavailable, add exact Qwen model IDs from your region's Model Studio console manually.
+
+    | Format | Per-format request path |
+    |---|---|
+    | OpenAI | `/compatible-mode/v1/chat/completions` |
+    | OpenAI Responses | `/compatible-mode/v1/responses` |
+    | Anthropic | `/apps/anthropic/v1/messages` |
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing YAML is less intuitive, but requires fewer manual operations.
+
+    Replace the API key and model ID placeholders with values from your Singapore-region console.
+
+    ```yaml title="~/.config/tresor/config.yaml"
+    # Other settings omitted. Add this entry to your existing downstreams list.
+    downstreams:
+      - id: qwen
+        name: Alibaba Qwen
+        base_url: https://dashscope-intl.aliyuncs.com
+        api_formats:
+          - openai
+          - openai_responses
+          - anthropic
+        format_paths:
+          openai: /compatible-mode/v1/chat/completions
+          openai_responses: /compatible-mode/v1/responses
+          anthropic: /apps/anthropic/v1/messages
+        output_model_ids:
+          - YOUR-QWEN-MODEL-ID
+        is_enabled: true
+        auth:
+          type: api_key
+          api_key: YOUR-DASHSCOPE-API-KEY
+    ```
+
+    Restart Tresor to apply the YAML changes.
+  </TabItem>
+</Tabs>
+
+## Regions and plans
+
+Keys, endpoints, and model availability are region-specific. For another region, change the API host or `base_url` and use a key issued in that region:
+
+| Region | API host |
+|---|---|
+| China, Beijing | `https://dashscope.aliyuncs.com` |
+| Singapore | `https://dashscope-intl.aliyuncs.com` |
+| US, Virginia | `https://dashscope-us.aliyuncs.com` |
+| China, Hong Kong | `https://cn-hongkong.dashscope.aliyuncs.com` |
+
+The request paths above remain the same for these shared hosts. Alibaba also publishes workspace-specific hosts, such as `https://YOUR-WORKSPACE-ID.ap-southeast-1.maas.aliyuncs.com` for Singapore; copy the host from your workspace's invocation instructions when required.
+
+**Alibaba Coding Plan does not support Responses.** For that plan, select only OpenAI and Anthropic and use its own documented endpoints and credentials instead of assuming the pay-as-you-go configuration applies.
+
+Done! Clients accessing Tresor can now use your configured Qwen models.
+
+## Next step
+
+- [Configure your LLM Apps](/Tresor-docs/docs/user/llm-apps/claude-code)

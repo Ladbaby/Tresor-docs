@@ -1,0 +1,60 @@
+---
+title: OpenAI (GPT)
+description: Add OpenAI GPT models to Tresor using an API key.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# OpenAI (GPT)
+
+[[official website]](https://platform.openai.com/)
+
+GPT models can be added to Tresor via API key authentication. OpenAI supports both Chat Completions and Responses, and recommends Responses for new integrations. This page configures the paid API, not a ChatGPT subscription or OAuth login.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but requires more manual operations.
+
+    In the "Downstreams" tab:
+
+    - Click <kbd>+ Add Provider</kbd> if OpenAI is not already listed.
+    - Enter `OpenAI` or any name you like.
+    - Under "API Formats", select <kbd>OpenAI</kbd> and <kbd>OpenAI Responses</kbd>.
+    - Under "Authentication", select <kbd>API key</kbd> and enter a key from [OpenAI API Keys](https://platform.openai.com/api-keys).
+    - Under "API Host", enter `https://api.openai.com`.
+    - Under "Models", click <kbd>Fetch Models</kbd> and add the models you need. Only add models that support your selected generation formats.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing YAML is less intuitive, but requires fewer manual operations.
+
+    Replace `YOUR-OPENAI-API-KEY` with your API key. The model ID below follows Tresor's example configuration; replace it with a model available to your account.
+
+    ```yaml title="~/.config/tresor/config.yaml"
+    # Other settings omitted. Add this entry to your existing downstreams list.
+    downstreams:
+      - id: openai
+        name: OpenAI
+        base_url: https://api.openai.com
+        api_formats:
+          - openai
+          - openai_responses
+        output_model_ids:
+          - gpt-6-astra
+        is_enabled: true
+        auth:
+          type: api_key
+          api_key: YOUR-OPENAI-API-KEY
+    ```
+
+    Restart Tresor to apply the YAML changes.
+  </TabItem>
+</Tabs>
+
+OpenAI does not expose native Anthropic Messages or Gemini endpoints. Do not enable those downstream formats for this provider.
+
+Done! Clients accessing Tresor can now use your configured GPT models.
+
+## Next step
+
+- [Configure your LLM Apps](/Tresor-docs/docs/user/llm-apps/claude-code)

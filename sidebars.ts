@@ -17,6 +17,16 @@ const sidebars: SidebarsConfig = {
       label: 'Add LLMs',
       items: [
         'user/providers/deepseek',
+        'user/providers/anthropic',
+        'user/providers/openai',
+        'user/providers/google',
+        'user/providers/xai',
+        'user/providers/xiaomi',
+        'user/providers/zai',
+        'user/providers/moonshot',
+        'user/providers/alibaba',
+        'user/providers/minimax',
+        'user/providers/tencent',
       ],
     },
     {

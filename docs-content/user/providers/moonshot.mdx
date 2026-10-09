@@ -1,0 +1,64 @@
+---
+title: Moonshot (Kimi)
+description: Add Moonshot Kimi models to Tresor using an API key.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Moonshot (Kimi)
+
+[[official website]](https://platform.moonshot.cn/)
+
+Kimi models can be added to Tresor via API key authentication.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but requires more manual operations.
+
+    In the "Downstreams" tab:
+
+    - Click <kbd>+ Add Provider</kbd> if Moonshot is not already listed.
+    - Enter `Moonshot Kimi` or any name you like.
+    - Under "API Formats", select <kbd>OpenAI</kbd>, <kbd>OpenAI Responses</kbd>, and <kbd>Anthropic</kbd>.
+    - Under "Authentication", select <kbd>API key</kbd> and enter a key from [Moonshot API Keys](https://platform.moonshot.cn/console/api-keys).
+    - Under "API Host", enter `https://api.moonshot.cn`.
+    - Click <kbd>Advanced</kbd>. Under "Per-format URLs", set the Anthropic entry to `https://api.moonshot.cn/anthropic`.
+    - Under "Models", click <kbd>Fetch Models</kbd> and add the models you need. If discovery is unavailable, enter exact Kimi model IDs from the console manually.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing YAML is less intuitive, but requires fewer manual operations.
+
+    Replace `YOUR-MOONSHOT-API-KEY` with your API key and `YOUR-KIMI-MODEL-ID` with an exact model ID from your console.
+
+    ```yaml title="~/.config/tresor/config.yaml"
+    # Other settings omitted. Add this entry to your existing downstreams list.
+    downstreams:
+      - id: moonshot
+        name: Moonshot Kimi
+        base_url: https://api.moonshot.cn
+        api_formats:
+          - openai
+          - openai_responses
+          - anthropic
+        output_model_ids:
+          - YOUR-KIMI-MODEL-ID
+        is_enabled: true
+        auth:
+          type: api_key
+          api_key: YOUR-MOONSHOT-API-KEY
+        format_urls:
+          anthropic: https://api.moonshot.cn/anthropic
+    ```
+
+    Restart Tresor to apply the YAML changes.
+  </TabItem>
+</Tabs>
+
+The URLs above use the Moonshot China platform described in the supplied compatibility report. Use credentials issued for that platform. Protocol compatibility does not guarantee identical behavior for every sampling parameter or deprecated function-calling field.
+
+Done! Clients accessing Tresor can now use your configured Kimi models.
+
+## Next step
+
+- [Configure your LLM Apps](/Tresor-docs/docs/user/llm-apps/claude-code)
