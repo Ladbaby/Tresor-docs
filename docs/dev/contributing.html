@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.1">
 <title data-rh="true">🤝 Contributing | Tresor</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://ladbaby.github.io/Tresor-docs/docs/dev/contributing"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="🤝 Contributing | Tresor"><meta data-rh="true" name="description" content="💻 Development Workflow"><meta data-rh="true" property="og:description" content="💻 Development Workflow"><link data-rh="true" rel="icon" href="/Tresor-docs/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://ladbaby.github.io/Tresor-docs/docs/dev/contributing"><link data-rh="true" rel="alternate" href="https://ladbaby.github.io/Tresor-docs/docs/dev/contributing" hreflang="en"><link data-rh="true" rel="alternate" href="https://ladbaby.github.io/Tresor-docs/docs/dev/contributing" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"🤝 Contributing","item":"https://ladbaby.github.io/Tresor-docs/docs/dev/contributing"}]}</script><link rel="stylesheet" href="/Tresor-docs/assets/css/styles.772472de.css">
-<script src="/Tresor-docs/assets/js/runtime~main.7fd2038b.js" defer="defer"></script>
+<script src="/Tresor-docs/assets/js/runtime~main.62db0d5e.js" defer="defer"></script>
 <script src="/Tresor-docs/assets/js/main.0c1630da.js" defer="defer"></script>
 </head>
 <body>
@@ -34,15 +34,18 @@
 <li class="">Write tests before or alongside implementation</li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="-adding-a-new-plugin">🔌 Adding a New Plugin<a href="#-adding-a-new-plugin" class="hash-link" aria-label="Direct link to 🔌 Adding a New Plugin" title="Direct link to 🔌 Adding a New Plugin" translate="no">​</a></h2>
+<p>Build custom traffic modifications as JavaScript API V2 packages: transform request metadata and bodies, response headers and bodies, or SSE events and collection behavior. Explore <a href="https://github.com/Ladbaby/Tresor-plugins" target="_blank" rel="noopener noreferrer" class="">Ladbaby/Tresor-plugins</a> for examples and inspiration, then implement the behavior your application needs. Packages support hot reload: install and enable a new version without rebuilding or restarting the gateway; future requests use it while in-flight requests retain their pinned package.</p>
+<blockquote>
+<p>Automatic API format conversion is handled by the native Go layer.</p>
+</blockquote>
 <ol>
-<li class="">Create a new file in <code>internal/plugins/</code> (e.g., <code>my_plugin.go</code>)</li>
-<li class="">Implement one or more transformer interfaces (<code>RequestTransformer</code>, <code>ResponseTransformer</code>, <code>StreamResponseTransformer</code>)</li>
-<li class="">Register the plugin in an <code>init()</code> function: <code>Register(&quot;my_plugin&quot;, &amp;MyPlugin{})</code></li>
-<li class="">Add a config schema for web UI consumption</li>
-<li class="">Write unit tests covering request transform, response transform, and streaming (if applicable)</li>
-<li class="">Run <code>go test ./internal/plugins/...</code> to verify</li>
+<li class="">Create a package directory with <code>manifest.json</code> (<code>api_version: 2</code>) and a CommonJS JavaScript entry file.</li>
+<li class="">Implement the needed synchronous hooks using <a href="https://github.com/Ladbaby/Tresor/blob/main/internal/jsplugins/api.d.ts" target="_blank" rel="noopener noreferrer" class=""><code>internal/jsplugins/api.d.ts</code></a>. Do not add user configuration or logging capabilities.</li>
+<li class="">Run <code>tresor plugin lint &lt;directory&gt;</code> and <code>tresor plugin pack &lt;directory&gt; --output &lt;new-file&gt;</code>; neither executes source.</li>
+<li class="">Install into a test daemon with <code>tresor plugin install &lt;directory&gt;</code> and add the plugin ID to a matching routing rule.</li>
+<li class="">Test buffered and streaming requests, malformed inputs, failure termination, and cleanup. Bump the manifest version for changed published source.</li>
 </ol>
-<p>See the <a class="" href="/Tresor-docs/docs/dev/plugin-system">/Tresor-docs/docs/dev/plugin-system</a> page for interface definitions and examples.</p>
+<p>See the <a class="" href="/Tresor-docs/docs/dev/plugin-system">Plugin System guide</a> for the native/JS boundary, lifecycle, packaging, and runtime limitations.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="-modifying-the-web-ui">🌐 Modifying the Web UI<a href="#-modifying-the-web-ui" class="hash-link" aria-label="Direct link to 🌐 Modifying the Web UI" title="Direct link to 🌐 Modifying the Web UI" translate="no">​</a></h2>
 <p>The web UI source files are in <code>internal/api/web/</code>:</p>
 <ul>
