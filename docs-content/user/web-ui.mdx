@@ -69,26 +69,26 @@ The **Rules** tab shows all routing rules in a table with enable/disable toggle 
 - ✏️ **Edit** — Modify rule settings including format filters and a **visual pipeline builder**:
   - Format checkboxes for input and downstream format filters (OpenAI, Anthropic, OpenAI Responses)
   - Multi-select for matching downstreams
-  - Select a plugin from a dropdown list
-  - Configure plugin-specific options through dynamically generated fields (e.g., header key-value pairs for `custom_header`)
-  - Each pipeline step is rendered as a card with the plugin description and config form
+  - Select an installed, enabled JavaScript plugin from the dropdown
+  - API format converters are automatic and are not offered in this picker
   - Add/remove steps with buttons
 - 🔄 **Toggle Enable/Disable** — Activate or deactivate a rule without deleting it
 - 🗑️ **Delete** — Remove the rule
 
-### 🔌 Available Plugins
+### 🔌 Plugins
 
-The **Available Plugins** section is displayed below the rules table on the **Rules** tab. It shows all 13 available built-in plugins as a read-only reference:
+Open **Rules > Plugins** to install and hot-reload JavaScript traffic transformations.
+Write your own plugins to modify requests, responses, headers, and streaming events, or explore [Ladbaby/Tresor-plugins](https://github.com/Ladbaby/Tresor-plugins) for installable examples and inspiration. 
+API format conversion is automatic and built in.
 
-| Column | Content |
-|---|---|
-| ID | 🔑 Plugin identifier (used in `pipeline_config`) |
-| Description | 📝 What the plugin does |
-| Config Schema | 📐 JSON schema for valid configuration options |
+- Install a versioned JSON bundle using its HTTPS URL from [plugin releases](https://github.com/Ladbaby/Tresor-plugins/releases). Do not use a repository ZIP or raw JavaScript URL.
+- For digest verification, use the CLI's `plugin install-url --sha256` option with the canonical source digest from the release's `plugin-digests.txt`. This is not the JSON download's file checksum.
+- View installed versions and availability, enable or disable a version, or delete an installed package.
 
-The list includes format converters for all supported API formats (OpenAI Chat Completions, Anthropic Messages, OpenAI Responses API, and Google Gemini), header injection, and image extraction.
+**No restart is needed:** hot-reloaded versions affect future requests while in-flight requests keep their pinned package.
+Install only code you trust.
 
-Use this section to look up plugin IDs and configuration options when building pipeline configs.
+See the [Plugin System guide](/Tresor-docs/docs/dev/plugin-system) for pipeline composition, CLI commands, and authoring details.
 
 ### ⚙️ Settings
 

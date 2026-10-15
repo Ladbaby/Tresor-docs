@@ -33,17 +33,17 @@ internal/
 │   ├── retry.go          # Empty response detection + retry with exponential backoff
 │   └── types.go          # Interfaces (RequestTransformer, etc.)
 │
-├── plugins/               # Plugin registry + built-in transformers
-│   ├── registry.go       # Plugin registration and lookup
-│   ├── custom_header.go  # Header injection plugin
+├── jsplugins/             # JavaScript API V2 packages, runtime, validation, cache
+│   └── api.d.ts           # Public hook/effect/context contract
+│
+├── plugins/               # Composite registry + native format converters only
+│   ├── registry.go       # Native converter and external package lookup
 │   ├── openai2anthropic.go # OpenAI → Anthropic format conversion
 │   ├── anthropic2openai.go # Anthropic → OpenAI format conversion
 │   ├── openai2responses.go # OpenAI Chat Completions → Responses API
 │   ├── anthropic2responses.go # Anthropic Messages → Responses API
 │   ├── responses2openai.go # Responses API → OpenAI Chat Completions
 │   ├── responses2anthropic.go # Responses API → Anthropic Messages
-│   ├── anthropic_image_fix.go # Image extraction from tool results
-│   ├── anthropic_usage_fix.go # Anthropic usage block normalization (MiniMax-M3 etc.)
 │   ├── openai2gemini.go   # OpenAI → Gemini format conversion
 │   ├── anthropic2gemini.go # Anthropic → Gemini format conversion
 │   ├── gemini2openai.go   # Gemini → OpenAI format conversion
@@ -86,6 +86,18 @@ internal/
 e2e/                       # End-to-end integration tests
 main.go                    # Binary entry point
 ```
+
+## 🔌 Extensible traffic pipeline
+
+Tresor combines built-in automatic API format conversion with a general-purpose JavaScript API V2 transformation layer.
+Plugins can modify request metadata and bodies, response headers and bodies, and SSE events, or collect upstream streams into buffered responses.
+Routing rules compose these transformations and scope them to selected traffic.
+Explore [Ladbaby/Tresor-plugins](https://github.com/Ladbaby/Tresor-plugins) for examples and inspiration; plugins are not limited to those examples.
+
+`internal/jsplugins/` validates manifests and source digests, manages an immutable package cache, and executes synchronous CommonJS hooks. 
+The runtime supports **hot reload without restarting the gateway**: install and enable a new package version to update future requests. 
+
+See the [Plugin System guide](/Tresor-docs/docs/dev/plugin-system) for lifecycle and trust boundaries.
 
 ## 🛠️ Technology Stack
 

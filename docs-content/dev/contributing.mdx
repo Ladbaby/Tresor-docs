@@ -44,14 +44,17 @@ See the [/Tresor-docs/docs/dev/testing](/Tresor-docs/docs/dev/testing) page for 
 
 ## 🔌 Adding a New Plugin
 
-1. Create a new file in `internal/plugins/` (e.g., `my_plugin.go`)
-2. Implement one or more transformer interfaces (`RequestTransformer`, `ResponseTransformer`, `StreamResponseTransformer`)
-3. Register the plugin in an `init()` function: `Register("my_plugin", &MyPlugin{})`
-4. Add a config schema for web UI consumption
-5. Write unit tests covering request transform, response transform, and streaming (if applicable)
-6. Run `go test ./internal/plugins/...` to verify
+Build custom traffic modifications as JavaScript API V2 packages: transform request metadata and bodies, response headers and bodies, or SSE events and collection behavior. Explore [Ladbaby/Tresor-plugins](https://github.com/Ladbaby/Tresor-plugins) for examples and inspiration, then implement the behavior your application needs. Packages support hot reload: install and enable a new version without rebuilding or restarting the gateway; future requests use it while in-flight requests retain their pinned package.
 
-See the [/Tresor-docs/docs/dev/plugin-system](/Tresor-docs/docs/dev/plugin-system) page for interface definitions and examples.
+> Automatic API format conversion is handled by the native Go layer.
+
+1. Create a package directory with `manifest.json` (`api_version: 2`) and a CommonJS JavaScript entry file.
+2. Implement the needed synchronous hooks using [`internal/jsplugins/api.d.ts`](https://github.com/Ladbaby/Tresor/blob/main/internal/jsplugins/api.d.ts). Do not add user configuration or logging capabilities.
+3. Run `tresor plugin lint <directory>` and `tresor plugin pack <directory> --output <new-file>`; neither executes source.
+4. Install into a test daemon with `tresor plugin install <directory>` and add the plugin ID to a matching routing rule.
+5. Test buffered and streaming requests, malformed inputs, failure termination, and cleanup. Bump the manifest version for changed published source.
+
+See the [Plugin System guide](/Tresor-docs/docs/dev/plugin-system) for the native/JS boundary, lifecycle, packaging, and runtime limitations.
 
 ## 🌐 Modifying the Web UI
 

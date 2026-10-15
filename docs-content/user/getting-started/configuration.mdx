@@ -111,31 +111,15 @@ downstreams:
 #
 # Priority: exact path+model > exact path > wildcard path (*)
 #
-# Uncomment to enable optional rules:
+# Optional JavaScript plugins must be installed and enabled first.
+# API format conversion is built in and needs no rule.
 # rules:
-# Example: Fix the image reading problem in Claude Code + llama.cpp. Refer to https://github.com/ggml-org/llama.cpp/pull/22536
-    # - id: anthropic_image_fix
-    #   name: Anthropic Image Fix
-    #   pattern_path: '*'
-    #   match_format:
-    #     - anthropic
-    #   pipeline_config:
-    #     - plugin_id: fix_anthropic_images
-    #   is_enabled: true
-
-# Example: Route OpenAI chat completions through a custom header transformer
-#  - id: chat-custom-header
-#    name: Chat with Custom Header
-#    pattern_path: /v1/chat/completions
-#    match_format: [openai]               # Only match OpenAI-format requests
-#    match_downstream_format: [openai]    # Only match OpenAI-format downstreams
-#    match_downstreams: [openai]          # Only match the "openai" downstream
-#    pipeline_config:
-#      - plugin_id: custom_header
-#        config:
-#          headers:
-#            X-Custom-Header: my-value
-#    is_enabled: true
+#   - id: hide-reasoning
+#     name: Hide reasoning
+#     pattern_path: '*'
+#     pipeline_config:
+#       - plugin_id: remove_thinking
+#     is_enabled: true
 
 # Model aliases — group by input model, list output options
 # Groups are ordered by array position; web UI supports drag-and-drop reordering.
@@ -202,6 +186,16 @@ The `api_formats` field declares which API protocol(s) a downstream speaks. Four
 This enables **auto-translation**: when a request arrives in a format that doesn't match the downstream's declared format, Tresor automatically inserts the appropriate format converter into the pipeline — no explicit rule needed.
 
 For example, if a downstream declares `api_formats: [anthropic]` and receives a request at `/v1/chat/completions` (OpenAI format), Tresor automatically prepends the `openai2anthropic` transformer. Similarly, if a downstream declares `api_formats: [openai_responses]` and receives an OpenAI Chat Completions request, the `openai2responses` transformer is inserted automatically.
+
+## 🔌 Optional JavaScript pipelines
+
+Use JavaScript plugins to customize request bodies, headers, paths, queries, responses, and streaming events.
+Write your own transformations or get inspiration from the examples in [Ladbaby/Tresor-plugins](https://github.com/Ladbaby/Tresor-plugins). 
+Install packages via **Rules > Plugins**, `tresor plugin install-url`, or `tresor plugin install`, then add their IDs to matching rules.
+
+Packages support **hot reload**: install and enable a new version without restarting the daemon. 
+
+See the [Plugin System guide](/Tresor-docs/docs/dev/plugin-system) for installation, pipeline composition, and authoring.
 
 ## 🏷️ Alias Option Fields
 

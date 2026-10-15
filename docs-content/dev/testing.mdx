@@ -73,13 +73,17 @@ Skipping any step is not acceptable for changes affecting API behavior, gateway 
 |---|---|
 | `auth_test.go` | Passthrough when no password set, valid token allows access, wrong token returns 401, missing header returns 401, malformed token format rejected, runtime password update |
 
-### 🔌 Plugins (`internal/plugins/`)
+### 🔌 Native conversion and JavaScript packages
 
-| File | Coverage |
-|---|---|
-| `plugins_test.go` | Custom header injection verification, OpenAI-to-Anthropic request/response transform accuracy, Anthropic-to-OpenAI request/response transform accuracy, streaming transforms for both directions, Responses API plugin transforms (all 4 directions), registry listing (8 plugins) |
-| `anthropic_image_fix_test.go` | No-change passthrough for messages without tool results, single image extraction from tool_result, mixed content handling (text + tool_result), string-valued tool_result preservation, multiple message handling, response no-op, empty base64 data skip |
-| `streaming_test.go` | SSE data writing and chunk formatting, done marker handling, OpenAI SSE parsing with early stop detection, Anthropic SSE parsing with early stop detection, Anthropic SSE event writing |
+`internal/plugins/` tests cover built-in automatic API request/response conversion and SSE transforms. Custom traffic modifications use the JavaScript package runtime.
+
+`internal/jsplugins/` tests cover package manifests and validation, source digests, runtime hook effects, immutable inputs, feature requirements, lifecycle and collection behavior, and package management. Run both layers when changing plugin behavior:
+
+```bash
+go test ./internal/plugins/... ./internal/jsplugins/...
+```
+
+When authoring an external package, also run `tresor plugin lint <directory>` and package it with `tresor plugin pack`. These commands do not execute JavaScript and are not substitutes for installing the package into a test daemon and sending matching buffered and streaming requests. Exercise failure termination and cleanup as well as successful transforms. Verify hot reload by installing an updated version while the daemon runs: new requests should use it while in-flight requests finish on their pinned package. Use [Tresor-plugins](https://github.com/Ladbaby/Tresor-plugins) as examples for building your own fixtures. See the [Plugin System guide](/Tresor-docs/docs/dev/plugin-system).
 
 ### 🌍 Proxy (`internal/proxy/`)
 
@@ -95,7 +99,7 @@ The E2E test (`//go:build integration` tag) starts a live daemon with a test con
 - Auth status/login endpoints
 - Rule CRUD operations (create, list, read, update, delete)
 - Default downstreams are seeded (3 providers)
-- Plugin registry contains all built-in plugins (8)
+- User plugin listing excludes native converters and lists only enabled executable external packages
 - Alias group operations (create, activate, list)
 - Model add/remove on downstreams
 - Proxy routing (requests forwarded correctly)

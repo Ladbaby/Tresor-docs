@@ -1,520 +1,190 @@
 ---
 title: Plugin System
-description: Building and registering transform plugins for the gateway pipeline
+description: Built-in API conversion and opt-in JavaScript API V2 transformation packages
 ---
 
 # 🔌 Plugin System
 
-The plugin system is the transformation layer of Tresor. Plugins implement Go interfaces to modify requests before forwarding and responses before returning to the client.
+Tresor's JavaScript plugin system lets you build **custom traffic modifications** without rebuilding or restarting the gateway. Transform requests, responses, and streaming events, then compose your transformations into ordered routing-rule pipelines. Tresor embeds the runtime, so no Node.js installation is required.
 
-## 🧩 Core Interfaces
+## ✨ What can you build?
 
-### RequestTransformer
+- Modify request headers, paths, queries, and bodies—for example, inject instructions or reshape messages and tool data.
+- Rewrite buffered response bodies and headers, normalize provider-specific payloads, or filter unwanted content.
+- Transform SSE events with per-request state, request upstream streaming, and collect streams into buffered responses.
+- Combine multiple plugins and target them by request path, model, client format, downstream format, or downstream ID.
 
-Modifies outgoing requests (body + headers):
+The hooks form a general-purpose traffic transformation layer; the examples below are starting points, not a list of everything the system can do. See the lifecycle and runtime boundaries below for the supported effects and execution model.
 
-```go
-type RequestTransformer interface {
-    TransformRequest(req *http.Request, body []byte, ctx *PipelineContext) (*http.Request, []byte, error)
-}
+## 🔄 Hot reload
+
+Install and enable packages **while the daemon is running**—no gateway restart, binary rebuild, or client reconfiguration is needed. Installing a new version enables it for future request snapshots. Requests already in flight keep their pinned package, so an update does not replace code partway through a response.
+
+To iterate on your own plugin, edit its source, bump the manifest version, and install the directory again. You can also enable or disable installed versions live. Hot reload is package-based: editing a source file alone does not update the installed package.
+
+API format conversion is built into Tresor and selected automatically; plugins let you customize traffic beyond that baseline.
+
+## 🛠️ Built-in format conversion
+
+Tresor automatically selects converters when the client format differs from the downstream's declared `api_formats`. These internal converters handle requests, responses, and SSE streams; they are not installable packages and are not offered in the rule plugin picker.
+
+| Client format | Native converters |
+|---|---|
+| OpenAI Chat Completions | `openai2anthropic`, `openai2responses`, `openai2gemini` |
+| Anthropic Messages | `anthropic2openai`, `anthropic2responses`, `anthropic2gemini` |
+| OpenAI Responses | `responses2openai`, `responses2anthropic` |
+| Google Gemini | `gemini2openai`, `gemini2anthropic`, `gemini2responses` |
+
+No routing rule is needed for format conversion. Configure downstream formats and model routing normally; do not add converter IDs to user pipelines.
+
+## 📦 Example plugins and inspiration
+
+Explore [Ladbaby/Tresor-plugins](https://github.com/Ladbaby/Tresor-plugins) for complete, installable examples. Read their source for inspiration, adapt an approach to your own needs, or build a completely different transformation:
+
+| ID | Purpose |
+|---|---|
+| `break_repeat` | Inserts a reminder after repeated comparable assistant turns |
+| `fix_anthropic_system` | Moves system-role messages into Anthropic's top-level system field |
+| `fix_anthropic_usage` | Normalizes incomplete Anthropic usage reporting |
+| `force_streaming` | Requests upstream SSE for buffered clients and reconstructs a JSON response |
+| `remove_thinking` | Removes thinking/reasoning response content while preserving visible content and tool inputs |
+
+Use the repository's README and each package's manifest for current versions and feature requirements. Plugins are optional and apply only when an enabled routing rule includes their ID.
+
+## ⚡ Install and enable
+
+Start the Tresor daemon first. Choose a **versioned JSON bundle** from [Tresor-plugins Releases](https://github.com/Ladbaby/Tresor-plugins/releases), not a repository ZIP or an individual JavaScript file.
+
+```bash
+# Example published bundle; add --config if your daemon uses a custom config path.
+tresor plugin install-url "https://github.com/Ladbaby/Tresor-plugins/releases/download/v1.0.2/remove_thinking-2.0.2.json"
+
+# Alternatively, install a local source directory containing manifest.json.
+tresor plugin install ./remove_thinking
+
+tresor plugin list
 ```
 
-- Receives the original request, raw body bytes, and shared pipeline context
-- Returns a modified request (may be a copy), transformed body, and any error
-- Common transformations: format conversion, header injection, model name rewriting
+In the dashboard, open **Rules > Plugins** to install the bundle's HTTPS URL or manage installed versions. Installation enables the installed version immediately; no separate approval or activation step is needed. Only one version per plugin ID is enabled at a time.
 
-### ResponseTransformer
+**Install only trusted code.** To check a known release, add `--sha256 <canonical-source-digest>` using the value in its `plugin-digests.txt`. This is Tresor's canonical source digest, **not** a checksum of the downloaded JSON file. Obtain the digest from a trusted source. HTTPS alone is not publisher verification. Signed bundles can additionally be checked with `--signature <base64>` and `--public-key <base64>` using a trusted Ed25519 publisher key.
 
-Modifies non-streaming responses:
-
-```go
-type ResponseTransformer interface {
-    TransformResponse(resp *http.Response, body []byte, ctx *PipelineContext) ([]byte, error)
-}
+```bash
+tresor plugin disable remove_thinking 2.0.2
+tresor plugin enable remove_thinking 2.0.2
+tresor plugin delete remove_thinking 2.0.2
 ```
 
-- Receives the downstream's response and raw body bytes
-- Returns transformed body bytes
-- Common transformations: format conversion back to client-expected format
+`plugin activate <id> <version>` remains a compatibility alias for enabling. Changes affect future request snapshots; in-flight requests retain their pinned package.
 
-### StreamResponseTransformer
+## 📐 Add a plugin to a rule
 
-Handles streaming (SSE) responses event-by-event:
+Enabling a package makes it available, but does not apply it globally. Add it to a routing rule in the [Web UI](/Tresor-docs/docs/user/web-ui) or YAML:
 
-```go
-type StreamResponseTransformer interface {
-    TransformStreamChunk(chunk SSEChunk, ctx *PipelineContext) (SSEChunk, error)
-}
-```
-
-- Receives individual SSE chunks from the downstream
-- Returns transformed chunks for the client
-- Use `ctx.Variables` map for state tracking across events (e.g., accumulating content, tracking role)
-
-The `SSEChunk` type represents a single SSE event:
-
-```go
-type SSEChunk struct {
-    EventType string   // e.g. "message_start", "content_block_delta" — empty for unnamed events
-    Data      []byte   // the JSON payload
-}
-```
-
-A plugin can implement any combination of these interfaces. The pipeline parser checks each plugin against all three and registers only the applicable steps.
-
-## 📦 PipelineContext
-
-Carries shared state through a request's lifecycle:
-
-```go
-type PipelineContext struct {
-    TargetDownstream *Downstream       // Resolved downstream for this request
-    Variables        map[string]any    // Inter-plugin communication / state tracking
-}
-```
-
-The `Variables` map enables plugins to share state — particularly important for streaming transforms that need to track context across SSE events.
-
-## 📋 Plugin Registry
-
-Plugins are registered at startup in `internal/plugins/registry.go`:
-
-```go
-var registry = make(map[string]any)
-
-func Register(id string, plugin any) {
-    registry[id] = plugin
-}
-
-func Get(id string) (any, bool) {
-    plugin, ok := registry[id]
-    return plugin, ok
-}
-
-func List() []PluginInfo {
-    // Returns [{ID, Description, ConfigSchema}] for each registered plugin
-}
-```
-
-All built-in plugins are registered in `init()` functions. The `/api/plugins` endpoint exposes the registry for web UI consumption.
-
-## 🛠️ Built-in Plugins
-
-### ➕ `custom_header`
-
-Injects arbitrary HTTP headers into forwarded requests.
-
-**📐 Config schema:**
-```json
-{
-  "type": "object",
-  "properties": {
-    "headers": {
-      "type": "object",
-      "additionalProperties": {"type": "string"}
-    }
-  },
-  "required": ["headers"]
-}
-```
-
-**📝 Usage:**
 ```yaml
-pipeline_config:
-  - plugin_id: custom_header
-    config:
-      headers:
-        X-Custom-Header: my-value
-        X-Request-ID: abc-123
+rules:
+  - id: hide-reasoning
+    name: Hide reasoning
+    pattern_path: '*'
+    pipeline_config:
+      - plugin_id: remove_thinking
+    is_enabled: true
 ```
 
-**⚙️ Transforms:** Request only
-
----
-
-### 🔄 `openai2anthropic`
-
-Converts OpenAI Chat Completion format to Anthropic Messages format (and vice versa for responses).
-
-**Request transform:**
-- Maps model names via configurable mapping table
-- Extracts system prompts into Anthropic's dedicated `system` field
-- Converts message roles and content blocks
-- Handles multi-modal content (text + images)
-- Sets Anthropic-specific headers (`anthropic-version`, `x-api-key` auth)
-
-**Response transform:**
-- Maps Anthropic response fields to OpenAI format
-- Converts content blocks to OpenAI message format
-
-**Streaming transform:**
-- Tracks state across SSE events (role deltas, content accumulation, finish reason)
-- Maps Anthropic's `message_start`, `content_block_start/delta/end`, `message_delta`, `message_stop` events to OpenAI's chunk format
-- Converts `end_turn` → `stop` for finish reasons
-- Always emits choice index `0` to ensure reasoning content and text aggregate on a single choice
-- Passes through thinking blocks for reasoning model compatibility
-
-**📐 Config schema:** No config required (`{}`)
-
----
-
-### ↩️ `anthropic2openai`
-
-The reverse of `openai2anthropic` — converts Anthropic Messages format to OpenAI Chat Completion format.
-
-**Request transform:**
-- Converts Anthropic messages array to OpenAI messages format
-- Merges Anthropic's `system` field into the first message
-- Sets OpenAI auth header (`Authorization: Bearer`)
-
-**Response transform:**
-- Maps OpenAI response fields back to Anthropic format
-
-**Streaming transform:**
-- Parses OpenAI SSE chunks (`data: {...}` with `[DONE]` marker)
-- Produces Anthropic's event-stream format (`event: message_start`, `content_block_delta`, etc.)
-
-**📐 Config schema:** No config required (`{}`)
-
----
-
-### 🖼️ `fix_anthropic_images`
-
-Extracts images from nested `tool_result.content[]` arrays and promotes them to top-level message content. Designed for llama.cpp-compatible backends that expect flat message structures.
-Refer to https://github.com/ggml-org/llama.cpp/pull/22536
-
-**Behavior:**
-- Identifies image blocks inside `tool_result.content[]` arrays
-- Promotes them to the message's top-level `content` array
-- Handles edge cases: mixed content (text + tool_result), empty base64 data (skipped), string-valued tool_result content (preserved as-is)
-
-**Config schema:** No config required (`{}`)
-
-**⚙️ Transforms:** Request only
-
----
-
-### 🧮 `fix_anthropic_usage`
-
-Normalizes the Anthropic Messages `usage` block. Some Anthropic-compatible providers (e.g. MiniMax-M3) emit responses whose usage reporting is incomplete: `message_start.usage` is missing `cache_creation_input_tokens` / `cache_read_input_tokens` fields entirely, and `message_delta` omits the cumulative `usage` block that downstream SDKs (Anthropic TypeScript SDK, pi-agent) read for token counts — leading to `Cannot read properties of undefined (reading 'input_tokens')`.
-
-**Behavior:**
-- Non-streaming: when `response.usage` is a JSON object, adds any missing canonical fields (`input_tokens`, `output_tokens`, `cache_creation_input_tokens`, `cache_read_input_tokens`) as `0`. Leaves responses without a `usage` block alone.
-- Streaming: rewrites `message_start.message.usage` to include all four canonical fields and synthesizes a `usage` block in `message_delta` if the upstream omitted it (carrying the start-of-stream counts forward).
-- Records `input_tokens` / `output_tokens` from `message_start` and applies them to a synthesized `message_delta.usage` if needed. State resets on `message_stop`.
-- No-op on responses that already conform (Deepseek-shaped providers); safe to leave attached.
-
-**Config schema:** No config required (`{}`)
-
-**⚙️ Transforms:** Response + streaming
-
-**📝 Usage:**
-```yaml
-pipeline_config:
-  - plugin_id: fix_anthropic_usage
-```
-
----
-
-### 🔄 `responses2openai`
-
-Converts OpenAI Responses API requests to Chat Completions format (and vice versa for responses).
-
-**Request transform:**
-- Maps `input[]` array items to OpenAI `messages[]` format
-- Converts `instructions` to system messages
-- Maps `function_call` items to tool_calls, `function_call_output` to tool messages
-- Converts `input_text`/`input_image` content parts to OpenAI format
-- Maps `reasoning.effort` to `reasoning_effort`
-- Maps `text.format` to `response_format`
-- Rewrites URL path from `/v1/responses` to `/v1/chat/completions`
-
-**Response transform:**
-- Converts OpenAI Chat Completions response to Responses API `output[]` array
-- Maps text content to `output_text` items
-- Maps tool_calls to `function_call` items
-
-**Streaming transform:**
-- Converts OpenAI SSE chunks to Responses API named events
-- Maps content deltas to `response.output_text.delta`
-- Maps tool call deltas to `response.output_item.added` / `response.function_call_arguments.delta`
-- Emits `response.created`, `response.in_progress`, `response.completed` lifecycle events
-
-**📐 Config schema:** No config required (`{}`)
-
----
-
-### 🔄 `responses2anthropic`
-
-Converts OpenAI Responses API requests to Anthropic Messages format (and vice versa for responses).
-
-**Request transform:**
-- Maps `input[]` array items to Anthropic `messages[]` format
-- Converts `instructions` to Anthropic `system` field
-- Maps `function_call` items to `tool_use` content blocks
-- Maps `function_call_output` items to `tool_result` content blocks
-- Converts OpenAI tools to Anthropic format (`input_schema` instead of `parameters`)
-- Maps `reasoning.effort` to `thinking.budget_tokens`
-- Rewrites URL path from `/v1/responses` to `/v1/messages`
-- Sets Anthropic-specific headers (`anthropic-version`, `x-api-key`)
-
-**Response transform:**
-- Converts Anthropic Messages response to Responses API `output[]` array
-- Maps `text` content blocks to `output_text` items
-- Maps `tool_use` content blocks to `function_call` items
-
-**Streaming transform:**
-- Converts Anthropic SSE events to Responses API named events
-- Maps `message_start` to `response.created` + `response.in_progress` (with `created_at`/`model` fields)
-- Maps `content_block_delta` (text) to `response.output_text.delta` (with `item_id`/`output_index`/`logprobs`)
-- Maps `content_block_delta` (input_json) to `response.function_call_arguments.delta`
-- Surfaces real `input_tokens`/`output_tokens` from upstream Anthropic `message_delta` on `response.completed.usage`
-- Includes output array in `response.completed`
-- Passes through thinking blocks for reasoning model compatibility
-
-**📐 Config schema:** No config required (`{}`)
-
----
-
-### 🔄 `openai2responses`
-
-Converts OpenAI Chat Completions requests to Responses API format (and vice versa for responses).
-
-**Request transform:**
-- Maps OpenAI `messages[]` to Responses API `input[]` array
-- Extracts system messages into `instructions` field
-- Converts assistant `tool_calls` to `function_call` items
-- Converts `tool` messages to `function_call_output` items
-- Handles multi-modal content (text + images) as `input_text`/`input_image` parts
-- Maps `reasoning_effort` to `reasoning.effort`
-- Maps `response_format` to `text.format`
-- Rewrites URL path from `/v1/chat/completions` to `/v1/responses`
-
-**Response transform:**
-- Converts Responses API `output[]` array to OpenAI Chat Completions format
-- Maps `output_text` items to assistant message content
-- Maps `function_call` items to tool_calls
-
-**Streaming transform:**
-- Converts Responses API SSE events to OpenAI SSE chunks
-- Maps `response.output_text.delta` to content delta chunks
-- Maps `response.output_item.added` / `response.function_call_arguments.delta` to tool call chunks
-- Maps `response.completed` to final chunk with `[DONE]`
-
-**📐 Config schema:** No config required (`{}`)
-
----
-
-### 🔄 `anthropic2responses`
-
-Converts Anthropic Messages requests to Responses API format (and vice versa for responses).
-
-**Request transform:**
-- Maps Anthropic `messages[]` to Responses API `input[]` array
-- Extracts `system` field to `instructions`
-- Converts `tool_use` content blocks to `function_call` items
-- Converts `tool_result` content blocks to `function_call_output` items
-- Handles image content blocks as `input_image` parts
-- Converts Anthropic tools to OpenAI format
-- Maps `thinking.budget_tokens` to `reasoning.effort`
-- Rewrites URL path from `/v1/messages` to `/v1/responses`
-
-**Response transform:**
-- Converts Responses API `output[]` array to Anthropic Messages format
-- Maps `output_text` items to `text` content blocks
-- Maps `function_call` items to `tool_use` content blocks
-
-**Streaming transform:**
-- Converts Responses API SSE events to Anthropic SSE events
-- Maps `response.created` to `message_start`
-- Maps `response.output_text.delta` to `content_block_delta` (text)
-- Maps `response.output_item.added` / `response.function_call_arguments.delta` to `content_block_start` / `content_block_delta` (tool_use)
-- Maps `response.completed` to `message_delta` + `message_stop`
-
-**📐 Config schema:** No config required (`{}`)
-
----
-
-### 🔄 `openai2gemini`
-
-Converts OpenAI Chat Completion format to Google Gemini generateContent format.
-
-**Request transform:**
-- Maps `messages[]` to Gemini `contents[]` array
-- Extracts system messages into `systemInstruction`
-- Converts `tool_calls` to Gemini `functionDeclarations`
-- Maps `response_format` to `text.format`
-- Rewrites URL path to `/v1beta/models/{model}:generateContent` (or `:streamGenerateContent?alt=sse` for streaming)
-
-**Response transform:**
-- Converts Gemini JSON response to OpenAI Chat Completions format
-- Maps `candidates[].content.parts` to assistant message content
-- Converts usage metadata
-
-**Streaming transform:**
-- Converts Gemini SSE chunks to OpenAI SSE chunks
-
-**📐 Config schema:** No config required (`{}`)
-
----
-
-### 🔄 `anthropic2gemini`
-
-Converts Anthropic Messages format to Google Gemini generateContent format.
-
-**Request transform:**
-- Maps `messages[]` to Gemini `contents[]` array
-- Extracts `system` field into `systemInstruction`
-- Converts `tool_use` to Gemini `functionDeclarations`
-- Maps `thinking.budget_tokens` to `thinkingConfig.budgetTokens`
-- Rewrites URL path to `/v1beta/models/{model}:generateContent`
-
-**Response transform:**
-- Converts Gemini JSON response to Anthropic Messages format
-- Maps `candidates[].content.parts` to text content blocks
-
-**Streaming transform:**
-- Converts Gemini SSE chunks to Anthropic SSE events
-- Passes through thinking blocks for reasoning model compatibility
-
-**📐 Config schema:** No config required (`{}`)
-
----
-
-### 🔄 `gemini2openai`
-
-Converts Google Gemini generateContent format to OpenAI Chat Completion format (and vice versa for responses).
-
-**Request transform:**
-- Maps Gemini `contents[]` to OpenAI `messages[]`
-- Rewrites URL path from `/v1beta/models/{model}:generateContent` to `/v1/chat/completions`
-- Sets `Authorization: Bearer` header
-
-**Response transform:**
-- Converts OpenAI Chat Completions response to Gemini JSON format
-
-**Streaming transform:**
-- Converts OpenAI SSE chunks to Gemini SSE events
-
-**📐 Config schema:** No config required (`{}`)
-
----
-
-### 🔄 `gemini2anthropic`
-
-Converts Google Gemini generateContent format to Anthropic Messages format (and vice versa for responses).
-
-**Request transform:**
-- Maps Gemini `contents[]` to Anthropic `messages[]`
-- Converts Gemini function declarations to Anthropic tools
-- Rewrites URL path to `/v1/messages`
-- Sets Anthropic-specific headers
-
-**Response transform:**
-- Converts Anthropic Messages response to Gemini JSON format
-
-**Streaming transform:**
-- Converts Anthropic SSE events to Gemini SSE events
-- Passes through thinking blocks
-
-**📐 Config schema:** No config required (`{}`)
-
----
-
-### 🔄 `gemini2responses`
-
-Converts Google Gemini generateContent format to OpenAI Responses API format (and vice versa for responses).
-
-**Request transform:**
-- Maps Gemini `contents[]` to Responses API `input[]` array
-- Rewrites URL path to `/v1/responses`
-
-**Response transform:**
-- Converts Responses API `output[]` to Gemini JSON format
-
-**Streaming transform:**
-- Converts Responses API SSE events to Gemini SSE events
-
-**📐 Config schema:** No config required (`{}`)
-
-## ⚡ Auto-Translation
-
-Tresor can automatically insert format converters when the request format doesn't match the downstream's declared `api_formats`. The engine detects the input format from the request path (`/v1/chat/completions` → OpenAI, `/v1/messages` → Anthropic, `/v1/responses` → OpenAI Responses API) and compares it against the downstream's format list. If there's a mismatch, the appropriate plugin is automatically selected and prepended to the request pipeline and appended to the response/stream pipelines — without any explicit rule.
-
-**Auto-translation decision tree:**
-
-| Input Format | Downstream Has | Plugin Selected |
-|---|---|---|
-| `openai` | `openai_responses` | `openai2responses` |
-| `openai` | `gemini` | `openai2gemini` |
-| `openai` | `anthropic` (not `openai_responses`) | `openai2anthropic` |
-| `anthropic` | `openai_responses` | `anthropic2responses` |
-| `anthropic` | `gemini` | `anthropic2gemini` |
-| `anthropic` | `openai` (not `openai_responses`) | `anthropic2openai` |
-| `openai_responses` | `gemini` | `responses2gemini` |
-| `openai_responses` | `openai` | `responses2openai` |
-| `openai_responses` | `anthropic` | `responses2anthropic` |
-| `gemini` | `openai` | `gemini2openai` |
-| `gemini` | `anthropic` | `gemini2anthropic` |
-| `gemini` | `openai_responses` | `gemini2responses` |
-
-When the downstream supports `openai_responses`, that format takes priority over direct OpenAI/Anthropic translation. This reflects the design principle that the Responses API serves as a **hub format**.
-
-## 📐 Pipeline Configuration Format
-
-Pipeline config is stored as JSON in the `rules.pipeline_config` column:
+In the admin API and database, `pipeline_config` is an ordered JSON array:
 
 ```json
 [
-  {"plugin_id": "custom_header", "config": {"headers": {"X-Custom": "value"}}},
-  {"plugin_id": "openai2responses"}
+  {"plugin_id": "fix_anthropic_usage"},
+  {"plugin_id": "remove_thinking"}
 ]
 ```
 
-Each entry has:
-- `plugin_id` (required): Registry ID of the plugin
-- `config` (optional): Plugin-specific configuration object
+Each step contains **only `plugin_id`**. There are no per-plugin user settings or configurable failure policies. Hook failures raise errors rather than silently bypassing the plugin. Order matters: each transformation feeds the next. Multiple matching rules contribute pipelines in rule priority order; rules never choose the downstream.
 
-Plugins execute **sequentially** — each plugin's output becomes the next plugin's input. Order matters.
+## ✍️ Write a JavaScript API V2 package
 
-## ✍️ Writing a Custom Plugin
+A plugin is a directory containing `manifest.json`, a CommonJS entry file, and any package-relative modules. **Node.js is not required** to run it: Tresor embeds a JavaScript runtime.
 
-To add a new plugin:
+Example `manifest.json`:
 
-1. **Create a struct** in `internal/plugins/` that implements one or more of the transformer interfaces
-2. **Register it** by calling `registry.Register("my_plugin", &MyPlugin{})` in an `init()` function
-3. **Define a config schema** as a JSON Schema object for web UI consumption
-
-Example skeleton:
-
-```go
-package plugins
-
-import (
-    "net/http"
-    "encoding/json"
-)
-
-type MyTransformer struct {
-    Config map[string]any
-}
-
-func (t *MyTransformer) TransformRequest(req *http.Request, body []byte, ctx *engine.PipelineContext) (*http.Request, []byte, error) {
-    // Parse body, apply transformation, return modified request + body
-    return req, body, nil
-}
-
-func (t *MyTransformer) TransformResponse(resp *http.Response, body []byte, ctx *engine.PipelineContext) ([]byte, error) {
-    // Parse response body, apply transformation, return modified body
-    return body, nil
-}
-
-func (t *MyTransformer) TransformStreamChunk(chunk engine.SSEChunk, ctx *engine.PipelineContext) (engine.SSEChunk, error) {
-    // Transform SSE event, return modified chunk
-    return chunk, nil
-}
-
-func init() {
-    Register("my_transformer", &MyTransformer{})
+```json
+{
+  "id": "example/request-header",
+  "version": "1.0.0",
+  "api_version": 2,
+  "entry": "plugin.js",
+  "requires": [],
+  "permissions": [],
+  "config_schema": {}
 }
 ```
+
+Example `plugin.js` (a fixed transformation, not user-configurable):
+
+```js
+module.exports = {
+  request({ request, body, context, state }) {
+    return {
+      request: {
+        setHeaders: { "x-example": ["enabled"] }
+      }
+    };
+  }
+};
+```
+
+Inputs are immutable snapshots; return an effect rather than modifying them. Returning `undefined` leaves the relevant input unchanged. `state` is mutable per-plugin request state. Payloads use `{ encoding: "utf8" | "base64", data: string }`; headers use arrays of strings. Hook execution is synchronous: Promises are unsupported.
+
+The authoritative contract is [`internal/jsplugins/api.d.ts`](https://github.com/Ladbaby/Tresor/blob/main/internal/jsplugins/api.d.ts). Check it against the Tresor version you target, and use the published packages as complete examples.
+
+### 🔄 Lifecycle and transport
+
+| Hooks | Purpose |
+|---|---|
+| `request` | Transform outgoing request metadata/body and optionally request transport behavior |
+| `responseHeaders`, `response` | Transform headers and buffered response bodies |
+| `upstreamStart`, `upstreamEvent`, `upstreamEnd` | Process upstream SSE before collection or regular response-event transforms |
+| `streamStart`, `streamEvent`, `streamEnd` | Transform regular response SSE events |
+| `collectStart`, `collectEvent`, `collectEnd` | Collect upstream SSE into a buffered response |
+| `finish` | Cleanup on completion or error |
+
+The immutable `context` distinguishes client, downstream, and current formats; requested versus observed HTTP/SSE transport; stage; phase; and effective limits. Never infer all of these from the original client request.
+
+Declare required host features in the manifest. Upstream hooks require `sse.upstream.v2`; collection requires `sse.collect.v2` and all three collection hooks. Ordinary stream hooks do **not** automatically run before collection. Error termination provides sanitized failure metadata and statistics, and finish releases managed storage. See `api.d.ts` for exact hook inputs, effects, and supported feature names.
+
+### 📦 Lint, pack, and publish
+
+```bash
+# Static checks only; neither command executes JavaScript.
+tresor plugin lint ./my-plugin
+tresor plugin lint ./my-plugin --json --strict
+
+# Output must be a new file. Pack prints the canonical source digest.
+tresor plugin pack ./my-plugin --output ./my-plugin-1.0.0.json
+
+# Install into the running daemon for integration testing.
+tresor plugin install ./my-plugin
+```
+
+Lint findings are advisory unless `--strict` is used. Lint is not a compatibility proof: test real gateway requests, including malformed payloads, SSE termination, collection, and cleanup. Bump the manifest version whenever published source changes. Publish versioned JSON bundles and canonical digests rather than repository ZIPs.
+
+### 🔐 Runtime boundaries
+
+Plugins are **trusted code**, not a hard security sandbox. The runtime exposes neither Node/browser APIs nor arbitrary filesystem/network access. Imports are limited to package-relative JavaScript modules and provided `tresor/*` libraries. Non-empty permissions, user configuration, and logging capabilities are unsupported; plugin logs and execution diagnostics are not collected or published.
+
+Tresor validates effects and enforces host-selected body, event, state, buffer, and wire limits, but these are not a hard memory sandbox. There are **no execution timers or watchdogs** for initialization or hooks. Authors must ensure their code terminates.
+
+## 🌐 Admin API
+
+Package management endpoints require admin authentication:
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/plugins` | Enabled executable external plugins for rule selection; excludes native converters |
+| GET | `/api/plugin-packages` | Installed versions and availability |
+| POST | `/api/plugin-packages/install` | Install local source as `{files: {...}}` |
+| POST | `/api/plugin-packages/install-remote` | Install HTTPS `{url, sha256?, signature?, public_key?}` bundle |
+| POST | `/api/plugin-packages/enabled` | Set `{id, version, enabled}` |
+| POST | `/api/plugin-packages/delete` | Delete `{id, version}` |
+| POST | `/api/plugin-packages/activate` | Compatibility alias for enabling |
