@@ -1,6 +1,6 @@
 ---
 title: xAI (Grok)
-description: Add xAI Grok models to Tresor using an API key.
+description: Connect a Grok subscription or add xAI API models to Tresor.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -10,7 +10,82 @@ import TabItem from '@theme/TabItem';
 
 [[official website]](https://console.x.ai/)
 
-Grok models can be added to Tresor via API key authentication. This page configures the direct API, not a Grok subscription or OAuth login.
+You can connect to Grok models via your Grok subscription, or, via the API key.
+They are charged separately, and normal users are likely to use the Grok subscription way.
+
+## Grok subscription
+
+Use a Grok account eligible for the OAuth flow below. A paid subscription does not by itself establish eligibility for every model or API. This integration is tested with offline fixtures, not a live subscription; compatibility does not guarantee provider authorization or account safety.
+
+### 1. Configure the provider
+
+If **Grok subscription** is already configured under **Downstreams** with these settings, skip to the next section **2. Connect**.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+
+1. Open **Downstreams**, click <kbd>+ Add Provider</kbd>, then select the new provider in the list.
+2. Set its name to `Grok subscription`. Under **API Formats**, select only <kbd>OpenAI</kbd>.
+3. Set **API Host** to `https://api.x.ai/v1`.
+4. Under **Authentication**, select <kbd>OAuth</kbd>, then expand **Advanced OAuth settings**.
+5. Set **Flow** to <kbd>Auth Code + PKCE (loopback)</kbd>, then fill in:
+
+| Field | Value |
+| --- | --- |
+| Discovery URL | `https://auth.x.ai/.well-known/openid-configuration` |
+| Client ID | `b1a00492-073a-47ea-816f-4c329264a828` |
+| Scopes | `openid profile email offline_access grok-cli:access api:access` |
+| Refresh skew (seconds) | `120` |
+| Default token lifetime (seconds) | `3600` |
+| Allowed endpoint hosts (one per line) | Enter `x.ai` on the first line and `*.x.ai` on the second. |
+
+6. Check **Request nonce**, **Require refresh token**, **Refresh on unknown expiry**, and **Persist discovered endpoints**.
+7. Leave **Authorization URL**, **Token URL**, **Client Secret**, **Extra Authorize Params**, and **Extra Headers** empty. Discovery supplies the endpoints. Changes save automatically; no restart is needed. Continue to **2. Connect**.
+
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+
+Add this entry to your existing `downstreams` list in `config.yaml`:
+
+```yaml
+- id: xai
+  name: Grok subscription
+  api_formats: [openai]
+  base_url: https://api.x.ai/v1
+  auth:
+    type: oauth
+    flow: auth_code
+    discovery_url: https://auth.x.ai/.well-known/openid-configuration
+    client_id: b1a00492-073a-47ea-816f-4c329264a828
+    scopes: "openid profile email offline_access grok-cli:access api:access"
+    request_nonce: true
+    require_refresh_token: true
+    default_token_lifetime_secs: 3600
+    refresh_on_unknown_expiry: true
+    refresh_skew_secs: 120
+    allowed_endpoint_hosts: [x.ai, "*.x.ai"]
+    persist_discovered_endpoints: true
+  output_model_ids: [grok-4]
+```
+
+Restart Tresor, then continue to **2. Connect**.
+
+  </TabItem>
+</Tabs>
+
+### 2. Connect
+
+1. Open **Downstreams** in the left sidebar, then click **Grok subscription** in the provider list.
+2. Click **Connect** below that section. Tresor opens the provider's authorization page in a new tab; allow the popup if your browser blocks it.
+3. Sign in to your eligible Grok account and approve access. Let the page redirect back to Tresor; it should show **Connected**.
+4. Return to the dashboard and wait for **Connected** below the Connect button.
+5. Under **Models**, click **Fetch Models**, then click **Add** beside the models you need. If discovery is unavailable, click **＋ Add Model** and enter a model ID available to your account.
+
+To disconnect, click **Disconnect** beside **Connect**, then confirm.
+
+## xAI API
+
+Direct xAI API access uses an API key from the xAI Console. API billing and subscription access are separate.
 
 <Tabs>
   <TabItem value="web" label="Web UI" default>
@@ -18,12 +93,12 @@ Grok models can be added to Tresor via API key authentication. This page configu
 
     In the "Downstreams" tab:
 
-    - Click <kbd>+ Add Provider</kbd> if xAI is not already listed.
-    - Enter `xAI` or any name you like.
-    - Under "API Formats", select <kbd>OpenAI</kbd> and <kbd>OpenAI Responses</kbd>.
-    - Under "Authentication", select <kbd>API key</kbd> and enter a key from [xAI Console](https://console.x.ai/).
-    - Under "API Host", enter `https://api.x.ai`.
-    - Under "Models", click <kbd>Fetch Models</kbd> and add the models you need. If discovery is unavailable, enter model IDs from the console manually.
+    1. Click <kbd>+ Add Provider</kbd> to create a separate API provider, then select it in the list.
+    2. Enter `xAI API` as its name.
+    3. Under **API Formats**, select <kbd>OpenAI</kbd> and <kbd>OpenAI Responses</kbd>.
+    4. Under **Authentication**, select <kbd>API key</kbd> and enter a key from [xAI Console](https://console.x.ai/).
+    5. Under **API Host**, enter `https://api.x.ai`. Changes save automatically.
+    6. Under **Models**, click <kbd>Fetch Models</kbd>, then <kbd>+ Add</kbd> beside each model you need. If discovery is unavailable, click <kbd>+ Add Model</kbd> and enter a model ID.
   </TabItem>
   <TabItem value="config" label="config.yaml">
     Editing YAML is less intuitive, but requires fewer manual operations.
@@ -33,8 +108,8 @@ Grok models can be added to Tresor via API key authentication. This page configu
     ```yaml title="~/.config/tresor/config.yaml"
     # Other settings omitted. Add this entry to your existing downstreams list.
     downstreams:
-      - id: xai
-        name: xAI
+      - id: xai-api
+        name: xAI API
         base_url: https://api.x.ai
         api_formats:
           - openai

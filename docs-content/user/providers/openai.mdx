@@ -1,6 +1,6 @@
 ---
 title: OpenAI (GPT)
-description: Add OpenAI GPT models to Tresor using an API key.
+description: Connect a ChatGPT subscription or add OpenAI API models to Tresor.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -10,7 +10,81 @@ import TabItem from '@theme/TabItem';
 
 [[official website]](https://platform.openai.com/)
 
-GPT models can be added to Tresor via API key authentication. OpenAI supports both Chat Completions and Responses, and recommends Responses for new integrations. This page configures the paid API, not a ChatGPT subscription or OAuth login.
+You can connect to GPT models via your ChatGPT subscription, or, via the API key.
+They are charged separately, and normal users are likely to use the ChatGPT subscription way.
+
+## ChatGPT subscription
+
+Use a ChatGPT account with Codex access.
+
+> WARNING: Compatibility does not guarantee provider authorization or account safety. Use at your own risk.
+
+### 1. Configure the provider
+
+If **ChatGPT subscription** is already configured under **Downstreams**, skip to the next section **2. Connect**.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+
+1. Open **Downstreams**, click <kbd>+ Add Provider</kbd>, then select the new provider in the list.
+2. Set its name to `ChatGPT subscription`. Under **API Formats**, select only <kbd>OpenAI Responses</kbd>.
+3. Set **API Host** to `https://chatgpt.com/backend-api/codex`.
+4. Open **Advanced Host Settings**. Under **Per-format request paths**, set the OpenAI Responses entry to `/responses`. Leave **Per-format URLs** empty.
+5. Under **Authentication**, select <kbd>OAuth</kbd>, then expand **Advanced OAuth settings**.
+6. Set **Flow** to <kbd>Device Code (RFC 8628)</kbd>, then fill in:
+
+| Field | Value |
+| --- | --- |
+| Device Auth URL | `https://auth.openai.com/api/accounts/deviceauth/usercode` |
+| Device Token URL | `https://auth.openai.com/api/accounts/deviceauth/token` |
+| Verify URL | `https://auth.openai.com/codex/device` |
+| Device Redirect URI | `https://auth.openai.com/deviceauth/callback` |
+| Token URL (code exchange) | `https://auth.openai.com/oauth/token` |
+| Client ID | `app_EMoamEEZ73f0CkXaXp7hrann` |
+
+7. Leave **Scopes** and **Extra Headers** empty, all policy checkboxes unchecked, both numeric fields at `0`, and **Allowed endpoint hosts** empty. Changes save automatically; no restart is needed. Continue to **2. Connect**.
+
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+
+Add this entry to your existing `downstreams` list in `config.yaml`:
+
+```yaml
+- id: chatgpt
+  name: ChatGPT subscription
+  api_formats: [openai_responses]
+  base_url: https://chatgpt.com/backend-api/codex
+  format_paths:
+    openai_responses: /responses
+  auth:
+    type: oauth
+    flow: device
+    device_auth_url: https://auth.openai.com/api/accounts/deviceauth/usercode
+    device_token_url: https://auth.openai.com/api/accounts/deviceauth/token
+    device_verify_url: https://auth.openai.com/codex/device
+    token_url: https://auth.openai.com/oauth/token
+    client_id: app_EMoamEEZ73f0CkXaXp7hrann
+    device_redirect_uri: https://auth.openai.com/deviceauth/callback
+  output_model_ids: [gpt-6-astra]
+```
+
+Restart Tresor, then continue to **2. Connect**.
+
+  </TabItem>
+</Tabs>
+
+### 2. Connect
+
+1. Open **Downstreams** in the left sidebar, then click **ChatGPT subscription** in the provider list.
+2. Click **Connect** below that section. The device-login dialog displays a verification URL and a code.
+3. Open the displayed URL in your browser, sign in to your ChatGPT account, and enter the displayed code. Complete any approval prompts.
+4. Return to Tresor and wait for **Connected** below the Connect button.
+5. Under **Models**, click **Fetch Models**, then click **Add** beside each model you want. If discovery is unavailable, click **＋ Add Model** and enter an available Codex model ID.
+
+To disconnect, click **Disconnect** beside **Connect**, then confirm.
+
+## OpenAI API
+
 
 <Tabs>
   <TabItem value="web" label="Web UI" default>
@@ -18,12 +92,12 @@ GPT models can be added to Tresor via API key authentication. OpenAI supports bo
 
     In the "Downstreams" tab:
 
-    - Click <kbd>+ Add Provider</kbd> if OpenAI is not already listed.
-    - Enter `OpenAI` or any name you like.
-    - Under "API Formats", select <kbd>OpenAI</kbd> and <kbd>OpenAI Responses</kbd>.
-    - Under "Authentication", select <kbd>API key</kbd> and enter a key from [OpenAI API Keys](https://platform.openai.com/api-keys).
-    - Under "API Host", enter `https://api.openai.com`.
-    - Under "Models", click <kbd>Fetch Models</kbd> and add the models you need. Only add models that support your selected generation formats.
+    1. Click <kbd>+ Add Provider</kbd> to create a separate API provider, then select it in the list.
+    2. Enter `OpenAI API` as its name.
+    3. Under **API Formats**, select <kbd>OpenAI</kbd> and <kbd>OpenAI Responses</kbd>.
+    4. Under **Authentication**, select <kbd>API key</kbd> and enter a key from [OpenAI API Keys](https://platform.openai.com/api-keys).
+    5. Under **API Host**, enter `https://api.openai.com`
+    6. Under **Models**, click <kbd>Fetch Models</kbd>, then <kbd>+ Add</kbd> beside each model you need. 
   </TabItem>
   <TabItem value="config" label="config.yaml">
     Editing YAML is less intuitive, but requires fewer manual operations.
