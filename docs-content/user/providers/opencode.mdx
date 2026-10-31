@@ -1,0 +1,80 @@
+---
+title: OpenCode Go
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# OpenCode Go
+
+[[official website]](https://opencode.ai/go)
+
+OpenCode Go models can be added to Tresor via API key authentication.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but require more manual operations.
+
+    In "Downstreams" tab
+
+        - If OpenCode Go does not appear in the list of providers, click <kbd>+ Add Provider</kbd>.
+        - Enter `OpenCode Go` or anything you like as the provider name.
+        - Under "API Formats", select <kbd>OpenAI</kbd>, <kbd>OpenAI Responses</kbd>, <kbd>Anthropic</kbd>, and <kbd>Gemini</kbd>.
+        - Under "Authentication", select <kbd>API key</kbd>, and enter the API key you obtained from [OpenCode Go](https://opencode.ai/go).
+        - Under "API Host", enter `https://opencode.ai/inference/go`.
+        - Click <kbd>Advanced</kbd>. Under "Per-format URLs", set the Gemini entry to `https://opencode.ai/inference/go/google`.
+        - Finally, under "Models", click <kbd>⟳ Fetch Models</kbd>, and add the models you need.
+
+    Settings save as you go; no restart needed.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing yaml is less intuitive, but require less manual operations.
+
+    Replace `sk-YOUR-OPENCODE-API-KEY` with the API key you obtained from [OpenCode Go](https://opencode.ai/go).
+    ```yaml title="~/.config/tresor/config.yaml"
+    ... # Omitted showing other settings here
+    downstreams:
+      - id: opencode-go
+        name: OpenCode Go
+        base_url: https://opencode.ai/inference/go
+        api_formats:
+            - openai
+            - openai_responses
+            - anthropic
+            - gemini
+        output_model_ids:
+            - minimax-m3
+            - claude-haiku-5-5
+            - qwen3.8-max
+            - beam-free
+            - glm-5.3
+            - kimi-k3
+            - gpt-5.6-luna
+            - grok-4.7
+        is_enabled: true
+        auth:
+            type: api_key
+            api_key: sk-YOUR-OPENCODE-API-KEY
+        format_urls:
+            gemini: https://opencode.ai/inference/go/google
+    ```
+    Restart Tresor to apply the changes in yaml.
+  </TabItem>
+</Tabs>
+
+Done! Clients accessing Tresor can use the models from OpenCode Go now!
+
+## 🔑 One requirement: a session header
+
+OpenCode Go routes every generation request by conversation. A request without a session header is refused with `400 MissingSessionID`:
+
+```json
+{"type":"error","error":{"type":"MissingSessionID","message":"Request is missing x-opencode-session and cannot be routed efficiently."}}
+```
+
+Tresor forwards the header but never invents one, so your client has to send it.
+`x-opencode-session` is the name the provider documents, and these are accepted too: `session-id`, `x-session-id`, `session_id`, `x-session-affinity`, `x-conversation-id`.
+
+## 📚 Next step
+
+- [Configure your LLM Apps](/Tresor-docs/docs/user/llm-apps/claude-code)
