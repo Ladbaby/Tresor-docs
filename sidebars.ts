@@ -22,6 +22,7 @@ const sidebars: SidebarsConfig = {
         'user/providers/google',
         'user/providers/minimax',
         'user/providers/moonshot',
+        'user/providers/nvidia',
         'user/providers/openai',
         'user/providers/tencent',
         'user/providers/xai',
