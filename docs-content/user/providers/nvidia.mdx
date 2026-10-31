@@ -1,0 +1,56 @@
+---
+title: NVIDIA NIM
+description: Add NVIDIA NIM models to Tresor using an API key.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# NVIDIA NIM
+
+[[official website]](https://build.nvidia.com/explore/discover)
+
+NVIDIA NIM models can be added to Tresor via API key authentication.
+
+<Tabs>
+  <TabItem value="web" label="Web UI" default>
+    Web UI is more intuitive, but require more manual operations.
+
+    In "Downstreams" tab
+
+        - If NVIDIA NIM does not appear in the list of providers, click <kbd>+ Add Provider</kbd>.
+        - Enter `NVIDIA NIM` or anything you like as the provider name.
+        - Under "API Formats", select <kbd>OpenAI</kbd>.
+        - Under "Authentication", select <kbd>API key</kbd>, and enter the API key you obtained from [NVIDIA NIM official website](https://build.nvidia.com/explore/discover) (usually starts with `nvapi-`).
+        - Under "API Host", enter `https://integrate.api.nvidia.com`.
+        - Finally, under "Models", click <kbd>⟳ Fetch Models</kbd>, and add the models you need.
+  </TabItem>
+  <TabItem value="config" label="config.yaml">
+    Editing yaml is less intuitive, but require less manual operations.
+
+    Replace `nvapi-YOUR-NVIDIA-API-KEY` with the API key you obtained from [NVIDIA NIM official website](https://build.nvidia.com/explore/discover).
+    ```yaml title="~/.config/tresor/config.yaml"
+    ... # Omitted showing other settings here
+    downstreams:
+      - id: nvidia-nim
+        name: NVIDIA NIM
+        base_url: https://integrate.api.nvidia.com
+        api_formats:
+            - openai
+        output_model_ids:
+            - meta/llama-3.3-70b-instruct
+            - deepseek-ai/deepseek-r1
+        is_enabled: true
+        auth:
+            type: api_key
+            api_key: nvapi-YOUR-NVIDIA-API-KEY
+    ```
+    Restart Tresor to apply the changes in yaml.
+  </TabItem>
+</Tabs>
+
+Done! Clients accessing Tresor can use the models from NVIDIA NIM now!
+
+## 📚 Next step
+
+- [Configure your LLM Apps](/Tresor-docs/docs/user/llm-apps/claude-code)
