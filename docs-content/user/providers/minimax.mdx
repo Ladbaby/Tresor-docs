@@ -8,9 +8,12 @@ import TabItem from '@theme/TabItem';
 
 # MiniMax
 
-[[official website]](https://platform.minimax.io/)
+[[official website (China)]](https://platform.minimaxi.com/) [[official website (International)]](https://platform.minimax.io/)
 
-MiniMax models can be added to Tresor via API key authentication. The example below uses the international platform.
+MiniMax models can be added to Tresor via your token plan subscription, or, via the pay-as-you-go API.
+They are charged separately, and normal users are likely to use the token plan subscription way.
+
+Pay-as-you-go API keys and M Plan Subscription Keys are separate.
 
 <Tabs>
   <TabItem value="web" label="Web UI" default>
@@ -21,10 +24,14 @@ MiniMax models can be added to Tresor via API key authentication. The example be
     - Click <kbd>+ Add Provider</kbd> if MiniMax is not already listed.
     - Enter `MiniMax` or any name you like.
     - Under "API Formats", select <kbd>OpenAI</kbd>, <kbd>OpenAI Responses</kbd>, and <kbd>Anthropic</kbd>.
-    - Under "Authentication", select <kbd>API key</kbd> and enter a key created under "API Keys" on [MiniMax Platform](https://platform.minimax.io/).
-    - Under "API Host", enter `https://api.minimax.io`.
-    - Click <kbd>Advanced</kbd>. Under "Per-format URLs", set the Anthropic entry to `https://api.minimax.io/anthropic`.
-    - Under "Models", click <kbd>Fetch Models</kbd> and add the models you need. If discovery is unavailable, enter exact model IDs from the console manually.
+    - Under "Authentication", select <kbd>API key</kbd> and enter a key created under "API Key" on the official website.
+    - Under "API Host", choose one of:
+        - China: `https://api.minimaxi.com`
+        - International: `https://api.minimax.io`
+    - Click <kbd>Advanced</kbd>. Under "Per-format URLs", set the Anthropic entry to one of:
+        - China: `https://api.minimaxi.com/anthropic`
+        - International: `https://api.minimax.io/anthropic`
+    - Under "Models", click <kbd>Fetch Models</kbd> and add the models you need.
   </TabItem>
   <TabItem value="config" label="config.yaml">
     Editing YAML is less intuitive, but requires fewer manual operations.
@@ -55,9 +62,6 @@ MiniMax models can be added to Tresor via API key authentication. The example be
   </TabItem>
 </Tabs>
 
-For the China platform used in Tresor's example configuration, use `https://api.minimaxi.com` as the API host or `base_url`, and `https://api.minimaxi.com/anthropic` for the Anthropic per-format URL. Use credentials issued for the corresponding platform.
-
-Pay-as-you-go API keys and **M Plan Subscription Keys** are separate. M Plan users should obtain their Subscription Key under **Billing → M Plan** and follow the plan's endpoint instructions rather than assuming an ordinary API key uses subscription quota.
 
 Done! Clients accessing Tresor can now use your configured MiniMax models.
 
