@@ -10,7 +10,10 @@ import TabItem from '@theme/TabItem';
 
 [[official website]](https://platform.xiaomimimo.com/)
 
-MiMo models can be added to Tresor via API key authentication.
+MiMo models can be added to Tresor via your [token plan subscription](https://platform.xiaomimimo.com/token-plan), or, via the [pay-as-you-go API](https://mimo.mi.com/docs/en-US/price/pay-as-you-go).
+They are charged separately, and normal users are likely to use the token plan subscription way.
+
+> WARNING: As of 2026.10.31, the cache hit rate of Xiaomi MiMo is not stable, where some random requests will get abnormally low rate. The problem is likely caused by Xiaomi instead of Tresor.
 
 <Tabs>
   <TabItem value="web" label="Web UI" default>
@@ -22,9 +25,19 @@ MiMo models can be added to Tresor via API key authentication.
     - Enter `Xiaomi MiMo` or any name you like.
     - Under "API Formats", select <kbd>OpenAI</kbd>, <kbd>OpenAI Responses</kbd>, and <kbd>Anthropic</kbd>.
     - Under "Authentication", select <kbd>API key</kbd> and enter a key from [MiMo Open Platform](https://platform.xiaomimimo.com/).
-    - Under "API Host", enter `https://api.xiaomimimo.com`.
-    - Click <kbd>Advanced</kbd>. Under "Per-format URLs", set the Anthropic entry to `https://api.xiaomimimo.com/anthropic`.
-    - Under "Models", click <kbd>Fetch Models</kbd> and add the models you need. If discovery is unavailable, enter the exact model IDs shown in your console.
+    - Under "API Host", choose one of:
+        - Token plan:
+            - China: `https://token-plan-cn.xiaomimimo.com`
+            - Singapore: `https://token-plan-sgp.xiaomimimo.com`
+            - Europe: `https://token-plan-ams.xiaomimimo.com`
+        - Pay-as-you-go API: `https://api.xiaomimimo.com`
+    - Click <kbd>Advanced</kbd>. Under "Per-format URLs", set the Anthropic entry to one of:
+        - Token plan:
+            - China: `https://token-plan-cn.xiaomimimo.com/anthropic`
+            - Singapore: `https://token-plan-sgp.xiaomimimo.com/anthropic`
+            - Europe: `https://token-plan-ams.xiaomimimo.com/anthropic`
+        - Pay-as-you-go API: `https://api.xiaomimimo.com/anthropic`
+    - Under "Models", click <kbd>Fetch Models</kbd> and add the models you need.
   </TabItem>
   <TabItem value="config" label="config.yaml">
     Editing YAML is less intuitive, but requires fewer manual operations.
@@ -36,7 +49,7 @@ MiMo models can be added to Tresor via API key authentication.
     downstreams:
       - id: mimo
         name: Xiaomi MiMo
-        base_url: https://api.xiaomimimo.com
+        base_url: https://token-plan-cn.xiaomimimo.com # choose one of: Token plan: China: `https://token-plan-cn.xiaomimimo.com`; Singapore: `https://token-plan-sgp.xiaomimimo.com`; Europe: `https://token-plan-ams.xiaomimimo.com`; Pay-as-you-go API: `https://api.xiaomimimo.com`
         api_formats:
           - openai
           - openai_responses
@@ -48,14 +61,12 @@ MiMo models can be added to Tresor via API key authentication.
           type: api_key
           api_key: YOUR-MIMO-API-KEY
         format_urls:
-          anthropic: https://api.xiaomimimo.com/anthropic
+          anthropic: https://token-plan-cn.xiaomimimo.com/anthropic # choose one of: Token plan: China: `https://token-plan-cn.xiaomimimo.com/anthropic`; Singapore: `https://token-plan-sgp.xiaomimimo.com/anthropic`; Europe: `https://token-plan-ams.xiaomimimo.com/anthropic`; Pay-as-you-go API: `https://api.xiaomimimo.com/anthropic`.
     ```
 
     Restart Tresor to apply the YAML changes.
   </TabItem>
 </Tabs>
-
-The example uses pay-as-you-go access. MiMo Token Plan keys and pay-as-you-go keys are separate; a Token Plan may require a dedicated base URL. Copy both the key and endpoint from that plan's console instead of assuming the URLs above apply.
 
 Done! Clients accessing Tresor can now use your configured MiMo models.
 
